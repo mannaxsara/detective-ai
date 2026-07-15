@@ -31,11 +31,12 @@ out/
 Thumbs.db
 
 # Uploads
-uploads/
-!uploads/.gitkeep
+/backend/uploads/
+!/backend/uploads/.gitkeep
 
 # Reports
-reports/
+/backend/uploads/reports/
+/reports/
 
 # Logs
 *.log
