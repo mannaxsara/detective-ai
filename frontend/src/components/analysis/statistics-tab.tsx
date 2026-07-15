@@ -186,8 +186,8 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
                   </div>
 
                   {/* ELI5 Plain English Interpretation */}
-                  <div className="p-3 bg-zinc-950/50 border-l-2 border-[#ea580c] pl-3.5 rounded-r-xl">
-                    <span className="text-[8px] text-[#ea580c] font-black uppercase tracking-wider block">Plain English Interpretation</span>
+                  <div className="p-3 bg-muted/40 border border-border rounded-xl">
+                    <span className="text-[8px] text-primary font-black uppercase tracking-wider block">Plain English Interpretation</span>
                     <p className="text-zinc-300 text-xs font-semibold mt-1 italic">
                       "{test.interpretation}"
                     </p>

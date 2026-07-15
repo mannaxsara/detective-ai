@@ -43,7 +43,7 @@ function InsightCardItem({ insight, index }: { insight: any; index: number }) {
   }
 
   return (
-    <Card className={`border border-[#27272A] border-l-4 ${borderStyle} bg-[#111217] shadow-xl hover:border-zinc-700 transition-all duration-200`}>
+    <Card className="border border-border bg-card shadow-sm hover:border-zinc-700 transition-all duration-200">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

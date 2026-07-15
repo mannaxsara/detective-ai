@@ -103,10 +103,10 @@ export default function Sidebar() {
                 onClick={() => {
                   if (isMobile) setSidebarCollapsed(true);
                 }}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 border-l-2 ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 border ${
                   active
-                    ? "bg-background text-foreground border-primary rounded-l-none"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/50 border-transparent"
+                    ? "bg-primary/10 text-primary border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40 border-transparent"
                 }`}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${active ? "text-primary" : ""}`} />

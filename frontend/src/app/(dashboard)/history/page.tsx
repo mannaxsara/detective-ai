@@ -93,63 +93,83 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : historyData?.analyses && historyData.analyses.length > 0 ? (
-        <div className="space-y-3">
-          {historyData.analyses.map((item: any) => {
-            const isExcel = item.dataset_name?.toLowerCase().endsWith(".xlsx") || item.dataset_name?.toLowerCase().endsWith(".xls");
-            const isCSV = item.dataset_name?.toLowerCase().endsWith(".csv");
-            
-            return (
-              <div
-                key={item.id}
-                onClick={() => handleReopenAnalysis(item)}
-                className="group/item flex items-center justify-between p-4.5 rounded-cards border border-border bg-card hover:bg-background/80 hover:border-border/65 transition-all duration-300 cursor-pointer relative overflow-hidden"
-              >
-                <div className="relative z-10 flex items-center gap-4 text-left">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-cards bg-background border border-border text-muted-foreground group-hover/item:border-primary/20 group-hover/item:scale-105 transition-all duration-300">
-                    {isExcel || isCSV ? (
-                      <FileSpreadsheet className="w-5 h-5 text-primary" />
-                    ) : (
-                      <Database className="w-5 h-5 text-primary" />
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-foreground group-hover/item:text-primary transition-colors">{item.dataset_name}</h4>
-                    <p className="text-[10px] text-muted-foreground/60 font-bold mt-1">
-                      Investigated on {new Date(item.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
+        <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-muted/20">
+                  <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Case ID</th>
+                  <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Dataset Name</th>
+                  <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Type</th>
+                  <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Status</th>
+                  <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Investigated Date</th>
+                  <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historyData.analyses.map((item: any) => {
+                  const isExcel = item.dataset_name?.toLowerCase().endsWith(".xlsx") || item.dataset_name?.toLowerCase().endsWith(".xls");
+                  const isCSV = item.dataset_name?.toLowerCase().endsWith(".csv");
 
-                <div className="relative z-10 flex items-center gap-4.5">
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border bg-background text-muted-foreground/80">
-                    {item.analysis_type} Case
-                  </span>
-                  
-                  {item.status && (
-                    <span className={`text-[8px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                      item.status === "completed"
-                        ? "border-emerald-900/30 text-emerald-400 bg-emerald-950/20"
-                        : item.status === "running"
-                        ? "border-amber-900/30 text-amber-400 bg-amber-950/20 animate-pulse"
-                        : "border-rose-900/30 text-rose-400 bg-rose-950/20"
-                    }`}>
-                      {item.status}
-                    </span>
-                  )}
-                  
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={(e) => handleDelete(e, item.dataset_id)}
-                      className="text-muted-foreground/45 hover:text-rose-500 hover:bg-rose-500/5 transition-all duration-200 rounded-lg w-8 h-8 flex items-center justify-center cursor-pointer border border-transparent hover:border-rose-950/20"
+                  let badgeColor = "border-border text-muted-foreground/60 bg-background";
+                  if (isExcel) badgeColor = "border-emerald-900/30 text-emerald-400 bg-emerald-950/10";
+                  else if (isCSV) badgeColor = "border-primary/30 text-primary bg-primary/5";
+
+                  return (
+                    <tr
+                      key={item.id}
+                      onClick={() => handleReopenAnalysis(item)}
+                      className="group border-b border-border last:border-b-0 hover:bg-background/50 transition-colors cursor-pointer"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground/45 group-hover/item:text-primary group-hover/item:translate-x-0.5 transition-all duration-300" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                      <td className="px-6 py-4 text-xs font-mono text-muted-foreground/80 font-bold">
+                        #{item.dataset_id}
+                      </td>
+                      <td className="px-6 py-4 text-xs font-semibold text-foreground truncate max-w-[240px]">
+                        {item.dataset_name}
+                      </td>
+                      <td className="px-6 py-4 text-[10px] font-mono font-bold">
+                        <span className={`px-2 py-0.5 rounded-full border uppercase tracking-wider ${badgeColor}`}>
+                          {item.analysis_type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-[10px] font-mono font-bold">
+                        <span className={`px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5 ${
+                          item.status === "completed"
+                            ? "border-emerald-900/30 text-emerald-400 bg-emerald-950/15"
+                            : item.status === "running"
+                            ? "border-amber-900/30 text-amber-400 bg-amber-950/15 animate-pulse"
+                            : "border-rose-900/30 text-rose-400 bg-rose-950/15"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            item.status === "completed"
+                              ? "bg-emerald-500"
+                              : item.status === "running"
+                              ? "bg-amber-500 animate-ping"
+                              : "bg-rose-500"
+                          }`} />
+                          {item.status || "uploaded"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-mono text-muted-foreground font-semibold">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-xs text-center align-middle">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={(e) => handleDelete(e, item.dataset_id)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground/60 hover:text-rose-500 transition-all cursor-pointer border border-transparent hover:border-rose-500/20"
+                            title="Delete Case File"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <div className="rounded-cards border border-dashed border-border bg-card/30 py-16 text-center">

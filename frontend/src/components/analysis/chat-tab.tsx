@@ -218,14 +218,14 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
             {mutation.isPending && (
               <div className="flex gap-3 mr-auto max-w-[85%]">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border bg-[#ea580c]/10 border-[#ea580c]/20 text-[#ea580c]">
-                  <Bot className="w-4.5 h-4.5 animate-bounce" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border bg-primary/10 border-primary/20 text-primary">
+                  <Bot className="w-4.5 h-4.5 animate-pulse" />
                 </div>
                 <div className="p-4 rounded-2xl bg-zinc-950/45 border border-zinc-900 text-zinc-450 text-xs rounded-tl-none flex items-center gap-2.5 font-semibold text-left">
                   <span className="flex gap-1.5 shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#ea580c] animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#ea580c] animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#ea580c] animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "300ms" }} />
                   </span>
                   Querying database findings...
                 </div>
@@ -248,12 +248,12 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={mutation.isPending}
-              className="flex-1 bg-black border border-zinc-900 focus:border-[#ea580c] focus:outline-none focus:ring-1 focus:ring-[#ea580c] text-xs h-11 rounded-xl px-4.5 placeholder:text-zinc-650 text-zinc-200 transition-all"
+              className="flex-1 bg-black border border-zinc-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-xs h-11 rounded-xl px-4.5 placeholder:text-zinc-600 text-zinc-200 transition-all"
             />
             <button
               type="submit"
               disabled={mutation.isPending || !input.trim()}
-              className="bg-[#ea580c] hover:bg-[#c2410c] text-white font-bold text-xs uppercase tracking-wider shrink-0 h-11 px-6 rounded-xl flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+              className="bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs uppercase tracking-wider shrink-0 h-11 px-6 rounded-xl flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
             >
               <Send className="w-3.5 h-3.5" />
               Send

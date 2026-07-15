@@ -241,114 +241,107 @@ export default function DashboardPage() {
         </h2>
 
         {datasetsList.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {datasetsList.map((dataset: any, datasetIdx: number) => {
-              const isExcel = dataset.file_type === "xlsx" || dataset.file_type === "xls";
-              const isCSV = dataset.file_type === "csv";
-              const isParquet = dataset.file_type === "parquet";
-              const isJSON = dataset.file_type === "json";
+          <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-muted/20">
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Case ID</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Dataset Name</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Type</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Status</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Schema Health</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-right">Rows</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-right">Cols</th>
+                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datasetsList.map((dataset: any) => {
+                    const isExcel = dataset.file_type === "xlsx" || dataset.file_type === "xls";
+                    const isCSV = dataset.file_type === "csv";
+                    const isParquet = dataset.file_type === "parquet";
+                    const isJSON = dataset.file_type === "json";
 
-              let badgeColor = "border-border text-muted-foreground/60 bg-background";
-              if (isExcel) badgeColor = "border-emerald-900/30 text-emerald-400 bg-emerald-950/20";
-              else if (isCSV) badgeColor = "border-primary/30 text-primary bg-primary/5";
-              else if (isParquet) badgeColor = "border-purple-900/30 text-purple-400 bg-purple-950/20";
-              else if (isJSON) badgeColor = "border-cyan-900/30 text-primary bg-cyan-950/20";
+                    let badgeColor = "border-border text-muted-foreground/60 bg-background";
+                    if (isExcel) badgeColor = "border-emerald-900/30 text-emerald-400 bg-emerald-950/10";
+                    else if (isCSV) badgeColor = "border-primary/30 text-primary bg-primary/5";
+                    else if (isParquet) badgeColor = "border-purple-900/30 text-purple-400 bg-purple-950/10";
+                    else if (isJSON) badgeColor = "border-cyan-900/30 text-cyan-400 bg-cyan-950/10";
 
-              return (
-                <div
-                  key={dataset.id}
-                  onClick={() => handleOpenCase(dataset.id, "profile")}
-                  className="p-5 rounded-cards border border-border bg-card hover:bg-background/80 hover:border-border/60 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[190px] group/item cursor-pointer"
-                >
-                  <div className="relative z-10 flex items-start gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-cards bg-background border border-border text-muted-foreground shrink-0 group-hover/item:border-primary/20 group-hover/item:scale-105 transition-all duration-300">
-                      {isExcel || isCSV ? (
-                        <Upload className="w-4.5 h-4.5 text-primary" />
-                      ) : (
-                        <Database className="w-4.5 h-4.5 text-primary" />
-                      )}
-                    </div>
-                    
-                    <div className="space-y-1.5 text-left flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2.5">
-                        <h4 className="font-bold text-xs text-foreground group-hover/item:text-primary transition-colors truncate">{dataset.name}</h4>
-                        <span className={`text-[8px] font-mono font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider shrink-0 ${badgeColor}`}>
-                          {dataset.file_type}
-                        </span>
-                      </div>
-                      
-                      {/* Health Indicator slider */}
-                      <div className="flex justify-between items-center pt-2 text-[9px] font-bold text-muted-foreground/60">
-                        <span>Schema Health</span>
-                        <span className="text-primary font-black">{Math.round(dataset.health_score)}%</span>
-                      </div>
-                      <div className="w-full h-1 rounded-full bg-background overflow-hidden mt-1 relative">
-                        <div
-                          className="h-full bg-primary rounded-full"
-                          style={{ width: `${dataset.health_score}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Metadata Row */}
-                  <div className="relative z-10 flex justify-between border-t border-border pt-3 mt-3 text-[10px] text-muted-foreground font-bold">
-                    <div>
-                      <span className="text-[8px] text-muted-foreground/50 block uppercase">Rows</span>
-                      <span className="font-mono text-foreground">{dataset.row_count?.toLocaleString() || "0"}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[8px] text-muted-foreground/50 block uppercase">Columns</span>
-                      <span className="font-mono text-foreground">{dataset.column_count || "0"}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions Bar */}
-                  <div className="relative z-10 grid grid-cols-4 gap-1.5 border-t border-border pt-3 mt-3">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenCase(dataset.slug || dataset.id, "profile");
-                      }}
-                      className="border border-border bg-background hover:bg-card text-muted-foreground hover:text-foreground text-[9px] uppercase font-bold tracking-wider h-7.5 rounded-cards transition-all cursor-pointer text-center"
-                    >
-                      Inspect
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenCase(dataset.slug || dataset.id, "chat");
-                      }}
-                      className="border border-border bg-background hover:bg-card text-muted-foreground hover:text-foreground text-[9px] uppercase font-bold tracking-wider h-7.5 rounded-cards transition-all cursor-pointer flex items-center justify-center gap-0.5"
-                    >
-                      <MessageSquare className="w-2.5 h-2.5 text-primary/85" />
-                      Chat
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenCase(dataset.slug || dataset.id, "report");
-                      }}
-                      className="border border-border bg-background hover:bg-card text-muted-foreground hover:text-foreground text-[9px] uppercase font-bold tracking-wider h-7.5 rounded-cards transition-all cursor-pointer flex items-center justify-center gap-0.5"
-                    >
-                      <FileDown className="w-2.5 h-2.5 text-primary/85" />
-                      Report
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDatasetToDelete(dataset);
-                        setDeleteConfirmOpen(true);
-                      }}
-                      className="border border-rose-950/30 bg-rose-950/10 hover:bg-rose-500/10 text-rose-500 hover:text-rose-400 text-[9px] uppercase font-bold tracking-wider h-7.5 rounded-cards transition-all cursor-pointer flex items-center justify-center gap-0.5"
-                    >
-                      <Trash className="w-2.5 h-2.5 text-rose-500" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                    return (
+                      <tr
+                        key={dataset.id}
+                        onClick={() => handleOpenCase(dataset.slug || dataset.id, "profile")}
+                        className="group border-b border-border last:border-b-0 hover:bg-background/50 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4 text-xs font-mono text-muted-foreground/80 font-bold">
+                          #{dataset.id}
+                        </td>
+                        <td className="px-6 py-4 text-xs font-semibold text-foreground truncate max-w-[200px]">
+                          {dataset.name}
+                        </td>
+                        <td className="px-6 py-4 text-[10px] font-mono font-bold">
+                          <span className={`px-2 py-0.5 rounded-full border uppercase tracking-wider ${badgeColor}`}>
+                            {dataset.file_type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-[10px] font-mono font-bold">
+                          <span className={`px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5 ${
+                            dataset.status === "completed"
+                              ? "border-emerald-900/30 text-emerald-400 bg-emerald-950/15"
+                              : dataset.status === "running"
+                              ? "border-amber-900/30 text-amber-400 bg-amber-950/15 animate-pulse"
+                              : "border-rose-900/30 text-rose-400 bg-rose-950/15"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              dataset.status === "completed"
+                                ? "bg-emerald-500"
+                                : dataset.status === "running"
+                                ? "bg-amber-500 animate-ping"
+                                : "bg-rose-500"
+                            }`} />
+                            {dataset.status || "uploaded"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-mono font-bold align-middle">
+                          <div className="flex items-center gap-2">
+                            <div className="w-12 h-1 rounded-full bg-border overflow-hidden relative">
+                              <div
+                                className="h-full bg-primary rounded-full"
+                                style={{ width: `${dataset.health_score || 0}%` }}
+                              />
+                            </div>
+                            <span>{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "—"}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-mono text-foreground text-right font-bold">
+                          {dataset.row_count?.toLocaleString() || "—"}
+                        </td>
+                        <td className="px-6 py-4 text-xs font-mono text-foreground text-right font-bold">
+                          {dataset.column_count || "—"}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-center align-middle">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDatasetToDelete(dataset);
+                                setDeleteConfirmOpen(true);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground/60 hover:text-rose-500 transition-all cursor-pointer border border-transparent hover:border-rose-500/20"
+                              title="Delete Case File"
+                            >
+                              <Trash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <Link
