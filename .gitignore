@@ -42,3 +42,7 @@ reports/
 
 # Docker
 docker-compose.override.yml
+
+# Databases
+*.db
+*.sqlite
