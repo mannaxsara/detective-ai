@@ -44,15 +44,29 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: handle 401
+// Response interceptor: handle 401 & error formatting
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Format validation errors (FastAPI 422 lists) into a readable string
+    if (error.response?.data?.detail) {
+      const detail = error.response.data.detail;
+      if (Array.isArray(detail)) {
+        error.response.data.detail = detail.map((d: any) => d.msg).join(', ');
+      } else if (typeof detail === 'object') {
+        error.response.data.detail = JSON.stringify(detail);
+      }
+    }
+
     if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('detective_token');
-        localStorage.removeItem('detective_user');
-        window.location.href = '/login';
+      const url = error.config?.url || '';
+      // Avoid redirecting on auth endpoints
+      if (!url.includes('/auth/login') && !url.includes('/auth/register') && !url.includes('/auth/google')) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('detective_token');
+          localStorage.removeItem('detective_user');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

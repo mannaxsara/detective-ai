@@ -52,6 +52,11 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
     try {
       const res = await authAPI.register({
         email,
