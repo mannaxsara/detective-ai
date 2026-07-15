@@ -35,11 +35,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex w-screen h-screen overflow-hidden bg-black text-zinc-50 font-sans">
+    <div className="flex w-screen h-screen overflow-hidden bg-background text-foreground font-sans">
       <Sidebar />
       <div className="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-black p-6">
+        <main className="flex-1 overflow-y-auto bg-background p-6">
           {children}
         </main>
       </div>

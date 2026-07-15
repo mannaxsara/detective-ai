@@ -74,38 +74,38 @@ html, body, button, input, textarea, select {
 }
 
 :root {
-  --background: #111215;
-  --foreground: #eaeaea;
-  --card: #181a1f;
-  --card-foreground: #eaeaea;
-  --popover: #181a1f;
-  --popover-foreground: #eaeaea;
+  --background: #fbfbfd;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
   --primary: #c49a88;
-  --primary-foreground: #111215;
-  --secondary: #22252c;
-  --secondary-foreground: #eaeaea;
-  --muted: #22252c;
-  --muted-foreground: #8e959e;
-  --accent: #22252c;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f3f2;
+  --secondary-foreground: #1c1917;
+  --muted: #f4f3f2;
+  --muted-foreground: #78716c;
+  --accent: #f4f3f2;
   --accent-foreground: #c49a88;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: rgba(234, 234, 234, 0.08);
-  --input: rgba(234, 234, 234, 0.08);
+  --border: rgba(28, 25, 23, 0.08);
+  --input: rgba(28, 25, 23, 0.08);
   --ring: #c49a88;
   --chart-1: #c49a88;
-  --chart-2: #8e959e;
+  --chart-2: #78716c;
   --chart-3: #d4a373;
   --chart-4: #dc2626;
-  --chart-5: #111215;
+  --chart-5: #fbfbfd;
   --radius: 0.625rem;
-  --sidebar: #181a1f;
-  --sidebar-foreground: #eaeaea;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1c1917;
   --sidebar-primary: #c49a88;
-  --sidebar-primary-foreground: #111215;
-  --sidebar-accent: #22252c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f3f2;
   --sidebar-accent-foreground: #c49a88;
-  --sidebar-border: rgba(234, 234, 234, 0.06);
+  --sidebar-border: rgba(28, 25, 23, 0.06);
   --sidebar-ring: #c49a88;
 }
 

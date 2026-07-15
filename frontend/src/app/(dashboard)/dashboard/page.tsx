@@ -34,34 +34,18 @@ function DashboardMetricCard({
   value,
   description,
   icon: Icon,
-  coords,
-  onMouseMove,
   sparklinePath,
 }: {
   title: string;
   value: string | number;
   description: string | React.ReactNode;
   icon?: any;
-  coords: { x: number; y: number };
-  onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   sparklinePath?: string;
 }) {
   return (
     <div
-      onMouseMove={onMouseMove}
-      className="group/metric shadow-sm flex flex-col justify-between p-5 rounded-cards border border-border bg-card transition-all duration-300 relative overflow-hidden hover:border-primary/30 min-h-[120px]"
+      className="group/metric shadow-sm flex flex-col justify-between p-5 rounded-cards border border-border bg-card transition-all duration-300 relative overflow-hidden min-h-[120px]"
     >
-      {/* Interactive hover glow */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover/metric:opacity-100 transition-opacity duration-500 pointer-events-none z-0"
-        style={{
-          background: `radial-gradient(130px circle at ${coords.x}px ${coords.y}px, var(--color-detective-purple, rgba(196,154,136,0.1)), transparent 80%)`,
-        }}
-      />
-      
-      {/* Top highlight bar */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border group-hover/metric:via-primary/20 to-transparent" />
-
       <div className="relative z-10 flex flex-col justify-between h-full w-full">
         <div className="flex items-center justify-between">
           <p className="text-[9px] text-muted-foreground/60 uppercase font-bold tracking-widest">{title}</p>
@@ -183,18 +167,8 @@ export default function DashboardPage() {
         
         {/* Dataset Health Gauge */}
         <div
-          onMouseMove={(e) => handleCardMouseMove("health", e)}
-          className="group/metric shadow-sm p-5 rounded-cards border border-border bg-card transition-all duration-300 relative overflow-hidden hover:border-primary/30 flex flex-col justify-between min-h-[120px]"
+          className="group/metric shadow-sm p-5 rounded-cards border border-border bg-card transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[120px]"
         >
-          <div
-            className="absolute inset-0 opacity-0 group-hover/metric:opacity-100 transition-opacity duration-300 pointer-events-none z-0"
-            style={{
-              background: `radial-gradient(150px circle at ${cardCoords["health"]?.x || 0}px ${cardCoords["health"]?.y || 0}px, var(--color-detective-purple, rgba(196,154,136,0.05)), transparent 80%)`,
-            }}
-          />
-          {/* Top highlight bar */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border group-hover/metric:via-primary/20 to-transparent" />
-
           <div className="relative z-10 flex flex-col justify-between h-full w-full">
             <div className="flex items-center justify-between">
               <p className="text-[9px] text-muted-foreground/60 uppercase font-bold tracking-widest">Average Case Health</p>
@@ -229,8 +203,6 @@ export default function DashboardPage() {
               <span>Rows parsed across all files</span>
             </div>
           }
-          coords={cardCoords["rows"] || { x: 0, y: 0 }}
-          onMouseMove={(e) => handleCardMouseMove("rows", e)}
           sparklinePath="M0 8 Q10 4 20 5 T40 1"
         />
 
@@ -244,8 +216,6 @@ export default function DashboardPage() {
               <span>Columns profiled & mapped</span>
             </div>
           }
-          coords={cardCoords["cols"] || { x: 0, y: 0 }}
-          onMouseMove={(e) => handleCardMouseMove("cols", e)}
           sparklinePath="M0 6 L10 6 L20 4 L30 5 L40 3"
         />
 
@@ -259,8 +229,6 @@ export default function DashboardPage() {
               <span>Evidence datasets archived</span>
             </div>
           }
-          coords={cardCoords["cases"] || { x: 0, y: 0 }}
-          onMouseMove={(e) => handleCardMouseMove("cases", e)}
           sparklinePath="M0 8 L15 8 L15 5 L30 5 L30 2 L40 2"
         />
       </div>
@@ -290,17 +258,8 @@ export default function DashboardPage() {
                 <div
                   key={dataset.id}
                   onClick={() => handleOpenCase(dataset.id, "profile")}
-                  onMouseMove={(e) => handleCardMouseMove(`dataset-${datasetIdx}`, e)}
                   className="p-5 rounded-cards border border-border bg-card hover:bg-background/80 hover:border-border/60 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[190px] group/item cursor-pointer"
                 >
-                  {/* Hover spotlight */}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 pointer-events-none z-0"
-                    style={{
-                      background: `radial-gradient(130px circle at ${cardCoords['dataset-' + datasetIdx]?.x || 0}px ${cardCoords['dataset-' + datasetIdx]?.y || 0}px, var(--color-detective-purple, rgba(196,154,136,0.03)), transparent 80%)`,
-                    }}
-                  />
-
                   <div className="relative z-10 flex items-start gap-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-cards bg-background border border-border text-muted-foreground shrink-0 group-hover/item:border-primary/20 group-hover/item:scale-105 transition-all duration-300">
                       {isExcel || isCSV ? (

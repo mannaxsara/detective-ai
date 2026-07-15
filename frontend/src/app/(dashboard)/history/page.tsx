@@ -104,9 +104,6 @@ export default function HistoryPage() {
                 onClick={() => handleReopenAnalysis(item)}
                 className="group/item flex items-center justify-between p-4.5 rounded-cards border border-border bg-card hover:bg-background/80 hover:border-border/65 transition-all duration-300 cursor-pointer relative overflow-hidden"
               >
-                {/* Spotlight background */}
-                <div className="absolute inset-0 bg-radial-gradient from-foreground/[0.01] to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
                 <div className="relative z-10 flex items-center gap-4 text-left">
                   <div className="flex items-center justify-center w-10 h-10 rounded-cards bg-background border border-border text-muted-foreground group-hover/item:border-primary/20 group-hover/item:scale-105 transition-all duration-300">
                     {isExcel || isCSV ? (
