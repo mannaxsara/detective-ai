@@ -35,7 +35,7 @@ export default function HomePage() {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.16, 1, 0.3, 1] as const,
       },
     },
   };
@@ -53,7 +53,7 @@ export default function HomePage() {
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
         className="border-b border-border bg-card/45 backdrop-blur-md sticky top-0 z-50"
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -118,7 +118,7 @@ export default function HomePage() {
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed"
           >
             Upload CSV, Excel, or Parquet evidence files. Detective AI instantly profiles schemas, detects outliers, runs statistical tests, and forecasts metrics.
-          </p>
+          </motion.p>
 
           {/* CTA Buttons */}
           <motion.div variants={itemVariants} className="pt-4 flex justify-center">
