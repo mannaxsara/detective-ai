@@ -23,6 +23,13 @@ export default function LoginPage() {
   const router = useRouter();
   const loginStore = useAuthStore((state) => state.login);
 
+  useEffect(() => {
+    const token = localStorage.getItem("detective_token");
+    if (token) {
+      router.push("/dashboard");
+    }
+  }, [router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

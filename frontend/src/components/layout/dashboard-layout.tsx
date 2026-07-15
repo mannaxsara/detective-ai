@@ -14,17 +14,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { isAuthenticated, initialize } = useAuthStore();
 
+  const [loading, setLoading] = React.useState(true);
+
   useEffect(() => {
     initialize();
-  }, [initialize]);
-
-  // Protect router client-side
-  useEffect(() => {
     const token = localStorage.getItem("detective_token");
-    if (!token) {
+    if (!token || !isAuthenticated) {
       router.push("/login");
+    } else {
+      setLoading(false);
     }
-  }, [isAuthenticated, router]);
+  }, [initialize, isAuthenticated, router]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black text-zinc-400 font-mono text-[12px]">
+        Checking credentials...
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-screen h-screen overflow-hidden bg-black text-zinc-50 font-sans">
