@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = 524_288_000  # 500 MB
 
     # ── CORS ──────────────────────────────────────────────────────────────
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "https://projectdetective.vercel.app"]
 
 
 settings = Settings()

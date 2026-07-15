@@ -27,9 +27,12 @@ if isinstance(origins, str):
     try:
         origins = json.loads(origins)
     except Exception:
-        origins = [origins]
-elif not origins:
-    origins = ["http://localhost:3000"]
+        if "," in origins:
+            origins = [o.strip() for o in origins.split(",")]
+        else:
+            origins = [origins]
+if not origins:
+    origins = ["http://localhost:3000", "https://projectdetective.vercel.app"]
 
 app.add_middleware(
     CORSMiddleware,
