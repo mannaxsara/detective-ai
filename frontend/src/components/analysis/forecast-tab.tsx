@@ -22,6 +22,9 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
   const upper = forecast.upper_bound || [];
 
   const option = {
+    legend: {
+      show: false,
+    },
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "line" },

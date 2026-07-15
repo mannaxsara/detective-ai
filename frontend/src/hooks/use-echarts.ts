@@ -28,6 +28,7 @@ export function useECharts(options: echarts.EChartsOption, theme: string = 'dark
         fontFamily: 'Inter, system-ui, sans-serif',
       },
       legend: {
+        show: false,
         textStyle: {
           color: '#A1A1AA',
         },

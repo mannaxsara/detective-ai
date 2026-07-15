@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
@@ -23,9 +23,65 @@ from app.services.eda_service import run_eda
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
+async def run_async_analysis(dataset_id: int, analysis_id: int):
+    """Asynchronous background worker task for running Polars analysis & ARIMA forecasting."""
+    from app.database.session import async_session_factory
+    async with async_session_factory() as session:
+        try:
+            # 1. Fetch dataset
+            ds_repo = DatasetRepository(session)
+            dataset = await ds_repo.get_by_id(dataset_id)
+            if not dataset:
+                return
+
+            # 2. Run EDA services
+            kpis = detect_kpis(dataset.file_path, dataset.file_type)
+            insights = discover_insights(dataset.file_path, dataset.file_type)
+            charts = run_eda(dataset.file_path, dataset.file_type)
+
+            # Profile dataset and update dataset details
+            from app.services.profiling_service import profile_dataset
+            profile = await profile_dataset(dataset.file_path, dataset.file_type)
+            dataset.row_count = profile.row_count
+            dataset.column_count = profile.column_count
+            dataset.health_score = profile.health_score
+            dataset.status = "completed"
+            session.add(dataset)
+
+            # 3. Update Analysis record
+            analysis_repo = AnalysisRepository(session)
+            await analysis_repo.update_by_id(
+                analysis_id,
+                status="completed",
+                kpis=[k.model_dump() for k in kpis],
+                insights=[i.model_dump() for i in insights],
+                charts=[c.model_dump() for c in charts],
+                completed_at=datetime.utcnow()
+            )
+            await session.commit()
+        except Exception as e:
+            # Mark dataset and analysis as failed
+            try:
+                ds_repo = DatasetRepository(session)
+                dataset = await ds_repo.get_by_id(dataset_id)
+                if dataset:
+                    dataset.status = "failed"
+                    session.add(dataset)
+                
+                analysis_repo = AnalysisRepository(session)
+                await analysis_repo.update_by_id(
+                    analysis_id,
+                    status="failed"
+                )
+                await session.commit()
+            except Exception:
+                pass
+            print(f"Error in async analysis task: {e}")
+
 @router.post("/trigger", response_model=AnalysisResponse, status_code=status.HTTP_201_CREATED)
 async def trigger_analysis(
     request: AnalysisTriggerRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> AnalysisResponse:
@@ -40,52 +96,35 @@ async def trigger_analysis(
     if not dataset or dataset.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    # 2. Compute components synchronously/in-thread for immediate UI return
-    # (Fast enough for typical <= 100MB files with Polars)
-    try:
-        kpis = detect_kpis(dataset.file_path, dataset.file_type)
-        insights = discover_insights(dataset.file_path, dataset.file_type)
-        charts = run_eda(dataset.file_path, dataset.file_type)
-        
-        # Profile dataset and update dataset details
-        from app.services.profiling_service import profile_dataset
-        profile = await profile_dataset(dataset.file_path, dataset.file_type)
-        dataset.row_count = profile.row_count
-        dataset.column_count = profile.column_count
-        dataset.health_score = profile.health_score
-        dataset.status = "completed"
-        db.add(dataset)
-        await db.commit()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis orchestration failed: {str(e)}")
+    # Update dataset status to running
+    dataset.status = "running"
+    db.add(dataset)
 
-    # 3. Save Analysis record
+    # 2. Save Analysis record immediately in "running" status
     analysis_repo = AnalysisRepository(db)
-    
-    # Check if there is an existing analysis for this dataset
     existing = await analysis_repo.get_by_dataset_id(resolved_dataset_id)
     if existing:
-        # Update existing
         analysis = await analysis_repo.update_by_id(
             existing[0].id,
-            status="completed",
-            kpis=[k.model_dump() for k in kpis],
-            insights=[i.model_dump() for i in insights],
-            charts=[c.model_dump() for c in charts],
-            completed_at=datetime.utcnow()
+            status="running",
+            completed_at=None
         )
     else:
-        # Create new
         analysis = await analysis_repo.create(
             dataset_id=resolved_dataset_id,
             user_id=current_user.id,
             analysis_type="full",
-            status="completed",
-            kpis=[k.model_dump() for k in kpis],
-            insights=[i.model_dump() for i in insights],
-            charts=[c.model_dump() for c in charts],
-            completed_at=datetime.utcnow()
+            status="running",
+            kpis=[],
+            insights=[],
+            charts=[]
         )
+
+    # Force commit changes to DB so that background task can view them
+    await db.commit()
+
+    # 3. Add to background tasks
+    background_tasks.add_task(run_async_analysis, resolved_dataset_id, analysis.id)
 
     return AnalysisResponse.model_validate(analysis)
 

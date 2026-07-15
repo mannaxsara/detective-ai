@@ -73,11 +73,16 @@ export default function AnalysisDetailPage() {
   const { data: dataset, isLoading: datasetLoading, error: datasetError } = useQuery({
     queryKey: ["dataset", datasetId],
     queryFn: () => datasetsAPI.getById(datasetId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "running" || status === "pending" || status === "uploaded" ? 3000 : false;
+    }
   });
 
   const { data: analysis, isLoading: analysisLoading } = useQuery({
     queryKey: ["analysis", datasetId],
     queryFn: () => analysisAPI.getAnalysis(datasetId),
+    enabled: dataset?.status === "completed"
   });
 
   useEffect(() => {
@@ -97,7 +102,7 @@ export default function AnalysisDetailPage() {
     setActiveTab(defaultTabs[index]);
   };
 
-  if (datasetLoading || analysisLoading) {
+  if (datasetLoading || (analysisLoading && dataset?.status === "completed")) {
     return (
       <div className="flex flex-col gap-6 py-6 animate-pulse max-w-7xl mx-auto">
         <div className="h-16 rounded-xl bg-white/[0.01] border border-zinc-900" />
@@ -113,6 +118,33 @@ export default function AnalysisDetailPage() {
         <AlertTriangle className="w-12 h-12 text-[#ea580c] mx-auto" />
         <h2 className="text-xl font-bold text-zinc-100">Dataset not found</h2>
         <p className="text-zinc-550 text-sm">We couldn't retrieve the requested case analysis. Please check cases archive or upload again.</p>
+      </div>
+    );
+  }
+
+  if (dataset.status === "running" || dataset.status === "pending" || dataset.status === "uploaded") {
+    return (
+      <div className="max-w-md mx-auto py-24 text-center space-y-6">
+        <div className="relative w-16 h-16 mx-auto">
+          <div className="absolute inset-0 rounded-full border-2 border-[#ea580c]/20 animate-ping" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-[#ea580c] animate-spin" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Investigating Evidence Case...</h3>
+          <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+            Detective AI is profiling schema, scanning correlations, detecting anomalies, and running ARIMA forecasting in the background.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (dataset.status === "failed") {
+    return (
+      <div className="py-12 text-center max-w-md mx-auto space-y-4">
+        <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
+        <h2 className="text-xl font-bold text-zinc-100">Investigation Failed</h2>
+        <p className="text-zinc-550 text-sm">An error occurred during dataset profiling. Please check that your file is formatted correctly or try uploading another case file.</p>
       </div>
     );
   }

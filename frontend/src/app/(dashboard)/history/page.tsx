@@ -128,6 +128,18 @@ export default function HistoryPage() {
                     {item.analysis_type} Case
                   </span>
                   
+                  {item.status && (
+                    <span className={`text-[8px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      item.status === "completed"
+                        ? "border-emerald-900/30 text-emerald-400 bg-emerald-950/20"
+                        : item.status === "running"
+                        ? "border-amber-900/30 text-amber-400 bg-amber-950/20 animate-pulse"
+                        : "border-rose-900/30 text-rose-400 bg-rose-950/20"
+                    }`}>
+                      {item.status}
+                    </span>
+                  )}
+                  
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={(e) => handleDelete(e, item.dataset_id)}
