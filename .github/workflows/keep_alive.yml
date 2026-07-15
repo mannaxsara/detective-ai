@@ -1,0 +1,14 @@
+name: Keep Render API Awake
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # runs every 10 minutes to prevent Render free-tier spin down
+  workflow_dispatch:      # allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API Health Route
+        run: |
+          curl -f -s https://detective-ai-guio.onrender.com/api/health || echo "Ping failed"
