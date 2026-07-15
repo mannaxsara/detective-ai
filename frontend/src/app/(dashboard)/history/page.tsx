@@ -78,7 +78,7 @@ export default function HistoryPage() {
           placeholder="Search cases by name... (Press '/' to focus)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-10 w-full rounded-full border border-border bg-card pl-10 pr-12 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+          className="h-10 w-full rounded-cards border border-border bg-card pl-10 pr-12 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
         />
         <div className="absolute right-3.5 top-2.5 px-2 py-0.5 rounded border border-border bg-background font-mono text-[9px] text-muted-foreground/45 font-bold select-none">
           /
