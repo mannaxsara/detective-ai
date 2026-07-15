@@ -83,9 +83,9 @@ async def on_startup() -> None:
             print(f"Error seeding demo user: {e}")
 
 @app.get("/api/health")
-async def health_check() -> dict[str, str]:
+async def health_check():
     """Simple API health endpoint."""
-    return {"status": "ok", "app": "DetectiveAI Backend"}
+    return {"status": "ok", "app": "DetectiveAI Backend", "cors_origins": origins}
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
