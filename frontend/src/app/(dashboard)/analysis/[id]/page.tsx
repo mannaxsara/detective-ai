@@ -3,7 +3,8 @@
 import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Database, AlertTriangle } from "lucide-react";
+import { Database, AlertTriangle, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,10 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { datasetsAPI, analysisAPI } from "@/lib/api";
 import { useAnalysisStore } from "@/store/analysis-store";
 
-// Import GooeyNav
-import GooeyNav from "@/components/ui/GooeyNav";
-
-// Import tabs
+// Import tab views
 import ProfileTab from "@/components/analysis/profile-tab";
 import CleaningTab from "@/components/analysis/cleaning-tab";
 import ChartsTab from "@/components/analysis/charts-tab";
@@ -29,40 +27,20 @@ import RootCauseTab from "@/components/analysis/root-cause-tab";
 import RecommendationsTab from "@/components/analysis/recommendations-tab";
 import ReportGenerator from "@/components/reports/report-generator";
 
-const TAB_GROUPS = [
-  {
-    title: "Data Foundation",
-    tabs: [
-      { value: "profile", label: "Profile & Health" },
-      { value: "cleaning", label: "Automatic Cleaning" },
-      { value: "kpis", label: "KPI Summary" },
-    ]
-  },
-  {
-    title: "AI Analysis & Chat",
-    tabs: [
-      { value: "chat", label: "Q&A Chat Assistant" },
-      { value: "insights", label: "Key Insights" },
-      { value: "recommendations", label: "Recommendations" },
-    ]
-  },
-  {
-    title: "Advanced Analytics",
-    tabs: [
-      { value: "charts", label: "Charts & EDA" },
-      { value: "forecast", label: "Time-Series Forecast" },
-      { value: "anomalies", label: "Anomalies Detection" },
-      { value: "statistics", label: "Statistical Summary" },
-      { value: "hypothesis", label: "Hypothesis Tester" },
-      { value: "rootcause", label: "Root Cause (5 Whys)" },
-    ]
-  },
-  {
-    title: "Outputs",
-    tabs: [
-      { value: "report", label: "Executive Report" },
-    ]
-  }
+const TABS_CONFIG = [
+  { value: "profile", label: "Evidence" },
+  { value: "cleaning", label: "Cleaning" },
+  { value: "kpis", label: "KPIs" },
+  { value: "insights", label: "Insights" },
+  { value: "chat", label: "Chat" },
+  { value: "charts", label: "Charts" },
+  { value: "forecast", label: "Forecast" },
+  { value: "anomalies", label: "Anomalies" },
+  { value: "statistics", label: "Statistics" },
+  { value: "hypothesis", label: "Hypothesis" },
+  { value: "rootcause", label: "Root Cause" },
+  { value: "recommendations", label: "Recommendations" },
+  { value: "report", label: "Report" },
 ];
 
 export default function AnalysisDetailPage() {
@@ -90,49 +68,40 @@ export default function AnalysisDetailPage() {
     if (analysis) setAnalysis(analysis);
   }, [dataset, analysis, setDataset, setAnalysis]);
 
-  const getGroupIndex = (tab: string): number => {
-    if (["profile", "cleaning", "kpis"].includes(tab)) return 0;
-    if (["chat", "insights", "recommendations"].includes(tab)) return 1;
-    if (["charts", "forecast", "anomalies", "statistics", "hypothesis", "rootcause"].includes(tab)) return 2;
-    return 3;
-  };
-
-  const handleGooeyChange = (index: number) => {
-    const defaultTabs = ["profile", "chat", "charts", "report"];
-    setActiveTab(defaultTabs[index]);
-  };
-
   if (datasetLoading || (analysisLoading && dataset?.status === "completed")) {
     return (
       <div className="flex flex-col gap-6 py-6 animate-pulse max-w-7xl mx-auto">
-        <div className="h-16 rounded-xl bg-white/[0.01] border border-zinc-900" />
-        <div className="h-12 rounded-xl bg-white/[0.01] border border-zinc-900" />
-        <div className="h-[400px] rounded-xl bg-white/[0.01] border border-zinc-900" />
+        <div className="h-20 rounded-cards bg-card/45 border border-border" />
+        <div className="h-10 rounded-cards bg-card/45 border border-border" />
+        <div className="h-[400px] rounded-cards bg-card/45 border border-border" />
       </div>
     );
   }
 
   if (datasetError || !dataset) {
     return (
-      <div className="py-12 text-center max-w-md mx-auto space-y-4">
-        <AlertTriangle className="w-12 h-12 text-[#ea580c] mx-auto" />
-        <h2 className="text-xl font-bold text-zinc-100">Dataset not found</h2>
-        <p className="text-zinc-550 text-sm">We couldn't retrieve the requested case analysis. Please check cases archive or upload again.</p>
+      <div className="py-16 text-center max-w-md mx-auto space-y-4">
+        <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
+        <h2 className="text-lg font-bold text-foreground">Dataset case file not found</h2>
+        <p className="text-muted-foreground text-xs font-medium leading-relaxed">
+          We couldn't retrieve the requested case analysis. Please check cases archive or upload again.
+        </p>
       </div>
     );
   }
 
   if (dataset.status === "running" || dataset.status === "pending" || dataset.status === "uploaded") {
     return (
-      <div className="max-w-md mx-auto py-24 text-center space-y-6">
-        <div className="relative w-16 h-16 mx-auto">
-          <div className="absolute inset-0 rounded-full border-2 border-[#ea580c]/20 animate-ping" />
-          <div className="absolute inset-0 rounded-full border-2 border-t-[#ea580c] animate-spin" />
+      <div className="max-w-md mx-auto py-32 text-center space-y-6 flex flex-col items-center">
+        <div className="relative w-12 h-12 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Investigating Evidence Case...</h3>
-          <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-            Detective AI is profiling schema, scanning correlations, detecting anomalies, and running ARIMA forecasting in the background.
+          <h3 className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">
+            Investigating Evidence Case...
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
+            Detective AI is profiling schema, scanning correlations, detecting anomalies, and running time-series forecasts in the background.
           </p>
         </div>
       </div>
@@ -141,57 +110,51 @@ export default function AnalysisDetailPage() {
 
   if (dataset.status === "failed") {
     return (
-      <div className="py-12 text-center max-w-md mx-auto space-y-4">
-        <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-zinc-100">Investigation Failed</h2>
-        <p className="text-zinc-550 text-sm">An error occurred during dataset profiling. Please check that your file is formatted correctly or try uploading another case file.</p>
+      <div className="py-16 text-center max-w-md mx-auto space-y-4">
+        <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
+        <h2 className="text-lg font-bold text-foreground">Investigation Failed</h2>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          An error occurred during dataset profiling. Please check that your file is formatted correctly or try uploading another case file.
+        </p>
       </div>
     );
   }
 
-  const currentGroupIndex = getGroupIndex(activeTab);
-  const activeGroup = TAB_GROUPS[currentGroupIndex];
-
-  const gooeyItems = TAB_GROUPS.map((g) => ({
-    label: g.title,
-    href: "#"
-  }));
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans text-zinc-300">
+    <div className="max-w-7xl mx-auto space-y-6 font-sans text-foreground">
       
       {/* Dataset Header Card */}
-      <Card className="border-zinc-900 bg-[#09090B] shadow-none">
+      <Card className="border-border bg-card shadow-sm rounded-cards">
         <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-black border border-zinc-900 text-[#ea580c]">
+            <div className="flex items-center justify-center w-12 h-12 rounded-cards bg-background border border-border text-primary">
               <Database className="w-5.5 h-5.5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-sm font-black text-white tracking-tight">{dataset.name}</h1>
-                <Badge className="bg-black border border-zinc-900 text-zinc-400 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+            <div className="text-left">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-base font-bold text-foreground tracking-tight">{dataset.name}</h1>
+                <Badge className="bg-background border border-border text-muted-foreground text-[9px] px-2.5 py-0.5 rounded font-mono uppercase font-bold">
                   {dataset.file_type}
                 </Badge>
               </div>
-              <p className="text-[10px] text-zinc-500 font-semibold uppercase mt-1 tracking-wider">
-                Size: <span className="font-mono text-zinc-300">{(dataset.file_size / (1024 * 1024)).toFixed(2)} MB</span> | 
-                Rows: <span className="font-mono text-zinc-300">{dataset.row_count?.toLocaleString()}</span> | 
-                Cols: <span className="font-mono text-zinc-300">{dataset.column_count}</span>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1.5 tracking-wider">
+                Size: <span className="font-mono text-foreground">{(dataset.file_size / (1024 * 1024)).toFixed(2)} MB</span> | 
+                Rows: <span className="font-mono text-foreground">{dataset.row_count?.toLocaleString()}</span> | 
+                Cols: <span className="font-mono text-foreground">{dataset.column_count}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Dataset Health</p>
-              <p className="text-xs font-mono font-black text-zinc-300 mt-0.5">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "N/A"}</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Dataset Health</p>
+              <p className="text-xs font-mono font-black text-foreground mt-0.5">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "N/A"}</p>
             </div>
-            <div className="w-1.5 h-10 rounded-full bg-zinc-900 relative">
+            <div className="w-1.5 h-10 rounded-full bg-background border border-border relative overflow-hidden">
               {dataset.health_score && (
                 <div
-                  className="absolute left-[-2px] w-2.5 h-2.5 rounded-full bg-[#ea580c] border border-zinc-950 shadow-md"
-                  style={{ bottom: `${dataset.health_score}%` }}
+                  className="absolute bottom-0 inset-x-0 bg-primary"
+                  style={{ height: `${dataset.health_score}%` }}
                 />
               )}
             </div>
@@ -199,41 +162,28 @@ export default function AnalysisDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Gooey Stage Navigation Tab Bar */}
-      <div className="border border-zinc-900 bg-[#09090B] p-2 rounded-xl flex items-center justify-between shadow-none overflow-x-auto scrollbar-none">
-        <GooeyNav
-          items={gooeyItems}
-          initialActiveIndex={currentGroupIndex}
-          onChange={handleGooeyChange}
-          particleCount={12}
-          particleDistances={[60, 5]}
-          particleR={80}
-        />
+      {/* Flat Horizontal Tab Navigation Bar */}
+      <div className="border-b border-border flex gap-6 overflow-x-auto scrollbar-none">
+        {TABS_CONFIG.map((tab) => {
+          const isActive = activeTab === tab.value;
+          return (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`pb-3 text-xs font-bold transition-all duration-150 border-b-2 cursor-pointer relative shrink-0 ${
+                isActive
+                  ? "text-foreground border-primary"
+                  : "text-muted-foreground hover:text-foreground border-transparent"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Sub-tabs Panel + Child Views */}
-      <div className="space-y-4">
-        {/* Flat Horizontal Sub-nav list */}
-        <div className="flex gap-2 border-b border-zinc-900/60 pb-2.5 overflow-x-auto scrollbar-none">
-          {activeGroup.tabs.map((tab) => {
-            const isActive = activeTab === tab.value;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`px-4 py-1.5 text-[11px] font-bold rounded-full border transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? "bg-[#ea580c]/5 text-white border-[#ea580c]/35 shadow-[0_0_10px_rgba(234,88,12,0.03)]"
-                    : "text-zinc-500 hover:text-zinc-300 border-transparent hover:bg-zinc-900/30"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content Renderers */}
+      <div className="pt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="w-full min-w-0">
             <TabsContent value="profile" className="mt-0 outline-none">
