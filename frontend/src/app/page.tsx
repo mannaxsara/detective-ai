@@ -3,35 +3,48 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, Sparkles, ShieldAlert, LineChart, MessageSquare,
-  FileText, ChevronRight, Terminal, ShieldCheck, Database, Code,
-  Cpu, Upload, ArrowUpRight, Play, CheckCircle2, RefreshCw, BarChart3,
-  Layers, HardDrive, Settings
+  ArrowRight, ShieldAlert, LineChart, MessageSquare,
+  FileText, Terminal, ShieldCheck, Database,
+  Cpu, Upload, ArrowUpRight, RefreshCw,
+  ExternalLink, BarChart3, Layers, HardDrive, Settings,
+  CheckCircle2
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 
-// Abstract "D" + magnifying glass logo
-function LogoIcon({ className = "w-6 h-6" }: { className?: string }) {
+/* ─────────────────────────────────────────────────────────────
+   LOGO — geometric magnifying lens + neural data nodes
+───────────────────────────────────────────────────────────── */
+function LogoMark({ size = 28 }: { size?: number }) {
   return (
-    <svg className={`${className} text-primary shrink-0`} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="15" y="15" width="70" height="70" rx="16" stroke="currentColor" strokeWidth="5" className="opacity-20" />
-      <path d="M35 30 H55 C66 30 73 37 73 50 C73 63 66 70 55 70 H35 V30 Z" stroke="currentColor" strokeWidth="6" strokeLinejoin="round" />
-      <circle cx="45" cy="50" r="10" stroke="currentColor" strokeWidth="5" />
-      <path d="M52 57 L68 73" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Outer lens ring */}
+      <circle cx="13" cy="13" r="9.5" stroke="currentColor" strokeWidth="2" />
+      {/* Inner data-node cluster */}
+      <circle cx="11" cy="12" r="1.2" fill="currentColor" />
+      <circle cx="15" cy="10" r="1.2" fill="currentColor" />
+      <circle cx="15" cy="15" r="1.2" fill="currentColor" />
+      {/* Node connector lines */}
+      <line x1="11" y1="12" x2="15" y2="10" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
+      <line x1="15" y1="10" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
+      <line x1="11" y1="12" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Handle */}
+      <line x1="20" y1="20" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-// Reusable scroll-triggered section wrapper
-function RevealSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+/* ─────────────────────────────────────────────────────────────
+   SCROLL REVEAL WRAPPER
+───────────────────────────────────────────────────────────── */
+function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-60px" });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay }}
       className={className}
     >
       {children}
@@ -39,735 +52,663 @@ function RevealSection({ children, className = "" }: { children: React.ReactNode
   );
 }
 
+/* ─────────────────────────────────────────────────────────────
+   INLINE MINI ARIMA CHART
+───────────────────────────────────────────────────────────── */
+function ArimaChart() {
+  return (
+    <svg className="w-full h-full" viewBox="0 0 200 64" preserveAspectRatio="none">
+      {/* Grid lines */}
+      {[16, 32, 48].map(y => (
+        <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="currentColor" strokeWidth="0.4" className="text-primary/10" />
+      ))}
+      {/* 95% CI band */}
+      <path d="M0,44 Q50,12 80,36 T150,14 L200,22 L200,44 L150,36 L80,54 Q50,36 0,52 Z" fill="currentColor" className="text-primary/6" />
+      {/* 80% CI band */}
+      <path d="M0,44 Q50,18 80,36 T150,18 L200,26 L200,40 L150,32 L80,48 Q50,28 0,48 Z" fill="currentColor" className="text-primary/10" />
+      {/* Historical line — solid */}
+      <polyline points="0,44 25,40 50,28 75,38 80,36" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary/50" />
+      {/* Forecast line — dashed */}
+      <polyline points="80,36 110,20 140,22 170,16 200,18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" className="text-primary" />
+      {/* Inflection dot */}
+      <circle cx="80" cy="36" r="3" fill="currentColor" stroke="#11120d" strokeWidth="1.5" className="text-primary" />
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN PAGE
+───────────────────────────────────────────────────────────── */
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedCodeTab, setSelectedCodeTab] = useState<"python" | "bash">("python");
-  const [selectedPreviewTab, setSelectedPreviewTab] = useState<"telemetry" | "forecasting" | "anomalies">("telemetry");
-  const [activeHowStep, setActiveHowStep] = useState(0);
-
-  // Live Simulation state in the processing core
-  const [simStatus, setSimStatus] = useState<"idle" | "running" | "complete">("idle");
-  const [simProgress, setSimProgress] = useState({ ingest: 100, anomalies: 85, arima: 60 });
-  const [simLogs, setSimLogs] = useState<string[]>([
-    "System ready. Awaiting thread initialization.",
-  ]);
+  const [activeStep, setActiveStep] = useState(0);
+  const [simStatus, setSimStatus] = useState<"idle" | "running" | "done">("idle");
+  const [simP, setSimP] = useState({ a: 100, b: 85, c: 60 });
+  const [simLogs, setSimLogs] = useState(["System ready."]);
 
   useEffect(() => {
-    const token = localStorage.getItem("detective_token");
-    if (token) setIsLoggedIn(true);
+    if (localStorage.getItem("detective_token")) setIsLoggedIn(true);
     setLoading(false);
   }, []);
 
-  // Auto-rotate the "How It Works" carousel
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveHowStep((prev) => (prev + 1) % 4);
-    }, 4500);
-    return () => clearInterval(interval);
+    const t = setInterval(() => setActiveStep(p => (p + 1) % 4), 4500);
+    return () => clearInterval(t);
   }, []);
 
-  const triggerCoreSimulation = () => {
+  const runSim = () => {
     if (simStatus === "running") return;
     setSimStatus("running");
-    setSimProgress({ ingest: 0, anomalies: 0, arima: 0 });
-    setSimLogs(["[1/3] Incepting ingestion pipeline...", "Allocating Polars in-memory table context."]);
-
-    setTimeout(() => {
-      setSimProgress(prev => ({ ...prev, ingest: 100 }));
-      setSimLogs(prev => [...prev, "✓ Ingested case file (10,240 rows parsed in 12ms)", "[2/3] Analyzing outliers..."]);
-    }, 1000);
-
-    setTimeout(() => {
-      setSimProgress(prev => ({ ...prev, anomalies: 85 }));
-      setSimLogs(prev => [...prev, "⚠️ Found 2 anomalies (Z-Score > 3.0 threshold)", "[3/3] Running ARIMA projection models..."]);
-    }, 2200);
-
-    setTimeout(() => {
-      setSimProgress(prev => ({ ...prev, arima: 60 }));
-      setSimLogs(prev => [...prev, "✓ ARIMA models converged successfully", "Diagnostics cycle complete. Report ready."]);
-      setSimStatus("complete");
-    }, 3500);
+    setSimP({ a: 0, b: 0, c: 0 });
+    setSimLogs(["[1/3] Opening ingestion pipeline..."]);
+    setTimeout(() => { setSimP(p => ({ ...p, a: 100 })); setSimLogs(p => [...p, "✓ 10,240 rows loaded (12ms)"]); }, 900);
+    setTimeout(() => { setSimP(p => ({ ...p, b: 85 })); setSimLogs(p => [...p, "⚠ 2 anomalies — Z > 3.0"]); }, 2000);
+    setTimeout(() => { setSimP(p => ({ ...p, c: 60 })); setSimLogs(p => [...p, "✓ ARIMA converged. Report ready."]); setSimStatus("done"); }, 3200);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-  };
+  const steps = [
+    { icon: Upload, title: "Upload Evidence", detail: "Drag any CSV, Excel, or Parquet file into the secure sandbox. Polars profiles every column and returns a schema health index in milliseconds.", tag: "12ms ingest" },
+    { icon: ShieldAlert, title: "Scan Anomalies", detail: "IQR and Z-score sweeps across every numeric axis. Flags outlier clusters, missing-value blocks, and duplicate records automatically.", tag: "IQR + Z-Score" },
+    { icon: LineChart, title: "Forecast & Test", detail: "ARIMA(1,1,1) projects 90 periods forward with 80/95% confidence bands. Run t-tests, ANOVA, and chi-square significance checks.", tag: "90-period ARIMA" },
+    { icon: FileText, title: "Export Briefing", detail: "All findings — anomaly records, forecast charts, chat logs — compiled into a PDF or Word executive report in one click.", tag: "PDF + DOCX" },
+  ];
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 12 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
-  };
-
-  const howItWorksSteps = [
-    {
-      title: "1. Upload Evidence",
-      desc: "Drag any CSV, Excel, or Parquet spreadsheet into the secure sandbox. The Polars engine profiles every column, identifies mapping schemas, and rates data integrity values in milliseconds.",
-      icon: Upload,
-      stat: "12ms Polars ingest",
-    },
-    {
-      title: "2. Scan & Diagnose",
-      desc: "The scanner applies standard IQR and Z-score distributions across all dimensions. It isolates outlier coordinates, missing cell blocks, and duplicate items automatically.",
-      icon: ShieldAlert,
-      stat: "IQR / Z-Score indices",
-    },
-    {
-      title: "3. Forecast & Test",
-      desc: "ARIMA auto-regressive models project 90 periods forward with multi-layered confidence bounds. Instantly run t-tests, ANOVA, and significance checks on any dataset target.",
-      icon: LineChart,
-      stat: "Confidence waves",
-    },
-    {
-      title: "4. Compile Briefings",
-      desc: "Generate comprehensive reports instantly. Save executive briefings complete with anomaly charts, projection trends, and chat history as download-ready PDF or Word files.",
-      icon: FileText,
-      stat: "PDF + DOCX builders",
-    },
+  const capabilities = [
+    "Polars Engine", "ARIMA Forecasting", "Z-Score Anomaly", "IQR Threshold",
+    "Schema Profiler", "T-Test Significance", "ANOVA Lab", "PDF Exporter",
+    "AI Copilot", "Parquet Support", "Data Cleaning", "Correlation Matrix",
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative overflow-hidden pt-24 pb-8">
-      
-      {/* Background grid */}
-      <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(212,110,85,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(212,110,85,0.012)_1px,transparent_1px)] bg-[size:40px_40px] opacity-65 pointer-events-none" aria-hidden="true" />
+    <div className="min-h-screen bg-background text-foreground font-sans overflow-x-hidden">
 
-      {/* Subtle radial glow for background depth */}
-      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/5 rounded-full blur-3xl pointer-events-none select-none z-0" />
-
-      {/* ═══════════════════ NAVBAR ═══════════════════ */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-full border border-border/80 bg-card/60 backdrop-blur-md px-6 h-12 flex items-center justify-between shadow-md">
-        <Link href="/" className="flex items-center gap-2 select-none group">
-          <LogoIcon className="w-5 h-5 group-hover:scale-105 transition-transform" />
-          <span className="font-bold text-[10px] uppercase tracking-widest text-foreground font-mono">DetectiveAI</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Features</a>
-          <a href="#how-it-works" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Process</a>
-          <a href="#architecture" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Core</a>
-          <a href="#developer" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">API</a>
-        </nav>
-
-        <div className="flex items-center gap-4">
-          {loading ? null : isLoggedIn ? (
-            <Link href="/dashboard">
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="h-7 rounded-full bg-primary hover:opacity-95 text-primary-foreground font-bold text-[9px] uppercase tracking-wider px-3.5 cursor-pointer flex items-center gap-1">
-                Workspace <ArrowUpRight className="w-3 h-3" />
-              </motion.button>
-            </Link>
-          ) : (
-            <>
-              <Link href="/login" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors hidden sm:block">Sign in</Link>
-              <Link href="/register">
-                <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="h-7 rounded-full bg-primary hover:opacity-95 text-primary-foreground font-bold text-[9px] uppercase tracking-wider px-3.5 cursor-pointer">
-                  Get Started
-                </motion.button>
-              </Link>
-            </>
-          )}
-        </div>
+      {/* ── SUBTLE BACKGROUND TEXTURE ── */}
+      <div className="fixed inset-0 z-0 pointer-events-none select-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(216,207,188,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(216,207,188,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
       </div>
 
-      {/* ═══════════════════ SPACIOUS HERO SECTION ═══════════════════ */}
-      <section className="pt-8 pb-12 max-w-4xl mx-auto px-6 text-center relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
-          {/* Active status indicator */}
-          <motion.div variants={itemVariants} className="inline-flex justify-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/40 bg-card text-[9px] font-mono font-bold uppercase text-primary tracking-wider select-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              FORENSIC LAB READY
-            </span>
-          </motion.div>
+      {/* ══════════════════════════════════════════════════════
+          NAVBAR — floating pill
+      ══════════════════════════════════════════════════════ */}
+      <motion.div
+        initial={{ y: -16, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[1040px]"
+      >
+        <div className="rounded-full border border-border bg-card/70 backdrop-blur-xl px-5 h-[46px] flex items-center justify-between shadow-lg shadow-black/10">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity select-none group">
+            <LogoMark size={20} />
+            <span className="font-mono font-bold text-[10px] uppercase tracking-[0.18em] text-foreground">DetectiveAI</span>
+          </Link>
 
-          {/* Heading */}
-          <motion.h1
-            variants={itemVariants}
-            className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tight leading-[1.05] uppercase max-w-3xl mx-auto"
-          >
-            Turn raw datasets <br />into <span className="text-primary font-bold">clean briefings.</span>
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            variants={itemVariants}
-            className="text-xs md:text-sm text-muted-foreground leading-relaxed font-semibold max-w-xl mx-auto"
-          >
-            DetectiveAI is an autonomous data diagnostics engine. Upload any CSV, Excel, or Parquet spreadsheet to automatically scan anomalies, project ARIMA models, test hypotheses, and export professional PDF/Word briefs.
-          </motion.p>
+          {/* Nav links */}
+          <nav className="hidden md:flex items-center gap-0">
+            {["#features", "#process", "#core", "#api"].map((href, i) => {
+              const labels = ["Features", "Process", "Core", "API"];
+              return (
+                <a key={href} href={href} className="px-3.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted/50">
+                  {labels[i]}
+                </a>
+              );
+            })}
+          </nav>
 
           {/* CTAs */}
-          <motion.div variants={itemVariants} className="pt-4 flex justify-center gap-3">
-            <Link href={isLoggedIn ? "/dashboard" : "/login"}>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="h-10 rounded-small bg-primary hover:opacity-95 text-primary-foreground font-bold text-xs uppercase tracking-wider px-6 flex items-center gap-2 cursor-pointer shadow-md"
+          <div className="flex items-center gap-2">
+            <a href="https://github.com/mannaxsara/detective-ai" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors px-2">
+              <ExternalLink className="w-3 h-3" /> GitHub
+            </a>
+            {!loading && (
+              isLoggedIn ? (
+                <Link href="/dashboard">
+                  <span className="inline-flex items-center gap-1 h-7 rounded-full bg-primary text-primary-foreground font-bold text-[9px] uppercase tracking-wider px-3.5 cursor-pointer hover:opacity-90 transition-opacity">
+                    Workspace <ArrowUpRight className="w-2.5 h-2.5" />
+                  </span>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="hidden sm:block text-[10px] font-mono font-bold text-muted-foreground hover:text-foreground transition-colors px-2">Sign in</Link>
+                  <Link href="/register">
+                    <span className="inline-flex h-7 rounded-full bg-primary text-primary-foreground font-bold text-[9px] uppercase tracking-wider px-3.5 cursor-pointer hover:opacity-90 transition-opacity items-center">
+                      Get Started
+                    </span>
+                  </Link>
+                </>
+              )
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ══════════════════════════════════════════════════════
+          HERO — split layout, left text / right product
+      ══════════════════════════════════════════════════════ */}
+      <section className="relative z-10 min-h-[100svh] flex items-center">
+        <div className="w-full max-w-[1180px] mx-auto px-6 pt-28 pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-8 items-center">
+
+            {/* ── LEFT: Headline block ── */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.07 } } }}
+              className="space-y-7"
+            >
+              {/* Badge */}
+              <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}>
+                <span className="inline-flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-primary/80 border border-primary/20 rounded-full px-3 py-1 bg-primary/5 select-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  Autonomous Forensics Engine
+                </span>
+              </motion.div>
+
+              {/* Headline */}
+              <motion.h1
+                variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
+                className="text-[2.8rem] sm:text-[3.4rem] md:text-[3.8rem] font-black leading-[1.02] tracking-[-0.02em] uppercase"
               >
-                {isLoggedIn ? "Open Workspace" : "Ingest Case File"}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </motion.button>
-            </Link>
-            
-            <Link href="/history">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="h-10 rounded-small border border-border bg-card hover:bg-background text-foreground font-bold text-xs uppercase tracking-wider px-6 cursor-pointer"
+                Raw data.
+                <br />
+                <span className="text-primary">Clean</span> briefings.
+              </motion.h1>
+
+              {/* Sub */}
+              <motion.p
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55 } } }}
+                className="text-[13px] text-muted-foreground leading-relaxed max-w-[420px]"
               >
-                View Case Archives
-              </motion.button>
-            </Link>
-          </motion.div>
+                Upload any CSV, Excel, or Parquet spreadsheet. DetectiveAI automatically scans anomalies, projects ARIMA forecasts, and exports professional PDF/Word briefings — no code required.
+              </motion.p>
+
+              {/* Stats row */}
+              <motion.div
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                className="flex flex-wrap gap-4"
+              >
+                {[
+                  { v: "<10s", l: "per diagnosis" },
+                  { v: "13", l: "analysis modules" },
+                  { v: "500MB", l: "max file size" },
+                ].map((s, i) => (
+                  <div key={i} className="flex items-baseline gap-1.5">
+                    <span className="text-[22px] font-black text-foreground font-mono tracking-tight leading-none">{s.v}</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{s.l}</span>
+                  </div>
+                ))}
+              </motion.div>
+
+              {/* CTAs */}
+              <motion.div
+                variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                className="flex flex-wrap gap-3 pt-1"
+              >
+                <Link href={isLoggedIn ? "/dashboard" : "/login"}>
+                  <motion.span
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 h-10 rounded-lg bg-primary text-primary-foreground font-bold text-[11px] uppercase tracking-wider px-5 cursor-pointer hover:opacity-90 transition-opacity shadow-md"
+                  >
+                    {isLoggedIn ? "Open Workspace" : "Start Investigation"}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </motion.span>
+                </Link>
+                <Link href="/history">
+                  <motion.span
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center h-10 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground font-bold text-[11px] uppercase tracking-wider px-5 cursor-pointer transition-colors"
+                  >
+                    Case Archives
+                  </motion.span>
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            {/* ── RIGHT: Product Preview Window ── */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative"
+            >
+              {/* Glow behind window */}
+              <div className="absolute -inset-6 bg-primary/8 rounded-3xl blur-2xl" />
+
+              {/* Browser window */}
+              <div className="relative border border-border rounded-2xl overflow-hidden shadow-2xl bg-card">
+                {/* Chrome bar */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-background/40">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+                  </div>
+                  <div className="flex-1 h-5 rounded bg-muted/60 flex items-center px-3">
+                    <span className="text-[9px] font-mono text-muted-foreground/50 truncate">detective.ai/analysis/case-428</span>
+                  </div>
+                  <div className="w-6 h-3 rounded bg-muted/40" />
+                </div>
+
+                {/* App layout */}
+                <div className="grid grid-cols-[80px_1fr] min-h-[340px]">
+                  {/* Mini sidebar */}
+                  <div className="border-r border-border p-3 space-y-5 bg-background/20">
+                    <div className="flex flex-col gap-1">
+                      {[Database, BarChart3, Layers, HardDrive, Settings].map((Icon, i) => (
+                        <div
+                          key={i}
+                          className={`flex items-center justify-center h-7 rounded transition-colors ${i === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Main panel */}
+                  <div className="p-4 space-y-4 overflow-hidden">
+                    {/* Case header */}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-widest">Evidence File</div>
+                        <div className="text-[11px] font-bold text-foreground mt-0.5 truncate max-w-[220px]">server_telemetry.parquet</div>
+                      </div>
+                      <div className="flex gap-2 text-[8px] font-mono">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">98.4% healthy</span>
+                        <span className="px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border">10,240 rows</span>
+                      </div>
+                    </div>
+
+                    {/* Two mini panels */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* ARIMA chart */}
+                      <div className="border border-border rounded-lg p-3 bg-background/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-wider">ARIMA Forecast</span>
+                          <LineChart className="w-3 h-3 text-primary/60" />
+                        </div>
+                        <div className="h-14 w-full text-primary">
+                          <ArimaChart />
+                        </div>
+                        <div className="mt-1.5 flex gap-2">
+                          <span className="text-[7px] font-mono text-muted-foreground/50">── Historical</span>
+                          <span className="text-[7px] font-mono text-primary/70">- - Forecast</span>
+                        </div>
+                      </div>
+
+                      {/* Anomaly log */}
+                      <div className="border border-border rounded-lg p-3 bg-background/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-wider">Anomaly Log</span>
+                          <ShieldAlert className="w-3 h-3 text-primary/60" />
+                        </div>
+                        <div className="space-y-1.5 text-[8px] font-mono text-muted-foreground">
+                          <div className="flex gap-1.5 items-start">
+                            <span className="w-1 h-1 rounded-full bg-primary mt-1 shrink-0" />
+                            <span>Row 428 — spike +5.4× mean</span>
+                          </div>
+                          <div className="flex gap-1.5 items-start">
+                            <span className="w-1 h-1 rounded-full bg-primary mt-1 shrink-0" />
+                            <span>Row 1022 — duplicate index</span>
+                          </div>
+                          <div className="flex gap-1.5 items-start">
+                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400 shrink-0 mt-0.5" />
+                            <span className="text-emerald-400">Pipeline optimized</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chat prompt */}
+                    <div className="border border-border rounded-lg p-2.5 bg-background/30">
+                      <div className="text-[8px] font-mono text-primary font-bold">&gt; What caused the spike at row 428?</div>
+                      <div className="text-[8px] font-mono text-muted-foreground mt-1">Transaction value exceeded 5.4× rolling mean — classified as statistical outlier. Recommend isolation.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════
+          CAPABILITY MARQUEE
+      ══════════════════════════════════════════════════════ */}
+      <section className="relative z-10 border-y border-border bg-card/30 py-3 overflow-hidden">
+        <motion.div
+          animate={{ x: [0, -1200] }}
+          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+          className="flex gap-6 whitespace-nowrap"
+        >
+          {[...capabilities, ...capabilities].map((c, i) => (
+            <span key={i} className="inline-flex items-center gap-2 text-[9px] font-mono font-bold uppercase tracking-widest text-muted-foreground/50 shrink-0">
+              <span className="w-1 h-1 rounded-full bg-primary/40" /> {c}
+            </span>
+          ))}
         </motion.div>
       </section>
 
-      {/* ═══════════════════ HIGH-FIDELITY DASHBOARD PREVIEW ═══════════════════ */}
-      <section className="py-6 max-w-5xl mx-auto px-6 relative z-10">
-        <RevealSection className="border border-border bg-card rounded-cards overflow-hidden shadow-2xl flex flex-col">
-          {/* Mock Browser Top bar */}
-          <div className="flex items-center justify-between px-4 py-3 bg-[#11110f] border-b border-border/40 select-none">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-            </div>
-            <div className="bg-background/80 border border-border/30 rounded px-8 py-0.5 text-[9px] font-mono text-muted-foreground/60 w-64 text-center truncate">
-              detective.ai/analysis/case-428
-            </div>
-            <div className="w-10" />
-          </div>
+      {/* ══════════════════════════════════════════════════════
+          FEATURES — horizontal bento grid
+      ══════════════════════════════════════════════════════ */}
+      <section id="features" className="relative z-10 py-20 max-w-[1180px] mx-auto px-6">
+        <Reveal className="mb-12 space-y-2">
+          <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Platform capabilities</span>
+          <h2 className="text-[1.9rem] md:text-[2.4rem] font-black uppercase tracking-tight leading-tight">Forensic profiling.<br />End to end.</h2>
+        </Reveal>
 
-          {/* Mock Dashboard Grid layout */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-0 min-h-[360px] text-left">
-            {/* Sidebar Mock navigator */}
-            <div className="md:col-span-3 border-r border-border/40 p-4 bg-[#11110f]/40 hidden md:flex flex-col justify-between font-mono text-[9px] text-muted-foreground/80 space-y-6">
-              <div className="space-y-4">
-                <div className="text-[8px] font-bold tracking-widest text-primary">NAVIGATION</div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-foreground font-bold bg-primary/10 border border-primary/20 rounded px-2 py-1 select-none">
-                    <Database className="w-3.5 h-3.5 text-primary" />
-                    <span>Case Analysis</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    <span>Descriptive Stats</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
-                    <Layers className="w-3.5 h-3.5" />
-                    <span>Significance Labs</span>
-                  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            {
+              tag: "Step 01", title: "Schema Normalizer", body: "Polars-powered. Prunes nulls, drops duplicates, coerces types, and emits a clean typed dataframe in under 15ms.",
+              visual: (
+                <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-2 font-mono text-[8px] text-muted-foreground">
+                  <span>[Raw CSV]</span><ArrowRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Polars DF]</span>
                 </div>
-
-                <div className="text-[8px] font-bold tracking-widest text-primary pt-2">WORKSPACE</div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
-                    <HardDrive className="w-3.5 h-3.5" />
-                    <span>Storage (2.4 GB)</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
-                    <Settings className="w-3.5 h-3.5" />
-                    <span>Settings</span>
-                  </div>
+              )
+            },
+            {
+              tag: "Step 02", title: "Outlier Detection", body: "IQR and Z-score sweeps across every numeric column. Surfaces anomaly coordinates and drift clusters automatically.",
+              visual: (
+                <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-1 px-3 font-mono text-[8px]">
+                  {[0.2, 0.2, 1, 0.2, 0.2, 0.2].map((o, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${o === 1 ? "bg-primary" : "bg-muted-foreground/25"}`} />)}
+                  <span className="text-primary font-bold ml-2">Z = +3.8σ</span>
                 </div>
+              )
+            },
+            {
+              tag: "Step 03", title: "ARIMA Forecasting", body: "Auto-regressive integrated moving average models project 90 periods forward with 80% and 95% confidence intervals.",
+              visual: (
+                <div className="h-8 border border-border/40 rounded bg-background/50 overflow-hidden text-primary">
+                  <ArimaChart />
+                </div>
+              )
+            },
+            {
+              tag: "Step 04", title: "Significance Tests", body: "Run t-tests, ANOVA, and chi-square tests on any column. Results are explained in plain English automatically.",
+              visual: (
+                <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center px-3 gap-2 font-mono text-[8px]">
+                  <span className="text-emerald-400 font-bold">p = 0.003</span><span className="text-muted-foreground">— Reject H₀ at α=0.05</span>
+                </div>
+              )
+            },
+            {
+              tag: "Step 05", title: "AI Copilot", body: "Chat with your data in plain English. The assistant references actual column values and computed findings in every response.",
+              visual: (
+                <div className="h-8 border border-border/40 rounded bg-background/50 p-2 font-mono text-[8px] text-muted-foreground">
+                  <span className="text-primary font-bold">&gt; </span>Outlier at row 428 — +5.4× rolling mean.
+                </div>
+              )
+            },
+            {
+              tag: "Step 06", title: "Report Compiler", body: "Compile every finding — anomalies, projections, test results, chat logs — into a download-ready PDF or Word report.",
+              visual: (
+                <div className="h-8 flex gap-2 items-center font-mono text-[8px] font-bold text-primary">
+                  <span className="px-2 py-0.5 rounded border border-primary/30 bg-primary/5">BRIEF.PDF</span>
+                  <span className="px-2 py-0.5 rounded border border-border text-muted-foreground">BRIEF.DOCX</span>
+                </div>
+              )
+            },
+          ].map((card, i) => (
+            <Reveal key={i} delay={i * 0.04} className="group border border-border rounded-xl p-5 bg-card hover:border-primary/30 hover:bg-card/80 transition-all duration-300 flex flex-col gap-4 cursor-default">
+              <div>
+                <span className="font-mono text-[8px] font-bold text-primary/60 uppercase tracking-widest">{card.tag}</span>
+                <h3 className="text-[12px] font-bold uppercase tracking-wide mt-1">{card.title}</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">{card.body}</p>
               </div>
-
-              <div className="border-t border-border/20 pt-4 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary text-[10px]">
-                  U
-                </div>
-                <div>
-                  <div className="text-[9px] font-bold text-foreground truncate">User profile</div>
-                  <div className="text-[7px] text-muted-foreground truncate">user@detective.ai</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Central Work Deck */}
-            <div className="md:col-span-9 p-6 space-y-6 flex flex-col justify-between bg-background/20">
-              {/* Header metrics */}
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/20 pb-4">
-                <div>
-                  <div className="text-[9px] font-mono text-muted-foreground/60 uppercase font-bold tracking-wider">ACTIVE EVIDENCE CASE</div>
-                  <h3 className="text-sm font-black text-foreground uppercase mt-0.5">server_telemetry_diagnostics.parquet</h3>
-                </div>
-                <div className="flex gap-4 font-mono text-[9px] text-muted-foreground">
-                  <div>Rows: <span className="text-foreground font-bold">10,240</span></div>
-                  <div>Health Index: <span className="text-emerald-500 font-bold">98.4%</span></div>
-                  <div>Type: <span className="text-foreground font-bold">PARQUET</span></div>
-                </div>
-              </div>
-
-              {/* Central display panels */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* ARIMA display panel */}
-                <div className="border border-border/40 rounded p-4 bg-background/40">
-                  <div className="flex items-center justify-between font-mono text-[8px] text-muted-foreground/50 tracking-wider mb-2">
-                    <span>ARIMA FORECAST WAVEFORM</span>
-                    <LineChart className="w-3 h-3 text-primary" />
-                  </div>
-                  <div className="h-20 w-full relative flex items-center justify-center border border-border/20 rounded bg-background/50 p-1">
-                    <svg className="w-full h-full overflow-visible z-10 relative" viewBox="0 0 200 60" preserveAspectRatio="none">
-                      <path d="M5,35 Q35,5 70,30 T140,10 T195,20 L195,50 L140,40 L70,48 L35,25 L5,45 Z" fill="var(--primary)" className="opacity-[0.04]" />
-                      <path d="M5,35 Q35,10 70,32 T140,15 T195,22 L195,40 L140,30 L70,40 L35,20 L5,40 Z" fill="var(--primary)" className="opacity-[0.08]" />
-                      <path d="M5,35 L20,38 L35,22 L50,42 L70,32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
-                      <path d="M70,32 Q105,15 140,25 T195,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2" className="text-primary" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Log outputs display panel */}
-                <div className="border border-border/40 rounded p-4 bg-background/40 flex flex-col justify-between min-h-[120px]">
-                  <div className="flex items-center justify-between font-mono text-[8px] text-muted-foreground/50 tracking-wider">
-                    <span>DETECTED ANOMALIES LOG</span>
-                    <ShieldAlert className="w-3 h-3 text-primary" />
-                  </div>
-                  <div className="space-y-1.5 mt-2 font-mono text-[8px] text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span>Row 428: Transaction value spike (+5.4x mean deviation).</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span>Row 1022: Host server region shows duplicate index error.</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-emerald-500 font-bold">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>Anomalies mapped. Data pipeline optimized.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </RevealSection>
+              {card.visual}
+            </Reveal>
+          ))}
+        </div>
       </section>
 
-      {/* ═══════════════════ SYMMETRICAL BENTO GRID FEATURE GRID ═══════════════════ */}
-      <section id="features" className="py-12 max-w-6xl mx-auto px-6 relative z-10">
-        <RevealSection>
-          <div className="text-center mb-12 space-y-2">
-            <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Platform capabilities</span>
-            <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">Equipped for Comprehensive Forensic Profiling</h2>
-          </div>
-        </RevealSection>
+      {/* ══════════════════════════════════════════════════════
+          HOW IT WORKS — vertical timeline
+      ══════════════════════════════════════════════════════ */}
+      <section id="process" className="relative z-10 py-20 border-t border-border bg-card/20">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <Reveal className="mb-12 space-y-2">
+            <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Four stages</span>
+            <h2 className="text-[1.9rem] md:text-[2.4rem] font-black uppercase tracking-tight leading-tight">From file to briefing.</h2>
+          </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          
-          {/* Card 1: Data Normalization (Col Span 2) */}
-          <div className="md:col-span-2 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
-            <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>STEP 1 // DATA CLEANING</span>
-              <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 items-start">
+            {/* Step selector */}
+            <div className="flex flex-row lg:flex-col gap-2">
+              {steps.map((s, i) => {
+                const Icon = s.icon;
+                const active = activeStep === i;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setActiveStep(i)}
+                    className={`flex-1 lg:flex-none text-left p-3 rounded-xl border transition-all duration-200 cursor-pointer ${active ? "bg-card border-primary/30 shadow-sm" : "border-border/30 hover:bg-card/50"}`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 mb-1.5 transition-colors ${active ? "text-primary" : "text-muted-foreground/40"}`} />
+                    <div className={`text-[10px] font-bold uppercase tracking-wide transition-colors hidden lg:block ${active ? "text-foreground" : "text-muted-foreground"}`}>{s.title}</div>
+                    <div className={`font-mono text-[8px] font-bold hidden lg:block transition-colors mt-0.5 ${active ? "text-primary/80" : "text-muted-foreground/30"}`}>{s.tag}</div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="my-2">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Interactive Normalization</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Prunes null points, drops duplicate records, scales metrics, and maps schemas instantly.</p>
-            </div>
-            <div className="h-7 border border-border/40 rounded bg-background/50 flex items-center justify-around font-mono text-[8px] text-muted-foreground">
-              <span>[Raw Dataset]</span><ChevronRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Polars Clean]</span>
-            </div>
-          </div>
 
-          {/* Card 2: Outlier Scan (Col Span 2) */}
-          <div className="md:col-span-2 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
-            <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>STEP 2 // ANOMALIES</span>
-              <ShieldAlert className="w-3.5 h-3.5 text-primary/70" />
-            </div>
-            <div className="my-2">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Forensic Outlier Scan</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Isolate data anomalies and drift spikes using dynamic Z-score calculations and IQR thresholds.</p>
-            </div>
-            <div className="h-7 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-1.5 px-3 select-none">
-              {[0.3, 0.3, 1, 0.3, 0.3, 0.3].map((o, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${o === 1 ? "bg-primary" : "bg-muted-foreground/30"}`} />)}
-              <span className="font-mono text-[8px] text-primary font-bold ml-1.5">Z-Score = +3.8</span>
-            </div>
-          </div>
-
-          {/* Card 3: ARIMA Waveform (Col Span 2) */}
-          <div className="md:col-span-2 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px] overflow-hidden">
-            <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>STEP 3 // FORECASTING</span>
-              <LineChart className="w-3.5 h-3.5 text-primary/70" />
-            </div>
-            <div className="h-14 w-full relative my-1 border border-border/30 rounded bg-background/50 p-1 overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 grid grid-cols-6 grid-rows-3 opacity-15 pointer-events-none">
-                {Array.from({ length: 18 }).map((_, i) => (
-                  <div key={i} className="border-r border-b border-border/40" />
+            {/* Detail card */}
+            <div className="border border-border bg-card rounded-xl p-8 md:p-10 min-h-[200px] flex flex-col justify-between relative">
+              <div className="absolute top-5 right-5 font-mono text-[9px] text-muted-foreground/30 select-none">{String(activeStep + 1).padStart(2, "0")} / 04</div>
+              <div className="space-y-3">
+                {React.createElement(steps[activeStep].icon, { className: "w-5 h-5 text-primary" })}
+                <h3 className="text-[18px] font-black uppercase tracking-tight">{steps[activeStep].title}</h3>
+                <p className="text-[12px] text-muted-foreground leading-relaxed max-w-lg">{steps[activeStep].detail}</p>
+              </div>
+              <div className="flex gap-2 pt-6">
+                {steps.map((_, i) => (
+                  <div key={i} className="flex-1 h-0.5 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full bg-primary rounded-full transition-all duration-300 ${i <= activeStep ? "w-full" : "w-0"}`} />
+                  </div>
                 ))}
               </div>
-              <svg className="w-full h-full overflow-visible z-10 relative" viewBox="0 0 200 60" preserveAspectRatio="none">
-                <path d="M5,35 Q35,5 70,30 T140,10 T195,20 L195,50 L140,40 L70,48 L35,25 L5,45 Z" fill="var(--primary)" className="opacity-[0.04]" />
-                <path d="M5,35 Q35,10 70,32 T140,15 T195,22 L195,40 L140,30 L70,40 L35,20 L5,40 Z" fill="var(--primary)" className="opacity-[0.08]" />
-                <path d="M5,35 L20,38 L35,22 L50,42 L70,32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
-                <path d="M70,32 Q105,15 140,25 T195,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2" className="text-primary animate-pulse" />
-                <circle cx="70" cy="32" r="3" className="fill-primary stroke-background" strokeWidth="1" />
-              </svg>
-            </div>
-            <div className="text-[10px] text-muted-foreground font-semibold">Predictive ARIMA projections with 95% bounds.</div>
-          </div>
-
-          {/* Card 4: AI Q&A Chat (Col Span 3) */}
-          <div className="md:col-span-3 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
-            <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>STEP 4 // AI ASSISTANT</span>
-              <MessageSquare className="w-3.5 h-3.5 text-primary/70" />
-            </div>
-            <div className="my-2">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Intelligent Assistant</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Interact directly with findings in natural language. Copilot translates schema correlations instantly.</p>
-            </div>
-            <div className="p-2 border border-border/40 rounded bg-background/50 font-mono text-[8px] text-left text-muted-foreground space-y-0.5">
-              <div className="text-primary font-bold">&gt; Any spikes in values?</div>
-              <div>Outlier detected at index 428 (+5.4x mean).</div>
             </div>
           </div>
-
-          {/* Card 5: Briefing Reports (Col Span 3) */}
-          <div className="md:col-span-3 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
-            <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>STEP 5 // COMPILER</span>
-              <FileText className="w-3.5 h-3.5 text-primary/70" />
-            </div>
-            <div className="my-2">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Briefing Generator</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Compile anomaly logs, projection paths, and significance tests into print-ready PDF/Word reports.</p>
-            </div>
-            <div className="flex gap-2 font-mono text-[8px] font-bold text-primary">
-              <span className="px-2 py-0.5 rounded border border-primary/30 bg-primary/5">REPORT.PDF</span>
-              <span className="px-2 py-0.5 rounded border border-border bg-background text-muted-foreground">REPORT.DOCX</span>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      {/* ═══════════════════ HOW IT WORKS CAROUSEL ═══════════════════ */}
-      <section id="how-it-works" className="py-20 border-t border-border bg-card/10 relative z-10">
-        <div className="max-w-6xl mx-auto px-6">
-          <RevealSection>
-            <div className="text-center mb-12 space-y-2">
-              <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">How It Works</span>
-              <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">From file upload to executive report</h2>
-              <p className="text-xs text-muted-foreground font-semibold max-w-lg mx-auto">Four automated stages transform a flat spreadsheet into a comprehensive diagnostic briefing.</p>
-            </div>
-          </RevealSection>
-
-          <RevealSection>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left: Step Selector Carousel Controls */}
-              <div className="lg:col-span-4 space-y-2">
-                {howItWorksSteps.map((step, i) => {
-                  const Icon = step.icon;
-                  const isActive = activeHowStep === i;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setActiveHowStep(i)}
-                      className={`w-full text-left p-4 rounded-cards border cursor-pointer transition-all duration-200 flex items-start gap-3 ${
-                        isActive
-                          ? "bg-card border-primary/40 shadow-sm"
-                          : "bg-transparent border-border/40 hover:bg-card/50"
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 shrink-0 mt-0.5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground/50"}`} />
-                      <div>
-                        <span className={`text-xs font-bold uppercase tracking-wide block transition-colors ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                          {step.title}
-                        </span>
-                        <span className={`font-mono text-[9px] font-bold mt-0.5 block transition-colors ${isActive ? "text-primary" : "text-muted-foreground/40"}`}>
-                          {step.stat}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Right: Active Step Detail */}
-              <div className="lg:col-span-8 border border-border bg-card rounded-cards p-8 md:p-10 text-left min-h-[260px] flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-4 right-4 font-mono text-[8px] font-bold text-muted-foreground/40 select-none">
-                  {String(activeHowStep + 1).padStart(2, "0")} / 04
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    {React.createElement(howItWorksSteps[activeHowStep].icon, { className: "w-5 h-5 text-primary" })}
-                    <h3 className="text-lg font-bold text-foreground uppercase tracking-tight">
-                      {howItWorksSteps[activeHowStep].title}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed font-semibold max-w-lg">
-                    {howItWorksSteps[activeHowStep].desc}
-                  </p>
-                </div>
-
-                {/* Progress bar showing auto-rotation */}
-                <div className="flex gap-2 pt-6">
-                  {howItWorksSteps.map((_, i) => (
-                    <div key={i} className="flex-1 h-1 rounded-full bg-background border border-border/40 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-300 ${i === activeHowStep ? "bg-primary w-full" : i < activeHowStep ? "bg-primary/30 w-full" : "w-0"}`} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ═══════════════════ STATS BAR ═══════════════════ */}
-      <section className="py-12 border-t border-b border-border bg-card relative z-10">
-        <RevealSection className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: "<10s", label: "Average diagnosis time" },
-              { value: "500MB", label: "Max file size per case" },
-              { value: "13", label: "Analysis modules loaded" },
-              { value: "PDF + DOCX", label: "Export format support" },
-            ].map((stat, i) => (
-              <div key={i} className="space-y-1">
-                <div className="text-2xl md:text-3xl font-black text-foreground font-mono tracking-tight">{stat.value}</div>
-                <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </RevealSection>
-      </section>
-
-      {/* ═══════════════════ ARCHITECTURE ═══════════════════ */}
-      <section id="architecture" className="py-20 border-b border-border bg-card/10 relative z-10">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <RevealSection className="lg:col-span-5 space-y-6 text-left">
+      {/* ══════════════════════════════════════════════════════
+          PROCESSING CORE — live simulation
+      ══════════════════════════════════════════════════════ */}
+      <section id="core" className="relative z-10 py-20 border-t border-border">
+        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <Reveal className="space-y-5">
             <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Pipeline Architecture</span>
-            <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">The Processing Core</h2>
-            <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
-              DetectiveAI combines high-performance database technologies to execute forensic scans. Data is analyzed entirely in memory and isolated inside a secure browser sandbox.
+            <h2 className="text-[1.9rem] md:text-[2.4rem] font-black uppercase tracking-tight leading-tight">The Processing Core</h2>
+            <p className="text-[12px] text-muted-foreground leading-relaxed max-w-sm">
+              High-performance stack: Polars for ingestion, Statsmodels for forecasting, zero-retention in-memory processing, and FastAPI backend — all deployed in a secure isolated sandbox.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               {[
-                { icon: Database, title: "Polars Engine", desc: "Rust-backed dataframe allocator. Parses millions of rows in milliseconds." },
-                { icon: Cpu, title: "Statsmodels Forecaster", desc: "Integrated ARIMA mathematical modeling for statistical projection." },
-                { icon: ShieldCheck, title: "Zero-Retention Sandbox", desc: "Uploads are analyzed in-memory and deleted immediately upon session end." },
+                { icon: Database, t: "Polars Engine", d: "Rust-backed dataframe allocator. Parses millions of rows in milliseconds." },
+                { icon: Cpu, t: "ARIMA Forecaster", d: "Statsmodels integration — auto-regressive mathematical projection." },
+                { icon: ShieldCheck, t: "Zero-Retention Sandbox", d: "Files analyzed in-memory. Deleted immediately after session ends." },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <item.icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-bold uppercase tracking-wide">{item.title}</h4>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <item.icon className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wide">{item.t}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{item.d}</div>
                   </div>
                 </div>
               ))}
             </div>
-          </RevealSection>
+          </Reveal>
 
-          <RevealSection className="lg:col-span-7 border border-border bg-card p-6 rounded-cards">
-            <div className="space-y-4 text-left">
-              <div className="flex items-center justify-between border-b border-border/30 pb-2.5">
-                <span className="font-mono text-[9px] font-bold text-muted-foreground/60 uppercase">ACTIVE_THREAD_POOL</span>
-                <button
-                  onClick={triggerCoreSimulation}
-                  disabled={simStatus === "running"}
-                  className="px-2.5 py-1 rounded bg-primary/10 border border-primary/30 text-primary font-mono text-[9px] font-bold flex items-center gap-1.5 hover:bg-primary/20 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all cursor-pointer"
-                >
-                  <RefreshCw className={`w-3 h-3 ${simStatus === "running" ? "animate-spin" : ""}`} />
-                  {simStatus === "running" ? "SIMULATING..." : "RUN SIMULATION"}
-                </button>
-              </div>
-              
-              <div className="space-y-3 font-mono text-[10px] text-muted-foreground">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span>&gt; Ingesting spreadsheet...</span>
-                    <span className="text-foreground">{simProgress.ingest === 100 ? "COMPLETE (12ms)" : "RUNNING"}</span>
+          <Reveal delay={0.1} className="border border-border bg-card rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="font-mono text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider">ACTIVE_THREAD_POOL</span>
+              <button
+                onClick={runSim}
+                disabled={simStatus === "running"}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 border border-primary/25 text-primary font-mono text-[9px] font-bold hover:bg-primary/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+              >
+                <RefreshCw className={`w-3 h-3 ${simStatus === "running" ? "animate-spin" : ""}`} />
+                {simStatus === "running" ? "RUNNING..." : "RUN SIMULATION"}
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                { label: "> Ingesting spreadsheet...", val: simP.a, result: simP.a === 100 ? "COMPLETE (12ms)" : simP.a > 0 ? "RUNNING" : "WAITING", hi: false },
+                { label: "> Profiling Z-score outliers...", val: simP.b, result: simP.b === 85 ? "2 ANOMALIES FOUND" : simP.b > 0 ? "RUNNING" : "WAITING", hi: simP.b === 85 },
+                { label: "> Compiling ARIMA vector...", val: simP.c, result: simP.c === 60 ? "COMPLETE" : simP.c > 0 ? "RUNNING" : "WAITING", hi: false },
+              ].map((row, i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex justify-between font-mono text-[9px] text-muted-foreground">
+                    <span>{row.label}</span>
+                    <span className={row.hi ? "text-primary font-bold" : "text-foreground"}>{row.result}</span>
                   </div>
-                  <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
-                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${simProgress.ingest}%` }} />
+                  <div className="w-full h-1.5 rounded-full bg-background border border-border/40 overflow-hidden">
+                    <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${row.val}%` }} />
                   </div>
                 </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span>&gt; Profiling outlier Z-scores...</span>
-                    <span className={simProgress.anomalies === 85 ? "text-primary font-bold" : "text-foreground"}>
-                      {simProgress.anomalies === 85 ? "FOUND 2 ANOMALIES" : simProgress.ingest === 100 ? "RUNNING" : "PENDING"}
-                    </span>
-                  </div>
-                  <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
-                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${simProgress.anomalies}%` }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span>&gt; Compiling ARIMA time vector...</span>
-                    <span className="text-foreground">
-                      {simProgress.arima === 60 ? "COMPLETE" : simProgress.anomalies === 85 ? "RUNNING" : "PENDING"}
-                    </span>
-                  </div>
-                  <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
-                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${simProgress.arima}%` }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Console log outputs */}
-              <div className="mt-4 p-3 bg-background border border-border/40 rounded font-mono text-[9px] text-muted-foreground/80 space-y-1 max-h-[80px] overflow-y-auto">
-                {simLogs.map((log, i) => (
-                  <div key={i} className={log.startsWith("✓") ? "text-emerald-500" : log.startsWith("⚠️") ? "text-primary font-bold" : ""}>
-                    {log}
+              ))}
+              <div className="mt-2 p-3 rounded-lg bg-background border border-border/40 font-mono text-[8px] text-muted-foreground/80 space-y-0.5 max-h-[70px] overflow-y-auto">
+                {simLogs.map((l, i) => (
+                  <div key={i} className={l.startsWith("✓") ? "text-emerald-400" : l.startsWith("⚠") ? "text-primary font-bold" : ""}>
+                    {l}
                   </div>
                 ))}
               </div>
             </div>
-          </RevealSection>
+          </Reveal>
         </div>
       </section>
 
-      {/* ═══════════════════ DEVELOPER SANDBOX ═══════════════════ */}
-      <section id="developer" className="py-20 border-b border-border bg-card/20 relative z-10">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          {/* Left Side: Code Editor with Console response view */}
-          <RevealSection className="lg:col-span-7 order-2 lg:order-1 bg-black border border-border rounded-cards overflow-hidden shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2.5 bg-card/60 border-b border-border/40">
-              <div className="flex gap-2">
-                {(["python", "bash"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setSelectedCodeTab(tab)}
-                    className={`font-mono text-[9px] font-bold px-2 py-0.5 rounded cursor-pointer transition-colors ${selectedCodeTab === tab ? "bg-primary/10 border border-primary/30 text-primary" : "text-muted-foreground border border-transparent"}`}
-                  >
-                    {tab === "python" ? "detective_api.py" : "install.sh"}
-                  </button>
-                ))}
-              </div>
-              <Terminal className="w-3.5 h-3.5 text-muted-foreground/50" />
+      {/* ══════════════════════════════════════════════════════
+          DEVELOPER — code tabs + stdout
+      ══════════════════════════════════════════════════════ */}
+      <section id="api" className="relative z-10 py-20 border-t border-border bg-card/20">
+        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <Reveal className="bg-[#0a0a09] border border-border rounded-xl overflow-hidden shadow-2xl">
+            {/* Tab bar */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/40 bg-card/30">
+              {(["python", "bash"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setSelectedCodeTab(tab)}
+                  className={`font-mono text-[9px] font-bold px-2.5 py-0.5 rounded cursor-pointer transition-colors ${selectedCodeTab === tab ? "bg-primary/12 border border-primary/25 text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"}`}
+                >
+                  {tab === "python" ? "detective_api.py" : "setup.sh"}
+                </button>
+              ))}
+              <Terminal className="w-3 h-3 text-muted-foreground/30 ml-auto" />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-b border-border/20">
-              <div className="md:col-span-7 p-6 font-mono text-[10px] text-left leading-relaxed text-muted-foreground/90 overflow-x-auto min-h-[180px] border-b md:border-b-0 md:border-r border-border/20">
+            {/* Split editor */}
+            <div className="grid grid-cols-[1.1fr_0.9fr]">
+              <div className="p-5 font-mono text-[10px] leading-relaxed text-muted-foreground/80 border-r border-border/20 min-h-[200px]">
                 {selectedCodeTab === "python" ? (
-                  <pre>
-                    <span className="text-primary">import</span> detective_ai <span className="text-primary">as</span> det{"\n\n"}
-                    <span className="text-muted-foreground/50"># Ingest parquet file</span>{"\n"}
-                    case = det.IngestionPipeline(<br/>
-                    &nbsp;&nbsp;<span className="text-emerald-500">&quot;case_telemetry.parquet&quot;</span><br/>
-                    ){"\n\n"}
-                    <span className="text-muted-foreground/50"># Run anomaly scan & ARIMA</span>{"\n"}
-                    res = case.scan_anomalies()<br/>
-                    f = case.project_arima(periods=<span className="text-amber-500">90</span>){"\n\n"}
-                    print(res.health_score)
-                  </pre>
+                  <pre>{`\u001b[35mimport\u001b[0m detective_ai as det
+
+\u001b[90m# Ingest evidence parquet\u001b[0m
+case = det.IngestionPipeline(
+  \u001b[32m"telemetry.parquet"\u001b[0m
+)
+
+\u001b[90m# Scan + forecast\u001b[0m
+res  = case.scan_anomalies()
+fcst = case.project_arima(
+  periods=\u001b[33m90\u001b[0m
+)
+
+print(res.health_score)`.split("\n").map((line, i) => (
+                    <div key={i} className={
+                      line.includes("import") ? "text-primary" :
+                      line.includes("#") ? "text-muted-foreground/40" :
+                      line.includes('"') ? "text-emerald-400" :
+                      line.includes("90") ? "text-amber-400" :
+                      ""
+                    }>{line}</div>
+                  ))}</pre>
                 ) : (
                   <pre>
-                    <span className="text-muted-foreground/50"># Install via pip manager</span>{"\n"}
-                    pip install detective-ai-engine{"\n\n"}
-                    <span className="text-muted-foreground/50"># Boot secure local worker</span>{"\n"}
-                    python -m detective_ai initialize
+                    <div className="text-muted-foreground/40"># Install</div>
+                    <div>pip install detective-ai-engine</div>
+                    <div className="mt-3 text-muted-foreground/40"># Initialize</div>
+                    <div>python -m detective_ai init</div>
                   </pre>
                 )}
               </div>
-
-              {/* API Response simulation panel */}
-              <div className="md:col-span-5 p-6 bg-[#040405] font-mono text-[9px] text-left leading-relaxed text-muted-foreground">
-                <span className="text-muted-foreground/40 uppercase block mb-3 font-bold select-none">// stdout response</span>
+              <div className="p-5 bg-[#060605] font-mono text-[9px] leading-relaxed">
+                <div className="text-muted-foreground/30 mb-3 font-bold">// stdout</div>
                 {selectedCodeTab === "python" ? (
-                  <pre className="text-emerald-500">
-                    {JSON.stringify({
-                      status: "completed",
-                      health_score: 98.4,
-                      anomalies_found: 2,
-                      forecast_periods: 90,
-                      latency: "12ms"
-                    }, null, 2)}
-                  </pre>
+                  <pre className="text-emerald-400 whitespace-pre-wrap">{JSON.stringify({ status: "completed", health_score: 98.4, anomalies: 2, forecast_periods: 90, latency_ms: 12 }, null, 2)}</pre>
                 ) : (
-                  <pre className="text-primary">
-                    [SYSTEM CONFIG]{"\n"}
-                    ✓ Thread pooling initialized{"\n"}
-                    ✓ Sandbox connection check OK{"\n"}
-                    ✓ Host target: localhost:8000{"\n"}
-                    ✓ Listening active...
-                  </pre>
+                  <pre className="text-primary whitespace-pre-wrap">{`✓ Engine loaded\n✓ Sandbox active\n✓ API: :8000\n✓ Ready`}</pre>
                 )}
               </div>
             </div>
-          </RevealSection>
+          </Reveal>
 
-          {/* Right Side: Description */}
-          <RevealSection className="lg:col-span-5 order-1 lg:order-2 space-y-6 text-left">
-            <div className="flex items-center gap-2">
-              <Code className="w-4 h-4 text-primary" />
-              <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Developer Sandbox</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">Flexible Integrations</h2>
-            <p className="text-xs text-muted-foreground leading-relaxed font-semibold">
-              The engine is built to scale. Integrate with backend databases or access metrics programmatically using clean scripting pipelines.
+          <Reveal delay={0.12} className="space-y-5">
+            <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Developer API</span>
+            <h2 className="text-[1.9rem] md:text-[2.4rem] font-black uppercase tracking-tight leading-tight">Built to integrate.</h2>
+            <p className="text-[12px] text-muted-foreground leading-relaxed max-w-sm">
+              The FastAPI backend exposes clean REST endpoints. Integrate with any backend pipeline, database, or reporting system using standard HTTP requests.
             </p>
             <Link href="/login">
-              <span className="inline-flex items-center gap-2 text-xs font-mono font-bold text-primary hover:underline cursor-pointer">
-                Generate Sandbox API Key <ArrowRight className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-2 font-mono text-[11px] font-bold text-primary hover:underline cursor-pointer">
+                Explore the API <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </Link>
-          </RevealSection>
+          </Reveal>
         </div>
       </section>
 
-      {/* ═══════════════════ CTA BEFORE FOOTER ═══════════════════ */}
-      <section className="py-24 border-b border-border bg-card/5 relative z-10">
-        <RevealSection className="max-w-4xl mx-auto px-6 text-center space-y-6">
-          <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">Ready to investigate your data?</h2>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed font-semibold">
-            Upload a file. Get anomaly scans, ARIMA forecasts, and a PDF briefing in under ten seconds.
+      {/* ══════════════════════════════════════════════════════
+          CTA
+      ══════════════════════════════════════════════════════ */}
+      <section className="relative z-10 py-24 border-t border-border">
+        <Reveal className="max-w-[680px] mx-auto px-6 text-center space-y-6">
+          <h2 className="text-[2rem] md:text-[2.6rem] font-black uppercase tracking-tight leading-tight">Ready to run your first investigation?</h2>
+          <p className="text-[12px] text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Upload a file. Get a complete forensic briefing — anomalies, forecasts, significance tests, and a PDF report — in under 10 seconds.
           </p>
-          <div className="flex justify-center pt-2">
-            <Link href="/login">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="h-11 rounded-small bg-primary hover:opacity-95 text-primary-foreground font-bold text-xs uppercase tracking-wider px-7 flex items-center gap-2 cursor-pointer">
-                Start Free Investigation <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </Link>
-          </div>
-        </RevealSection>
+          <Link href={isLoggedIn ? "/dashboard" : "/login"}>
+            <motion.span
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center gap-2 h-11 rounded-xl bg-primary text-primary-foreground font-bold text-[11px] uppercase tracking-wider px-7 cursor-pointer hover:opacity-90 transition-opacity shadow-lg mt-2"
+            >
+              Start Investigation <ArrowRight className="w-4 h-4" />
+            </motion.span>
+          </Link>
+        </Reveal>
       </section>
 
-      {/* ═══════════════════ FOOTER ═══════════════════ */}
-      <footer className="py-16 border-t border-border bg-card relative z-10">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-5 gap-10">
-          {/* Brand Column */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <LogoIcon className="w-5 h-5" />
-              <span className="font-bold text-[11px] uppercase tracking-widest text-foreground font-mono">DetectiveAI</span>
+      {/* ══════════════════════════════════════════════════════
+          FOOTER
+      ══════════════════════════════════════════════════════ */}
+      <footer className="relative z-10 border-t border-border py-12 bg-card/20">
+        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-primary">
+              <LogoMark size={18} />
+              <span className="font-mono font-bold text-[10px] uppercase tracking-[0.18em] text-foreground">DetectiveAI</span>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed max-w-sm font-semibold">
-              High-fidelity data diagnostics. Profile schemas, scan outliers, project ARIMA models, and compile executive briefings inside a secure sandbox.
+            <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[240px]">
+              Autonomous data forensics. Upload, scan, forecast, and brief — all in one secure sandbox.
             </p>
-            <span className="text-[10px] font-mono text-muted-foreground/50 block pt-2">
-              © {new Date().getFullYear()} DetectiveAI. All evidence files sandboxed.
-            </span>
+            <p className="text-[9px] font-mono text-muted-foreground/40">© {new Date().getFullYear()} DetectiveAI</p>
           </div>
-
-          {/* Link Columns */}
           {[
-            { title: "Forensics Engine", links: [{ label: "Case Profiler", href: "/dashboard" }, { label: "Anomaly Audit", href: "/dashboard" }, { label: "Forecasting", href: "/dashboard" }, { label: "Root Cause", href: "/dashboard" }] },
-            { title: "Product", links: [{ label: "Case Archives", href: "/history" }, { label: "Upload Evidence", href: "/upload" }, { label: "Settings", href: "/settings" }, { label: "Profile", href: "/profile" }] },
-            { title: "Connect", links: [{ label: "GitHub", href: "https://github.com/mannaxsara/detective-ai" }, { label: "Contact", href: "mailto:mannasarabilu@gmail.com" }] },
-          ].map((col, idx) => (
-            <div key={idx} className="space-y-3.5">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-foreground">{col.title}</span>
-              <ul className="space-y-2 text-[11px] font-medium text-muted-foreground">
-                {col.links.map((link, lidx) => (
-                  <li key={lidx}>
-                    <Link href={link.href} className="hover:text-foreground cursor-pointer transition-colors block">{link.label}</Link>
-                  </li>
+            { title: "Engine", links: [{ l: "Case Profiler", h: "/dashboard" }, { l: "Anomaly Scan", h: "/dashboard" }, { l: "Forecasting", h: "/dashboard" }, { l: "Reports", h: "/dashboard" }] },
+            { title: "Product", links: [{ l: "Case Archives", h: "/history" }, { l: "Upload File", h: "/upload" }, { l: "Settings", h: "/settings" }, { l: "Profile", h: "/profile" }] },
+            { title: "Connect", links: [{ l: "GitHub", h: "https://github.com/mannaxsara/detective-ai" }, { l: "Email", h: "mailto:mannasarabilu@gmail.com" }] },
+          ].map((col, i) => (
+            <div key={i} className="space-y-3">
+              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-foreground/70">{col.title}</span>
+              <ul className="space-y-1.5">
+                {col.links.map((lk, j) => (
+                  <li key={j}><Link href={lk.h} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">{lk.l}</Link></li>
                 ))}
               </ul>
             </div>
