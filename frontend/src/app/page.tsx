@@ -5,7 +5,8 @@ import Link from "next/link";
 import {
   ArrowRight, Sparkles, ShieldAlert, LineChart, MessageSquare,
   FileText, ChevronRight, Terminal, ShieldCheck, Database, Code,
-  Cpu, Upload, ArrowUpRight, Play, CheckCircle2, RefreshCw
+  Cpu, Upload, ArrowUpRight, Play, CheckCircle2, RefreshCw, BarChart3,
+  Layers, HardDrive, Settings
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 
@@ -42,6 +43,7 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedCodeTab, setSelectedCodeTab] = useState<"python" | "bash">("python");
+  const [selectedPreviewTab, setSelectedPreviewTab] = useState<"telemetry" | "forecasting" | "anomalies">("telemetry");
   const [activeHowStep, setActiveHowStep] = useState(0);
 
   // Live Simulation state in the processing core
@@ -132,7 +134,7 @@ export default function HomePage() {
       <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(212,110,85,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(212,110,85,0.012)_1px,transparent_1px)] bg-[size:40px_40px] opacity-65 pointer-events-none" aria-hidden="true" />
 
       {/* Subtle radial glow for background depth */}
-      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-3xl pointer-events-none select-none z-0" />
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/5 rounded-full blur-3xl pointer-events-none select-none z-0" />
 
       {/* ═══════════════════ NAVBAR ═══════════════════ */}
       <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-full border border-border/80 bg-card/60 backdrop-blur-md px-6 h-12 flex items-center justify-between shadow-md">
@@ -142,10 +144,10 @@ export default function HomePage() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          <a href="#how-it-works" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">How it works</a>
-          <a href="#architecture" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Architecture</a>
-          <a href="#developer" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Developer</a>
-          <Link href="/history" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Case Archives</Link>
+          <a href="#features" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Features</a>
+          <a href="#how-it-works" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Process</a>
+          <a href="#architecture" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Core</a>
+          <a href="#developer" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">API</a>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -226,8 +228,136 @@ export default function HomePage() {
         </motion.div>
       </section>
 
+      {/* ═══════════════════ HIGH-FIDELITY DASHBOARD PREVIEW ═══════════════════ */}
+      <section className="py-6 max-w-5xl mx-auto px-6 relative z-10">
+        <RevealSection className="border border-border bg-card rounded-cards overflow-hidden shadow-2xl flex flex-col">
+          {/* Mock Browser Top bar */}
+          <div className="flex items-center justify-between px-4 py-3 bg-[#11110f] border-b border-border/40 select-none">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+            </div>
+            <div className="bg-background/80 border border-border/30 rounded px-8 py-0.5 text-[9px] font-mono text-muted-foreground/60 w-64 text-center truncate">
+              detective.ai/analysis/case-428
+            </div>
+            <div className="w-10" />
+          </div>
+
+          {/* Mock Dashboard Grid layout */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-0 min-h-[360px] text-left">
+            {/* Sidebar Mock navigator */}
+            <div className="md:col-span-3 border-r border-border/40 p-4 bg-[#11110f]/40 hidden md:flex flex-col justify-between font-mono text-[9px] text-muted-foreground/80 space-y-6">
+              <div className="space-y-4">
+                <div className="text-[8px] font-bold tracking-widest text-primary">NAVIGATION</div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-foreground font-bold bg-primary/10 border border-primary/20 rounded px-2 py-1 select-none">
+                    <Database className="w-3.5 h-3.5 text-primary" />
+                    <span>Case Analysis</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Descriptive Stats</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>Significance Labs</span>
+                  </div>
+                </div>
+
+                <div className="text-[8px] font-bold tracking-widest text-primary pt-2">WORKSPACE</div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
+                    <HardDrive className="w-3.5 h-3.5" />
+                    <span>Storage (2.4 GB)</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:text-foreground">
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Settings</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border/20 pt-4 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary text-[10px]">
+                  U
+                </div>
+                <div>
+                  <div className="text-[9px] font-bold text-foreground truncate">User profile</div>
+                  <div className="text-[7px] text-muted-foreground truncate">user@detective.ai</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Central Work Deck */}
+            <div className="md:col-span-9 p-6 space-y-6 flex flex-col justify-between bg-background/20">
+              {/* Header metrics */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/20 pb-4">
+                <div>
+                  <div className="text-[9px] font-mono text-muted-foreground/60 uppercase font-bold tracking-wider">ACTIVE EVIDENCE CASE</div>
+                  <h3 className="text-sm font-black text-foreground uppercase mt-0.5">server_telemetry_diagnostics.parquet</h3>
+                </div>
+                <div className="flex gap-4 font-mono text-[9px] text-muted-foreground">
+                  <div>Rows: <span className="text-foreground font-bold">10,240</span></div>
+                  <div>Health Index: <span className="text-emerald-500 font-bold">98.4%</span></div>
+                  <div>Type: <span className="text-foreground font-bold">PARQUET</span></div>
+                </div>
+              </div>
+
+              {/* Central display panels */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* ARIMA display panel */}
+                <div className="border border-border/40 rounded p-4 bg-background/40">
+                  <div className="flex items-center justify-between font-mono text-[8px] text-muted-foreground/50 tracking-wider mb-2">
+                    <span>ARIMA FORECAST WAVEFORM</span>
+                    <LineChart className="w-3 h-3 text-primary" />
+                  </div>
+                  <div className="h-20 w-full relative flex items-center justify-center border border-border/20 rounded bg-background/50 p-1">
+                    <svg className="w-full h-full overflow-visible z-10 relative" viewBox="0 0 200 60" preserveAspectRatio="none">
+                      <path d="M5,35 Q35,5 70,30 T140,10 T195,20 L195,50 L140,40 L70,48 L35,25 L5,45 Z" fill="var(--primary)" className="opacity-[0.04]" />
+                      <path d="M5,35 Q35,10 70,32 T140,15 T195,22 L195,40 L140,30 L70,40 L35,20 L5,40 Z" fill="var(--primary)" className="opacity-[0.08]" />
+                      <path d="M5,35 L20,38 L35,22 L50,42 L70,32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
+                      <path d="M70,32 Q105,15 140,25 T195,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2" className="text-primary" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Log outputs display panel */}
+                <div className="border border-border/40 rounded p-4 bg-background/40 flex flex-col justify-between min-h-[120px]">
+                  <div className="flex items-center justify-between font-mono text-[8px] text-muted-foreground/50 tracking-wider">
+                    <span>DETECTED ANOMALIES LOG</span>
+                    <ShieldAlert className="w-3 h-3 text-primary" />
+                  </div>
+                  <div className="space-y-1.5 mt-2 font-mono text-[8px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <span>Row 428: Transaction value spike (+5.4x mean deviation).</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <span>Row 1022: Host server region shows duplicate index error.</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-emerald-500 font-bold">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>Anomalies mapped. Data pipeline optimized.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </RevealSection>
+      </section>
+
       {/* ═══════════════════ SYMMETRICAL BENTO GRID FEATURE GRID ═══════════════════ */}
-      <section className="py-4 max-w-6xl mx-auto px-6 relative z-10">
+      <section id="features" className="py-12 max-w-6xl mx-auto px-6 relative z-10">
+        <RevealSection>
+          <div className="text-center mb-12 space-y-2">
+            <span className="font-mono text-[9px] font-bold text-primary uppercase tracking-widest">Platform capabilities</span>
+            <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">Equipped for Comprehensive Forensic Profiling</h2>
+          </div>
+        </RevealSection>
+
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           
           {/* Card 1: Data Normalization (Col Span 2) */}
