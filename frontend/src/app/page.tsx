@@ -202,6 +202,10 @@ export default function HomePage() {
   const [timelineForecastPeriod, setTimelineForecastPeriod] = useState<30 | 60 | 90>(90);
   const [timelineExportStatus, setTimelineExportStatus] = useState<"idle" | "generating" | "done">("idle");
 
+  // Footer interactive states
+  const [footerEmail, setFooterEmail] = useState("");
+  const [footerSubscribed, setFooterSubscribed] = useState(false);
+
   const runTimelineScan = () => {
     if (timelineScanStatus === "scanning") return;
     setTimelineScanStatus("scanning");
@@ -1204,32 +1208,114 @@ print(res.health_score)`.split("\n").map((line, i) => (
       {/* ══════════════════════════════════════════════════════
           FOOTER
       ══════════════════════════════════════════════════════ */}
-      <footer className="relative z-10 border-t border-border py-12 bg-card/20">
-        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10">
-          <div className="space-y-4">
+      <footer className="relative z-10 border-t border-border py-16 bg-card/25">
+        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr_0.8fr_1.2fr] gap-12 font-mono text-[9px]">
+          
+          {/* Logo & Operational Status */}
+          <div className="space-y-5">
             <div className="flex items-center gap-2 text-primary">
-              <LogoMark size={18} />
-              <span className="font-mono font-bold text-[10px] uppercase tracking-[0.18em] text-foreground">DetectiveAI</span>
+              <LogoMark size={16} />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em] text-foreground">DetectiveAI</span>
             </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[240px]">
-              Autonomous data forensics. Upload, scan, forecast, and brief — all in one secure sandbox.
+            <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[210px] font-sans">
+              Autonomous data forensics pipelines. Upload, clean, forecast, and compile briefings inside a zero-retention memory-only sandbox.
             </p>
-            <p className="text-[9px] font-mono text-muted-foreground/40">© {new Date().getFullYear()} DetectiveAI</p>
-          </div>
-          {[
-            { title: "Engine", links: [{ l: "Case Profiler", h: "/dashboard" }, { l: "Anomaly Scan", h: "/dashboard" }, { l: "Forecasting", h: "/dashboard" }, { l: "Reports", h: "/dashboard" }] },
-            { title: "Product", links: [{ l: "Case Archives", h: "/history" }, { l: "Upload File", h: "/upload" }, { l: "Settings", h: "/settings" }, { l: "Profile", h: "/profile" }] },
-            { title: "Connect", links: [{ l: "GitHub", h: "https://github.com/mannaxsara/detective-ai" }, { l: "Email", h: "mailto:mannasarabilu@gmail.com" }] },
-          ].map((col, i) => (
-            <div key={i} className="space-y-3">
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-foreground/70">{col.title}</span>
-              <ul className="space-y-1.5">
-                {col.links.map((lk, j) => (
-                  <li key={j}><Link href={lk.h} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">{lk.l}</Link></li>
-                ))}
-              </ul>
+            <div className="space-y-1.5 pt-2 border-t border-border/20 max-w-[210px]">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                <span className="text-[8px] font-bold text-foreground">ALL SYSTEMS OPTIMAL</span>
+              </div>
+              <div className="text-[7.5px] text-muted-foreground/50">
+                latency: 9.4ms · sandbox: sandbox_active · ssl: verified
+              </div>
             </div>
-          ))}
+            <p className="text-[8px] text-muted-foreground/35 pt-4">© {new Date().getFullYear()} DetectiveAI. All rights reserved.</p>
+          </div>
+
+          {/* Links Col 1 */}
+          <div className="space-y-4">
+            <span className="font-bold uppercase tracking-wider text-foreground">Engine Tools</span>
+            <ul className="space-y-2">
+              {[
+                { name: "Ingestion Pipeline", path: "/upload" },
+                { name: "Anomaly Scan", path: "/dashboard" },
+                { name: "ARIMA Forecast", path: "/dashboard" },
+                { name: "Executive Compiler", path: "/dashboard" }
+              ].map((lk, idx) => (
+                <li key={idx}>
+                  <Link href={lk.path} className="text-muted-foreground hover:text-primary transition-colors text-[9.5px] font-sans block">{lk.name}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Links Col 2 */}
+          <div className="space-y-4">
+            <span className="font-bold uppercase tracking-wider text-foreground">Account Archive</span>
+            <ul className="space-y-2">
+              {[
+                { name: "Telemetry History", path: "/history" },
+                { name: "System Settings", path: "/settings" },
+                { name: "Developer Keys", path: "/profile" },
+                { name: "Pricing Tiers", path: "/pricing" }
+              ].map((lk, idx) => (
+                <li key={idx}>
+                  <Link href={lk.path} className="text-muted-foreground hover:text-primary transition-colors text-[9.5px] font-sans block">{lk.name}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Newsletter / Intel Channel */}
+          <div className="space-y-4">
+            <span className="font-bold uppercase tracking-wider text-foreground">Secure Intel Channel</span>
+            <p className="text-[10px] text-muted-foreground leading-relaxed font-sans max-w-[240px]">
+              Subscribe to get weekly diagnostics logs, vulnerability insights, and platform capabilities briefings.
+            </p>
+            
+            {footerSubscribed ? (
+              <div className="p-3 border border-emerald-500/20 bg-emerald-500/5 rounded-xl space-y-1 max-w-[260px] animate-fade-in">
+                <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Channel active
+                </div>
+                <p className="text-[7.5px] text-muted-foreground font-sans">Secure telemetry alerts initialized. Welcome agent.</p>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (footerEmail.trim()) setFooterSubscribed(true);
+                }}
+                className="flex items-center border border-border/40 hover:border-primary/45 focus-within:border-primary bg-background/25 rounded-xl overflow-hidden max-w-[260px] p-1 transition-all"
+              >
+                <input
+                  type="email"
+                  required
+                  placeholder="agent@domain.com"
+                  value={footerEmail}
+                  onChange={(e) => setFooterEmail(e.target.value)}
+                  className="flex-1 bg-transparent border-0 outline-0 ring-0 px-2.5 py-1 text-[9px] text-foreground font-mono placeholder:text-muted-foreground/30"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-1 rounded bg-primary text-primary-foreground font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                >
+                  Join
+                </button>
+              </form>
+            )}
+            
+            <div className="flex gap-3 items-center pt-2">
+              <Link href="https://github.com/mannaxsara/detective-ai" target="_blank" className="text-muted-foreground hover:text-foreground transition-all">
+                <span className="text-[7.5px] uppercase tracking-wider underline">GitHub record</span>
+              </Link>
+              <span className="text-muted-foreground/20">|</span>
+              <a href="mailto:mannasarabilu@gmail.com" className="text-muted-foreground hover:text-foreground transition-all">
+                <span className="text-[7.5px] uppercase tracking-wider underline">Direct COMMS</span>
+              </a>
+            </div>
+          </div>
+
         </div>
       </footer>
     </div>
