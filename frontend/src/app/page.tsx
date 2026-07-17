@@ -615,29 +615,56 @@ export default function HomePage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="flex-1 flex flex-col justify-between py-2 space-y-4"
+                          className="flex-1 flex flex-col justify-between py-1 space-y-4 font-mono select-none"
                         >
-                          <div className="text-center p-5 border border-dashed border-border/60 rounded-xl bg-background/25">
-                            <Upload className="w-6 h-6 text-primary/60 mx-auto mb-2" />
-                            <div className="text-[10px] font-bold uppercase tracking-wide">Select Telemetry Case to Load</div>
-                            <p className="text-[8px] text-muted-foreground/50 mt-1 max-w-[200px] mx-auto leading-relaxed">Choose a forensic template dataset below to initialize the interactive workspace panels.</p>
+                          {/* Geometric scan brackets targeting space */}
+                          <div className="relative text-center p-6 border border-border/20 rounded-xl bg-background/25 flex flex-col items-center justify-center min-h-[140px] group transition-all duration-300 hover:border-primary/20">
+                            {/* Target points */}
+                            <div className="absolute top-2 left-2 text-muted-foreground/30 font-sans text-[10px] select-none">+</div>
+                            <div className="absolute top-2 right-2 text-muted-foreground/30 font-sans text-[10px] select-none">+</div>
+                            <div className="absolute bottom-2 left-2 text-muted-foreground/30 font-sans text-[10px] select-none">+</div>
+                            <div className="absolute bottom-2 right-2 text-muted-foreground/30 font-sans text-[10px] select-none">+</div>
+
+                            <Upload className="w-5 h-5 text-primary/50 mb-2 transition-transform duration-300 group-hover:-translate-y-0.5" />
+                            <div className="text-[9px] font-bold uppercase tracking-widest text-foreground">ingest new evidence</div>
+                            <p className="text-[7.5px] text-muted-foreground/50 mt-1 max-w-[210px] leading-relaxed font-sans">
+                              Drop telemetry case files or select a diagnostic template record below to initiate parsing.
+                            </p>
                           </div>
 
                           <div className="space-y-2">
-                            <span className="font-mono text-[7px] text-muted-foreground/55 uppercase tracking-wider block font-bold">Forensics Templates</span>
-                            <div className="grid grid-cols-3 gap-2">
+                            <span className="text-[7.5px] text-muted-foreground/55 uppercase tracking-wider block font-bold">Forensics Records templates</span>
+                            <div className="grid grid-cols-1 gap-2">
                               {[
-                                { id: "server_telemetry" as const, name: "Server Logs", type: "PARQUET" },
-                                { id: "retail_spikes" as const, name: "Retail sales", type: "CSV" },
-                                { id: "energy_drift" as const, name: "Grid load", type: "JSON" }
+                                { id: "server_telemetry" as const, filename: "server_telemetry.parquet", label: "Server Logs", type: "PARQUET", size: "12.4 MB", density: [30, 70, 45, 90, 60, 40] },
+                                { id: "retail_spikes" as const, filename: "retail_promos.csv", label: "Retail Sales", type: "CSV", size: "2.1 MB", density: [80, 20, 50, 40, 75, 90] },
+                                { id: "energy_drift" as const, filename: "grid_stability.json", label: "Grid Load", type: "JSON", size: "5.8 MB", density: [15, 30, 70, 85, 45, 60] }
                               ].map(tpl => (
                                 <button
                                   key={tpl.id}
                                   onClick={() => loadMockDataset(tpl.id)}
-                                  className="border border-border/40 hover:border-primary/50 hover:bg-primary/5 rounded px-2 py-2 text-left transition-all cursor-pointer flex flex-col justify-between min-h-[52px]"
+                                  className="group w-full border border-border/30 hover:border-primary/45 hover:bg-primary/5 rounded-xl p-3 text-left transition-all cursor-pointer flex items-center justify-between gap-4"
                                 >
-                                  <span className="text-[9px] font-bold block truncate text-foreground">{tpl.name}</span>
-                                  <span className="font-mono text-[6.5px] text-primary bg-primary/10 rounded px-1.5 py-0.5 mt-1 self-start">{tpl.type}</span>
+                                  <div className="flex-1 space-y-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[9.5px] font-bold text-foreground truncate">{tpl.label}</span>
+                                      <span className="text-[6.5px] px-1.5 py-0.2 rounded bg-primary/10 text-primary font-bold">{tpl.type}</span>
+                                    </div>
+                                    <div className="text-[7.5px] text-muted-foreground/50 truncate">
+                                      {tpl.filename} · {tpl.size}
+                                    </div>
+                                  </div>
+
+                                  {/* Inline micro bar density visualization */}
+                                  <div className="flex items-end gap-0.5 h-6 w-12 shrink-0 select-none font-sans">
+                                    {tpl.density.map((val, idx) => (
+                                      <div key={idx} className="flex-1 bg-muted-foreground/20 rounded-t-[1px] transition-all group-hover:bg-primary/30" style={{ height: `${val}%` }} />
+                                    ))}
+                                  </div>
+
+                                  <div className="text-[9px] text-muted-foreground/45 group-hover:text-primary group-hover:translate-x-0.5 transition-all select-none">
+                                    →
+                                  </div>
                                 </button>
                               ))}
                             </div>
