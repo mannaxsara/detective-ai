@@ -29,7 +29,7 @@ export default function UploadPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,
-    maxSize: 500 * 1024 * 1024, // 500MB
+    maxSize: 100 * 1024 * 1024, // 100MB
     accept: {
       "text/csv": [".csv"],
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
@@ -47,7 +47,7 @@ export default function UploadPage() {
     onDropRejected: (rejections) => {
       const error = rejections[0]?.errors[0];
       if (error?.code === "file-too-large") {
-        toast.error("File is too large. Max size is 500 MB.");
+        toast.error("File is too large. Max size is 100 MB.");
       } else {
         toast.error("Invalid file format. Please upload CSV, Excel, JSON, or Parquet.");
       }
@@ -132,7 +132,7 @@ export default function UploadPage() {
                     {isDragActive ? "Drop evidence file here..." : "Drag & drop evidence dataset here, or browse"}
                   </p>
                   <p className="text-muted-foreground text-xs mt-1.5 font-medium">
-                    CSV, Excel, JSON, or Parquet formats up to 500MB
+                    CSV, Excel, JSON, or Parquet formats up to 100MB
                   </p>
                 </div>
 

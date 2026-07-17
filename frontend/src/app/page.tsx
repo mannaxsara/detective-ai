@@ -1081,7 +1081,7 @@ export default function HomePage() {
 
           <Reveal delay={0.1} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { val: "2.8 GB/s", label: "Polars Ingestion Rate", desc: "Parallel multi-threaded vector parsing skips slow Python loops completely.", status: "OPTIMAL" },
+              { val: "180 MB/s", label: "Polars Ingestion Rate", desc: "Vectorized processing on shared CPU threads bypasses slow Python loops completely.", status: "OPTIMAL" },
               { val: "< 12ms", label: "Schema Locking Latency", desc: "Core dataframe type coercions and validation metrics calculated on upload.", status: "SUB-MILLISECOND" },
               { val: "100%", label: "Zero-Retention Isolation", desc: "No disk storage persistence. Telemetry vectors reside entirely in-memory.", status: "SECURE" },
               { val: "4.5s", label: "AI Context Embedding", desc: "Vector indexing speeds mapping column coordinates directly into model contexts.", status: "LIVE PIPELINE" },

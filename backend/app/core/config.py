@@ -31,7 +31,7 @@ class Settings(BaseSettings):
 
     # ── File uploads ──────────────────────────────────────────────────────
     UPLOAD_DIR: str = "./uploads"
-    MAX_UPLOAD_SIZE: int = 524_288_000  # 500 MB
+    MAX_UPLOAD_SIZE: int = 104_857_600  # 100 MB
 
     # ── CORS ──────────────────────────────────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:3000,https://projectdetective.vercel.app"
