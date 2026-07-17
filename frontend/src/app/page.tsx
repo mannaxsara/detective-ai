@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, ShieldAlert, LineChart,
+  ArrowRight, ShieldAlert, LineChart, MessageSquare,
   FileText, Terminal, ShieldCheck, Database,
   Cpu, Upload, ArrowUpRight, RefreshCw,
   ExternalLink, BarChart3, Layers, HardDrive, Settings,
@@ -91,7 +91,31 @@ export default function HomePage() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // Mockup preview interaction states
+  const [previewTab, setPreviewTab] = useState<"database" | "chart" | "anomaly" | "chat">("database");
+  const [forecastHorizon, setForecastHorizon] = useState<30 | 60 | 90>(90);
+  const [selectedAnomalyIndex, setSelectedAnomalyIndex] = useState<number | null>(null);
+  const [mockChatQ, setMockChatQ] = useState("");
+  const [mockChatA, setMockChatA] = useState("");
+  const [isTypingChat, setIsTypingChat] = useState(false);
+
   useEffect(() => { setMounted(true); }, []);
+
+  const triggerMockChat = (question: string, answer: string) => {
+    if (isTypingChat) return;
+    setMockChatQ(question);
+    setMockChatA("");
+    setIsTypingChat(true);
+    let i = 0;
+    const interval = setInterval(() => {
+      setMockChatA(prev => prev + answer.charAt(i));
+      i++;
+      if (i >= answer.length) {
+        clearInterval(interval);
+        setIsTypingChat(false);
+      }
+    }, 15);
+  };
 
   useEffect(() => {
     if (localStorage.getItem("detective_token")) setIsLoggedIn(true);
@@ -284,7 +308,7 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
-            {/* ── RIGHT: Product Preview Window ── */}
+            {/* ── RIGHT: Interactive Product Preview Window ── */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -292,98 +316,231 @@ export default function HomePage() {
               className="relative"
             >
               {/* Glow behind window */}
-              <div className="absolute -inset-6 bg-primary/8 rounded-3xl blur-2xl" />
+              <div className="absolute -inset-6 bg-primary/8 rounded-3xl blur-2xl pointer-events-none" />
 
               {/* Browser window */}
               <div className="relative border border-border rounded-2xl overflow-hidden shadow-2xl bg-card">
                 {/* Chrome bar */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-background/40">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-background/40 select-none">
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
                     <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
                     <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
                   </div>
-                  <div className="flex-1 h-5 rounded bg-muted/60 flex items-center px-3">
+                  <div className="flex-1 h-5 rounded bg-muted/60 flex items-center px-3 justify-between">
                     <span className="text-[9px] font-mono text-muted-foreground/50 truncate">detective.ai/analysis/case-428</span>
+                    <span className="text-[7px] font-mono text-primary/60 animate-pulse uppercase tracking-wider font-bold">Interactive Sandbox</span>
                   </div>
-                  <div className="w-6 h-3 rounded bg-muted/40" />
                 </div>
 
                 {/* App layout */}
-                <div className="grid grid-cols-[80px_1fr] min-h-[340px]">
-                  {/* Mini sidebar */}
-                  <div className="border-r border-border p-3 space-y-5 bg-background/20">
-                    <div className="flex flex-col gap-1">
-                      {[Database, BarChart3, Layers, HardDrive, Settings].map((Icon, i) => (
-                        <div
-                          key={i}
-                          className={`flex items-center justify-center h-7 rounded transition-colors ${i === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                      ))}
+                <div className="grid grid-cols-[60px_1fr] min-h-[350px]">
+                  {/* Mini sidebar with active tab controls */}
+                  <div className="border-r border-border p-2 space-y-4 bg-background/20 flex flex-col items-center">
+                    <div className="flex flex-col gap-1 w-full">
+                      {[
+                        { tab: "database" as const, icon: Database, label: "Data" },
+                        { tab: "chart" as const, icon: LineChart, label: "Forecast" },
+                        { tab: "anomaly" as const, icon: ShieldAlert, label: "Outliers" },
+                        { tab: "chat" as const, icon: MessageSquare, label: "Copilot" },
+                      ].map((item, i) => {
+                        const Icon = item.icon;
+                        const active = previewTab === item.tab;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setPreviewTab(item.tab)}
+                            className={`flex flex-col items-center justify-center py-2.5 rounded-lg transition-all cursor-pointer ${
+                              active
+                                ? "bg-primary text-primary-foreground font-bold shadow-sm shadow-black/10"
+                                : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
+                            }`}
+                            title={item.label}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            <span className="text-[7px] font-mono tracking-tighter mt-1 block select-none scale-[0.9]">{item.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  {/* Main panel */}
-                  <div className="p-4 space-y-4 overflow-hidden">
-                    {/* Case header */}
-                    <div className="flex items-start justify-between">
+                  {/* Main panel - dynamically changes view based on active tab */}
+                  <div className="p-5 space-y-4 overflow-hidden flex flex-col justify-between">
+                    
+                    {/* Panel Top stats */}
+                    <div className="flex items-start justify-between border-b border-border/20 pb-3">
                       <div>
-                        <div className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-widest">Evidence File</div>
-                        <div className="text-[11px] font-bold text-foreground mt-0.5 truncate max-w-[220px]">server_telemetry.parquet</div>
+                        <div className="text-[7px] font-mono text-muted-foreground/50 uppercase tracking-widest">Active Workspace</div>
+                        <div className="text-[11px] font-bold text-foreground mt-0.5 truncate max-w-[180px]">server_telemetry.parquet</div>
                       </div>
-                      <div className="flex gap-2 text-[8px] font-mono">
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">98.4% healthy</span>
-                        <span className="px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border">10,240 rows</span>
+                      <div className="flex gap-1.5 text-[8px] font-mono">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">98.4% health</span>
+                        <span className="px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border">10.2k rows</span>
                       </div>
                     </div>
 
-                    {/* Two mini panels */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* ARIMA chart */}
-                      <div className="border border-border rounded-lg p-3 bg-background/30">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-wider">ARIMA Forecast</span>
-                          <LineChart className="w-3 h-3 text-primary/60" />
+                    {/* View 1: Database Columns view */}
+                    {previewTab === "database" && (
+                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-primary/90 font-mono">Schema Attributes Profile</div>
+                        <div className="space-y-1.5">
+                          {[
+                            { name: "timestamp", type: "datetime", check: true },
+                            { name: "cpu_utilization", type: "float64", check: true },
+                            { name: "status_code", type: "int64", check: true },
+                          ].map((col, i) => (
+                            <div key={i} className="flex items-center justify-between border border-border/30 rounded px-2.5 py-1.5 bg-background/20 font-mono text-[9px] text-muted-foreground">
+                              <span className="text-foreground font-bold">{col.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[8px] opacity-60">[{col.type}]</span>
+                                {col.check && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="h-14 w-full text-primary">
-                          <ArimaChart />
-                        </div>
-                        <div className="mt-1.5 flex gap-2">
-                          <span className="text-[7px] font-mono text-muted-foreground/50">── Historical</span>
-                          <span className="text-[7px] font-mono text-primary/70">- - Forecast</span>
+                        <div className="text-[8px] text-muted-foreground/50 leading-relaxed font-mono">
+                          * Polars dataframe context initialized. Outlier scans are active on all numeric float coordinates.
                         </div>
                       </div>
+                    )}
 
-                      {/* Anomaly log */}
-                      <div className="border border-border rounded-lg p-3 bg-background/30 space-y-2">
+                    {/* View 2: ARIMA forecasting chart view */}
+                    {previewTab === "chart" && (
+                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
                         <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-mono text-muted-foreground/50 uppercase tracking-wider">Anomaly Log</span>
-                          <ShieldAlert className="w-3 h-3 text-primary/60" />
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-primary/90 font-mono">ARIMA Predictions (Horizon)</span>
+                          <div className="flex border border-border rounded-md overflow-hidden font-mono text-[8px]">
+                            {([30, 60, 90] as const).map(d => (
+                              <button
+                                key={d}
+                                onClick={() => setForecastHorizon(d)}
+                                className={`px-2 py-0.5 transition-colors cursor-pointer ${forecastHorizon === d ? "bg-primary text-primary-foreground" : "hover:bg-muted/40 text-muted-foreground"}`}
+                              >
+                                {d}d
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                        <div className="space-y-1.5 text-[8px] font-mono text-muted-foreground">
-                          <div className="flex gap-1.5 items-start">
-                            <span className="w-1 h-1 rounded-full bg-primary mt-1 shrink-0" />
-                            <span>Row 428 — spike +5.4× mean</span>
-                          </div>
-                          <div className="flex gap-1.5 items-start">
-                            <span className="w-1 h-1 rounded-full bg-primary mt-1 shrink-0" />
-                            <span>Row 1022 — duplicate index</span>
-                          </div>
-                          <div className="flex gap-1.5 items-start">
-                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400 shrink-0 mt-0.5" />
-                            <span className="text-emerald-400">Pipeline optimized</span>
-                          </div>
+
+                        {/* Interactive SVG path changing based on forecastHorizon state */}
+                        <div className="h-20 w-full border border-border/40 rounded-lg p-2 bg-background/30 text-primary">
+                          <svg className="w-full h-full" viewBox="0 0 200 64" preserveAspectRatio="none">
+                            {/* Grid lines */}
+                            {[16, 32, 48].map(y => (
+                              <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="currentColor" strokeWidth="0.4" className="text-primary/10" />
+                            ))}
+                            {/* Confidence Interval band scaling with horizon selection */}
+                            <path
+                              d={`M0,44 Q50,12 80,36 T150,${forecastHorizon === 30 ? 28 : forecastHorizon === 60 ? 20 : 14} L200,${forecastHorizon === 30 ? 32 : forecastHorizon === 60 ? 26 : 22} L200,44 L150,36 L80,54 Q50,36 0,52 Z`}
+                              fill="currentColor"
+                              className="text-primary/6 transition-all duration-300"
+                            />
+                            {/* Historical path */}
+                            <polyline points="0,44 25,40 50,28 75,38 80,36" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary/50" />
+                            {/* Interactive forecast path */}
+                            <path
+                              d={forecastHorizon === 30 
+                                ? "M80,36 Q110,28 140,30 T200,32"
+                                : forecastHorizon === 60 
+                                  ? "M80,36 Q110,24 140,26 T200,26"
+                                  : "M80,36 Q110,20 140,22 T200,18"
+                              }
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeDasharray="4 3"
+                              className="text-primary transition-all duration-300"
+                            />
+                            <circle cx="80" cy="36" r="3" fill="currentColor" stroke="#11120d" strokeWidth="1.5" className="text-primary" />
+                          </svg>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[7px] font-mono text-muted-foreground/60 select-none pt-1">
+                          <span>Horizon: {forecastHorizon} periods</span>
+                          <span>Confidence Level: 95% threshold</span>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Chat prompt */}
-                    <div className="border border-border rounded-lg p-2.5 bg-background/30">
-                      <div className="text-[8px] font-mono text-primary font-bold">&gt; What caused the spike at row 428?</div>
-                      <div className="text-[8px] font-mono text-muted-foreground mt-1">Transaction value exceeded 5.4× rolling mean — classified as statistical outlier. Recommend isolation.</div>
-                    </div>
+                    {/* View 3: Outlier Log view */}
+                    {previewTab === "anomaly" && (
+                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-primary/90 font-mono">Select Outlier for Details</div>
+                        <div className="space-y-1.5">
+                          {[
+                            { index: 428, desc: "Value Spike: +5.4× Rolling Mean", detail: "Row 428 (cpu_utilization = 98.42). Normal bounds: 10.0 - 65.0. Action: Replace with rolling median." },
+                            { index: 1022, desc: "Duplicate index validation error", detail: "Row 1022 timestamp collision matching index 1021. Action: Drop duplicate item." },
+                          ].map((anom) => {
+                            const active = selectedAnomalyIndex === anom.index;
+                            return (
+                              <div key={anom.index}>
+                                <button
+                                  onClick={() => setSelectedAnomalyIndex(active ? null : anom.index)}
+                                  className={`w-full text-left border rounded px-3 py-1.5 font-mono text-[9px] cursor-pointer transition-all flex justify-between items-center ${
+                                    active
+                                      ? "bg-primary/10 border-primary text-primary font-bold"
+                                      : "border-border/30 hover:bg-muted/40 text-muted-foreground"
+                                  }`}
+                                >
+                                  <span>Row {anom.index} — {anom.desc.substring(0, 16)}...</span>
+                                  <span className="text-[8px] opacity-60">{active ? "Hide Details" : "View Details"}</span>
+                                </button>
+                                {active && (
+                                  <div className="mt-1 p-2 bg-background border border-border/30 rounded text-[8px] font-mono text-muted-foreground leading-relaxed animate-slide-down">
+                                    {anom.detail}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="text-[8px] font-mono text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Z-Score validation checks complete</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* View 4: Chat assistant view */}
+                    {previewTab === "chat" && (
+                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
+                        {/* Chat suggestion prompts */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { q: "What caused the spike?", a: "Row 428 value exceeded 5.4× rolling mean bounds (outlier threshold)." },
+                            { q: "Is the dataset healthy?", a: "Dataset health score is 98.4%. Standard deviation bounds are clean." },
+                          ].map((item, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => triggerMockChat(item.q, item.a)}
+                              disabled={isTypingChat}
+                              className="text-[7.5px] font-mono border border-border hover:bg-muted/40 rounded-full px-2.5 py-0.5 cursor-pointer disabled:opacity-50 transition-colors"
+                            >
+                              &gt; {item.q}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Typing / Query response box */}
+                        <div className="border border-border/40 rounded-lg p-3 bg-background/40 flex-1 flex flex-col justify-between min-h-[90px]">
+                          {mockChatQ ? (
+                            <div className="space-y-2">
+                              <div className="text-[8.5px] font-mono text-primary font-bold">&gt; {mockChatQ}</div>
+                              <div className="text-[8.5px] font-mono text-muted-foreground leading-relaxed transition-all">
+                                {mockChatA}
+                                {isTypingChat && <span className="w-1.5 h-3 bg-primary inline-block ml-0.5 animate-pulse" />}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30 font-mono text-[9px] select-none text-center">
+                              <span>Select a prompt above to chat with Copilot</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>
