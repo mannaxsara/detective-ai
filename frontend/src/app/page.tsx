@@ -3,13 +3,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, ShieldAlert, LineChart, MessageSquare,
+  ArrowRight, ShieldAlert, LineChart,
   FileText, Terminal, ShieldCheck, Database,
   Cpu, Upload, ArrowUpRight, RefreshCw,
   ExternalLink, BarChart3, Layers, HardDrive, Settings,
-  CheckCircle2
+  CheckCircle2, Sun, Moon
 } from "lucide-react";
 import { motion, useInView } from "framer-motion";
+import { useTheme } from "next-themes";
 
 /* ─────────────────────────────────────────────────────────────
    LOGO — geometric magnifying lens + neural data nodes
@@ -87,6 +88,10 @@ export default function HomePage() {
   const [simStatus, setSimStatus] = useState<"idle" | "running" | "done">("idle");
   const [simP, setSimP] = useState({ a: 100, b: 85, c: 60 });
   const [simLogs, setSimLogs] = useState(["System ready."]);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (localStorage.getItem("detective_token")) setIsLoggedIn(true);
@@ -163,6 +168,18 @@ export default function HomePage() {
             <a href="https://github.com/mannaxsara/detective-ai" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors px-2">
               <ExternalLink className="w-3 h-3" /> GitHub
             </a>
+            {/* Theme toggle */}
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="w-7 h-7 rounded-full border border-border bg-muted/40 hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark"
+                  ? <Sun className="w-3.5 h-3.5 text-muted-foreground" />
+                  : <Moon className="w-3.5 h-3.5 text-muted-foreground" />}
+              </button>
+            )}
             {!loading && (
               isLoggedIn ? (
                 <Link href="/dashboard">
@@ -404,7 +421,8 @@ export default function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
-              tag: "Step 01", title: "Schema Normalizer", body: "Polars-powered. Prunes nulls, drops duplicates, coerces types, and emits a clean typed dataframe in under 15ms.",
+              num: "01", title: "Schema Normalizer", body: "Polars-powered. Prunes nulls, drops duplicates, coerces types, and emits a clean typed dataframe in under 15ms.",
+              icon: Database,
               visual: (
                 <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-2 font-mono text-[8px] text-muted-foreground">
                   <span>[Raw CSV]</span><ArrowRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Polars DF]</span>
@@ -412,7 +430,8 @@ export default function HomePage() {
               )
             },
             {
-              tag: "Step 02", title: "Outlier Detection", body: "IQR and Z-score sweeps across every numeric column. Surfaces anomaly coordinates and drift clusters automatically.",
+              num: "02", title: "Outlier Detection", body: "IQR and Z-score sweeps across every numeric column. Surfaces anomaly coordinates and drift clusters automatically.",
+              icon: ShieldAlert,
               visual: (
                 <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-1 px-3 font-mono text-[8px]">
                   {[0.2, 0.2, 1, 0.2, 0.2, 0.2].map((o, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${o === 1 ? "bg-primary" : "bg-muted-foreground/25"}`} />)}
@@ -421,7 +440,8 @@ export default function HomePage() {
               )
             },
             {
-              tag: "Step 03", title: "ARIMA Forecasting", body: "Auto-regressive integrated moving average models project 90 periods forward with 80% and 95% confidence intervals.",
+              num: "03", title: "ARIMA Forecasting", body: "Auto-regressive integrated moving average models project 90 periods forward with 80% and 95% confidence intervals.",
+              icon: LineChart,
               visual: (
                 <div className="h-8 border border-border/40 rounded bg-background/50 overflow-hidden text-primary">
                   <ArimaChart />
@@ -429,7 +449,8 @@ export default function HomePage() {
               )
             },
             {
-              tag: "Step 04", title: "Significance Tests", body: "Run t-tests, ANOVA, and chi-square tests on any column. Results are explained in plain English automatically.",
+              num: "04", title: "Significance Tests", body: "Run t-tests, ANOVA, and chi-square tests on any column. Results are explained in plain English automatically.",
+              icon: CheckCircle2,
               visual: (
                 <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center px-3 gap-2 font-mono text-[8px]">
                   <span className="text-emerald-400 font-bold">p = 0.003</span><span className="text-muted-foreground">— Reject H₀ at α=0.05</span>
@@ -437,7 +458,8 @@ export default function HomePage() {
               )
             },
             {
-              tag: "Step 05", title: "AI Copilot", body: "Chat with your data in plain English. The assistant references actual column values and computed findings in every response.",
+              num: "05", title: "AI Copilot", body: "Chat with your data in plain English. The assistant references actual column values and computed findings in every response.",
+              icon: FileText,
               visual: (
                 <div className="h-8 border border-border/40 rounded bg-background/50 p-2 font-mono text-[8px] text-muted-foreground">
                   <span className="text-primary font-bold">&gt; </span>Outlier at row 428 — +5.4× rolling mean.
@@ -445,7 +467,8 @@ export default function HomePage() {
               )
             },
             {
-              tag: "Step 06", title: "Report Compiler", body: "Compile every finding — anomalies, projections, test results, chat logs — into a download-ready PDF or Word report.",
+              num: "06", title: "Report Compiler", body: "Compile every finding — anomalies, projections, test results, chat logs — into a download-ready PDF or Word report.",
+              icon: FileText,
               visual: (
                 <div className="h-8 flex gap-2 items-center font-mono text-[8px] font-bold text-primary">
                   <span className="px-2 py-0.5 rounded border border-primary/30 bg-primary/5">BRIEF.PDF</span>
@@ -453,16 +476,31 @@ export default function HomePage() {
                 </div>
               )
             },
-          ].map((card, i) => (
-            <Reveal key={i} delay={i * 0.04} className="group border border-border rounded-xl p-5 bg-card hover:border-primary/30 hover:bg-card/80 transition-all duration-300 flex flex-col gap-4 cursor-default">
-              <div>
-                <span className="font-mono text-[8px] font-bold text-primary/60 uppercase tracking-widest">{card.tag}</span>
-                <h3 className="text-[12px] font-bold uppercase tracking-wide mt-1">{card.title}</h3>
-                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">{card.body}</p>
-              </div>
-              {card.visual}
-            </Reveal>
-          ))}
+          ].map((card, i) => {
+            const Icon = card.icon;
+            return (
+              <Reveal key={i} delay={i * 0.04}
+                className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden"
+              >
+                {/* Left accent bar on hover */}
+                <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <Icon className="w-2.5 h-2.5 text-primary" />
+                      </span>
+                      <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step {card.num}</span>
+                    </div>
+                    <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">{card.title}</h3>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">{card.body}</p>
+                  </div>
+                  <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">{card.num}</span>
+                </div>
+                {card.visual}
+              </Reveal>
+            );
+          })}
         </div>
       </section>
 
