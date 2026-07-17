@@ -7,7 +7,7 @@ import {
   FileText, ChevronRight, Terminal, ShieldCheck, Database, Code,
   Cpu, Upload, ArrowUpRight, Play, CheckCircle2, RefreshCw
 } from "lucide-react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 
 // Abstract "D" + magnifying glass logo
 function LogoIcon({ className = "w-6 h-6" }: { className?: string }) {
@@ -28,9 +28,9 @@ function RevealSection({ children, className = "" }: { children: React.ReactNode
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}
@@ -57,7 +57,7 @@ export default function HomePage() {
     setLoading(false);
   }, []);
 
-  // Auto-rotate the "How It Works" carousel (only if not manually interacted)
+  // Auto-rotate the "How It Works" carousel
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveHowStep((prev) => (prev + 1) % 4);
@@ -71,19 +71,16 @@ export default function HomePage() {
     setSimProgress({ ingest: 0, anomalies: 0, arima: 0 });
     setSimLogs(["[1/3] Incepting ingestion pipeline...", "Allocating Polars in-memory table context."]);
 
-    // Ingestion simulation
     setTimeout(() => {
       setSimProgress(prev => ({ ...prev, ingest: 100 }));
       setSimLogs(prev => [...prev, "✓ Ingested case file (10,240 rows parsed in 12ms)", "[2/3] Analyzing outliers..."]);
     }, 1000);
 
-    // Anomalies simulation
     setTimeout(() => {
       setSimProgress(prev => ({ ...prev, anomalies: 85 }));
       setSimLogs(prev => [...prev, "⚠️ Found 2 anomalies (Z-Score > 3.0 threshold)", "[3/3] Running ARIMA projection models..."]);
     }, 2200);
 
-    // ARIMA simulation
     setTimeout(() => {
       setSimProgress(prev => ({ ...prev, arima: 60 }));
       setSimLogs(prev => [...prev, "✓ ARIMA models converged successfully", "Diagnostics cycle complete. Report ready."]);
@@ -93,12 +90,12 @@ export default function HomePage() {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+    visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const } },
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
   };
 
   const howItWorksSteps = [
@@ -129,20 +126,21 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative overflow-hidden pt-20">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative overflow-hidden pt-24 pb-8">
       
       {/* Background grid */}
       <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(212,110,85,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(212,110,85,0.012)_1px,transparent_1px)] bg-[size:40px_40px] opacity-65 pointer-events-none" aria-hidden="true" />
 
+      {/* Subtle radial glow for background depth */}
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-3xl pointer-events-none select-none z-0" />
+
       {/* ═══════════════════ NAVBAR ═══════════════════ */}
       <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-full border border-border/80 bg-card/60 backdrop-blur-md px-6 h-12 flex items-center justify-between shadow-md">
-        {/* Left: Logo + Name */}
         <Link href="/" className="flex items-center gap-2 select-none group">
           <LogoIcon className="w-5 h-5 group-hover:scale-105 transition-transform" />
           <span className="font-bold text-[10px] uppercase tracking-widest text-foreground font-mono">DetectiveAI</span>
         </Link>
 
-        {/* Center: Navigation Links */}
         <nav className="hidden md:flex items-center gap-6">
           <a href="#how-it-works" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">How it works</a>
           <a href="#architecture" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Architecture</a>
@@ -150,7 +148,6 @@ export default function HomePage() {
           <Link href="/history" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Case Archives</Link>
         </nav>
 
-        {/* Right: CTA */}
         <div className="flex items-center gap-4">
           {loading ? null : isLoggedIn ? (
             <Link href="/dashboard">
@@ -171,39 +168,72 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ═══════════════════ HERO BENTO GRID ═══════════════════ */}
-      <section className="py-8 md:py-16 max-w-6xl mx-auto px-6 relative z-10">
-        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* Main Elevator Pitch Card (Span 2x2) */}
-          <motion.div variants={itemVariants} className="md:col-span-2 md:row-span-2 p-8 md:p-12 bg-card border border-border rounded-cards flex flex-col justify-between min-h-[380px] relative overflow-hidden text-left">
-            <div className="absolute top-6 right-6 flex items-center gap-1.5 font-mono text-[9px] font-bold text-primary select-none">
+      {/* ═══════════════════ SPACIOUS HERO SECTION ═══════════════════ */}
+      <section className="pt-8 pb-12 max-w-4xl mx-auto px-6 text-center relative z-10">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6"
+        >
+          {/* Active status indicator */}
+          <motion.div variants={itemVariants} className="inline-flex justify-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/40 bg-card text-[9px] font-mono font-bold uppercase text-primary tracking-wider select-none">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              FORENSIC WORKSPACE READY
-            </div>
-            <div className="space-y-6 pt-4">
-              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight leading-none uppercase">
-                Turn raw datasets <br />into <span className="text-primary">clean briefings.</span>
-              </h1>
-              <p className="text-xs text-muted-foreground leading-relaxed font-semibold max-w-lg">
-                DetectiveAI is an autonomous data diagnostics engine. Upload any CSV, Excel, or Parquet spreadsheet to automatically scan anomalies, run ARIMA projections, test hypotheses, and export professional PDF/Word briefs.
-              </p>
-            </div>
-            <div className="pt-8 flex flex-wrap items-center gap-4">
-              <Link href={isLoggedIn ? "/dashboard" : "/login"}>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="h-10 rounded-small bg-primary hover:opacity-95 text-primary-foreground font-bold text-xs uppercase tracking-wider px-6 flex items-center gap-2 cursor-pointer shadow-sm">
-                  {isLoggedIn ? "Open Workspace" : "Ingest Case File"}
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </motion.button>
-              </Link>
-              <span className="font-mono text-[9px] text-muted-foreground/60 font-bold select-none">SECURE SANDBOX INGESTION</span>
-            </div>
+              FORENSIC LAB READY
+            </span>
           </motion.div>
 
-          {/* Bento: Data Cleaning */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
+          {/* Heading */}
+          <motion.h1
+            variants={itemVariants}
+            className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tight leading-[1.05] uppercase max-w-3xl mx-auto"
+          >
+            Turn raw datasets <br />into <span className="text-primary font-bold">clean briefings.</span>
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            variants={itemVariants}
+            className="text-xs md:text-sm text-muted-foreground leading-relaxed font-semibold max-w-xl mx-auto"
+          >
+            DetectiveAI is an autonomous data diagnostics engine. Upload any CSV, Excel, or Parquet spreadsheet to automatically scan anomalies, project ARIMA models, test hypotheses, and export professional PDF/Word briefs.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div variants={itemVariants} className="pt-4 flex justify-center gap-3">
+            <Link href={isLoggedIn ? "/dashboard" : "/login"}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="h-10 rounded-small bg-primary hover:opacity-95 text-primary-foreground font-bold text-xs uppercase tracking-wider px-6 flex items-center gap-2 cursor-pointer shadow-md"
+              >
+                {isLoggedIn ? "Open Workspace" : "Ingest Case File"}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </motion.button>
+            </Link>
+            
+            <Link href="/history">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="h-10 rounded-small border border-border bg-card hover:bg-background text-foreground font-bold text-xs uppercase tracking-wider px-6 cursor-pointer"
+              >
+                View Case Archives
+              </motion.button>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ═══════════════════ SYMMETRICAL BENTO GRID FEATURE GRID ═══════════════════ */}
+      <section className="py-4 max-w-6xl mx-auto px-6 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          
+          {/* Card 1: Data Normalization (Col Span 2) */}
+          <div className="md:col-span-2 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>DATA CLEANING</span>
+              <span>STEP 1 // DATA CLEANING</span>
               <Sparkles className="w-3.5 h-3.5 text-primary/70" />
             </div>
             <div className="my-2">
@@ -213,12 +243,12 @@ export default function HomePage() {
             <div className="h-7 border border-border/40 rounded bg-background/50 flex items-center justify-around font-mono text-[8px] text-muted-foreground">
               <span>[Raw Dataset]</span><ChevronRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Polars Clean]</span>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Bento: Anomaly */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
+          {/* Card 2: Outlier Scan (Col Span 2) */}
+          <div className="md:col-span-2 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>ANOMALY SCAN</span>
+              <span>STEP 2 // ANOMALIES</span>
               <ShieldAlert className="w-3.5 h-3.5 text-primary/70" />
             </div>
             <div className="my-2">
@@ -229,42 +259,35 @@ export default function HomePage() {
               {[0.3, 0.3, 1, 0.3, 0.3, 0.3].map((o, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${o === 1 ? "bg-primary" : "bg-muted-foreground/30"}`} />)}
               <span className="font-mono text-[8px] text-primary font-bold ml-1.5">Z-Score = +3.8</span>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Bento: Forecast Waveform */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px] overflow-hidden">
+          {/* Card 3: ARIMA Waveform (Col Span 2) */}
+          <div className="md:col-span-2 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px] overflow-hidden">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>FORECASTING</span>
+              <span>STEP 3 // FORECASTING</span>
               <LineChart className="w-3.5 h-3.5 text-primary/70" />
             </div>
-            {/* Highly detailed, professional ARIMA SVG forecasting chart */}
-            <div className="h-16 w-full relative my-1 border border-border/30 rounded bg-background/50 p-1 overflow-hidden flex items-center justify-center">
-              {/* Chart grid lines */}
+            <div className="h-14 w-full relative my-1 border border-border/30 rounded bg-background/50 p-1 overflow-hidden flex items-center justify-center">
               <div className="absolute inset-0 grid grid-cols-6 grid-rows-3 opacity-15 pointer-events-none">
                 {Array.from({ length: 18 }).map((_, i) => (
                   <div key={i} className="border-r border-b border-border/40" />
                 ))}
               </div>
               <svg className="w-full h-full overflow-visible z-10 relative" viewBox="0 0 200 60" preserveAspectRatio="none">
-                {/* 95% Confidence Interval (Wide, Translucent) */}
                 <path d="M5,35 Q35,5 70,30 T140,10 T195,20 L195,50 L140,40 L70,48 L35,25 L5,45 Z" fill="var(--primary)" className="opacity-[0.04]" />
-                {/* 80% Confidence Interval (Narrower, Slightly darker) */}
                 <path d="M5,35 Q35,10 70,32 T140,15 T195,22 L195,40 L140,30 L70,40 L35,20 L5,40 Z" fill="var(--primary)" className="opacity-[0.08]" />
-                {/* Historical Data path */}
                 <path d="M5,35 L20,38 L35,22 L50,42 L70,32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
-                {/* Forecast projection line */}
                 <path d="M70,32 Q105,15 140,25 T195,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2" className="text-primary animate-pulse" />
-                {/* Origin pointer */}
                 <circle cx="70" cy="32" r="3" className="fill-primary stroke-background" strokeWidth="1" />
               </svg>
             </div>
             <div className="text-[10px] text-muted-foreground font-semibold">Predictive ARIMA projections with 95% bounds.</div>
-          </motion.div>
+          </div>
 
-          {/* Bento: Chat */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
+          {/* Card 4: AI Q&A Chat (Col Span 3) */}
+          <div className="md:col-span-3 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>AI ASSISTANT</span>
+              <span>STEP 4 // AI ASSISTANT</span>
               <MessageSquare className="w-3.5 h-3.5 text-primary/70" />
             </div>
             <div className="my-2">
@@ -275,12 +298,12 @@ export default function HomePage() {
               <div className="text-primary font-bold">&gt; Any spikes in values?</div>
               <div>Outlier detected at index 428 (+5.4x mean).</div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Bento: Reports */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
+          {/* Card 5: Briefing Reports (Col Span 3) */}
+          <div className="md:col-span-3 p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
-              <span>REPORT COMPILER</span>
+              <span>STEP 5 // COMPILER</span>
               <FileText className="w-3.5 h-3.5 text-primary/70" />
             </div>
             <div className="my-2">
@@ -291,9 +314,9 @@ export default function HomePage() {
               <span className="px-2 py-0.5 rounded border border-primary/30 bg-primary/5">REPORT.PDF</span>
               <span className="px-2 py-0.5 rounded border border-border bg-background text-muted-foreground">REPORT.DOCX</span>
             </div>
-          </motion.div>
+          </div>
 
-        </motion.div>
+        </div>
       </section>
 
       {/* ═══════════════════ HOW IT WORKS CAROUSEL ═══════════════════ */}
@@ -429,7 +452,6 @@ export default function HomePage() {
                 </button>
               </div>
               
-              {/* Telemetry Visual Simulator */}
               <div className="space-y-3 font-mono text-[10px] text-muted-foreground">
                 <div>
                   <div className="flex items-center justify-between">
