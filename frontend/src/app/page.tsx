@@ -67,12 +67,108 @@ function ArimaChart() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   LIVE NETWORK TOPOLOGY SIMULATOR (CANVAS)
+───────────────────────────────────────────────────────────── */
+function NetworkSimulator({ progress }: { progress: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+    const nodes = [
+      { x: 30, y: 30, state: "idle" },
+      { x: 80, y: 20, state: "idle" },
+      { x: 130, y: 40, state: "idle" },
+      { x: 180, y: 15, state: "idle" },
+      { x: 50, y: 70, state: "idle" },
+      { x: 100, y: 65, state: "idle" },
+      { x: 150, y: 80, state: "idle" },
+      { x: 220, y: 60, state: "idle" },
+    ];
+
+    const connections = [
+      [0, 1], [0, 4], [1, 2], [1, 5], [2, 3], [2, 6], [3, 7], [4, 5], [5, 6], [6, 7]
+    ];
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      nodes.forEach((n, idx) => {
+        if (progress >= 100) {
+          n.state = idx === 2 || idx === 5 ? "anomaly" : "done";
+        } else if (progress > 30) {
+          n.state = idx === 2 || idx === 5 ? "anomaly" : "active";
+        } else if (progress > 5) {
+          n.state = (idx * 12) < progress ? "active" : "idle";
+        } else {
+          n.state = "idle";
+        }
+      });
+
+      connections.forEach(([s, e]) => {
+        const from = nodes[s];
+        const to = nodes[e];
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.lineWidth = 0.8;
+        
+        if (from.state === "anomaly" || to.state === "anomaly") {
+          ctx.strokeStyle = "rgba(238, 96, 24, 0.25)";
+        } else if (from.state === "active" || to.state === "active" || from.state === "done" || to.state === "done") {
+          ctx.strokeStyle = "rgba(216, 207, 188, 0.4)";
+        } else {
+          ctx.strokeStyle = "rgba(86, 84, 73, 0.1)";
+        }
+        ctx.stroke();
+      });
+
+      nodes.forEach((n) => {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.state === "anomaly" ? 3.5 : 2.5, 0, Math.PI * 2);
+        
+        if (n.state === "anomaly") {
+          ctx.fillStyle = "#bc3e3e";
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#bc3e3e";
+        } else if (n.state === "done") {
+          ctx.fillStyle = "#A0CA92";
+          ctx.shadowBlur = 0;
+        } else if (n.state === "active") {
+          ctx.fillStyle = "#d8cfbc";
+          ctx.shadowBlur = 4;
+          ctx.shadowColor = "#d8cfbc";
+        } else {
+          ctx.fillStyle = "rgba(86, 84, 73, 0.3)";
+          ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => cancelAnimationFrame(animId);
+  }, [progress]);
+
+  return (
+    <canvas ref={canvasRef} width={260} height={100} className="w-full h-[90px] border border-border/30 rounded-lg bg-background/20" />
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────────────────────────── */
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedCodeTab, setSelectedCodeTab] = useState<"python" | "bash">("python");
+  const [selectedCodeTab, setSelectedCodeTab] = useState<"python" | "nodejs" | "curl">("python");
   const [activeStep, setActiveStep] = useState(0);
   const [simStatus, setSimStatus] = useState<"idle" | "running" | "done">("idle");
   const [simP, setSimP] = useState({ a: 100, b: 85, c: 60 });
@@ -1001,7 +1097,7 @@ export default function HomePage() {
           </Reveal>
 
           <Reveal delay={0.1} className="border border-border bg-card rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/25">
               <span className="font-mono text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider">ACTIVE_THREAD_POOL</span>
               <button
                 onClick={runSim}
@@ -1013,6 +1109,9 @@ export default function HomePage() {
               </button>
             </div>
             <div className="p-5 space-y-4">
+              {/* Canvas topology simulator */}
+              <NetworkSimulator progress={(simP.a + simP.b + simP.c) / 3} />
+
               {[
                 { label: "> Ingesting spreadsheet...", val: simP.a, result: simP.a === 100 ? "COMPLETE (12ms)" : simP.a > 0 ? "RUNNING" : "WAITING", hi: false },
                 { label: "> Profiling Z-score outliers...", val: simP.b, result: simP.b === 85 ? "2 ANOMALIES FOUND" : simP.b > 0 ? "RUNNING" : "WAITING", hi: simP.b === 85 },
@@ -1048,7 +1147,7 @@ export default function HomePage() {
           <Reveal className="bg-[#0a0a09] border border-border rounded-xl overflow-hidden shadow-2xl">
             {/* Tab bar */}
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/40 bg-card/30">
-              {(["python", "bash"] as const).map(tab => (
+              {(["python", "nodejs", "curl"] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setSelectedCodeTab(tab)}
