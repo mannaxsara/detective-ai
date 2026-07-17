@@ -5,9 +5,9 @@ import Link from "next/link";
 import {
   ArrowRight, Sparkles, ShieldAlert, LineChart, MessageSquare,
   FileText, ChevronRight, Terminal, ShieldCheck, Database, Code,
-  Cpu, Upload, ArrowUpRight
+  Cpu, Upload, ArrowUpRight, Play, CheckCircle2, RefreshCw
 } from "lucide-react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 
 // Abstract "D" + magnifying glass logo
 function LogoIcon({ className = "w-6 h-6" }: { className?: string }) {
@@ -44,19 +44,52 @@ export default function HomePage() {
   const [selectedCodeTab, setSelectedCodeTab] = useState<"python" | "bash">("python");
   const [activeHowStep, setActiveHowStep] = useState(0);
 
+  // Live Simulation state in the processing core
+  const [simStatus, setSimStatus] = useState<"idle" | "running" | "complete">("idle");
+  const [simProgress, setSimProgress] = useState({ ingest: 100, anomalies: 85, arima: 60 });
+  const [simLogs, setSimLogs] = useState<string[]>([
+    "System ready. Awaiting thread initialization.",
+  ]);
+
   useEffect(() => {
     const token = localStorage.getItem("detective_token");
     if (token) setIsLoggedIn(true);
     setLoading(false);
   }, []);
 
-  // Auto-rotate the "How It Works" carousel
+  // Auto-rotate the "How It Works" carousel (only if not manually interacted)
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveHowStep((prev) => (prev + 1) % 4);
-    }, 4000);
+    }, 4500);
     return () => clearInterval(interval);
   }, []);
+
+  const triggerCoreSimulation = () => {
+    if (simStatus === "running") return;
+    setSimStatus("running");
+    setSimProgress({ ingest: 0, anomalies: 0, arima: 0 });
+    setSimLogs(["[1/3] Incepting ingestion pipeline...", "Allocating Polars in-memory table context."]);
+
+    // Ingestion simulation
+    setTimeout(() => {
+      setSimProgress(prev => ({ ...prev, ingest: 100 }));
+      setSimLogs(prev => [...prev, "✓ Ingested case file (10,240 rows parsed in 12ms)", "[2/3] Analyzing outliers..."]);
+    }, 1000);
+
+    // Anomalies simulation
+    setTimeout(() => {
+      setSimProgress(prev => ({ ...prev, anomalies: 85 }));
+      setSimLogs(prev => [...prev, "⚠️ Found 2 anomalies (Z-Score > 3.0 threshold)", "[3/3] Running ARIMA projection models..."]);
+    }, 2200);
+
+    // ARIMA simulation
+    setTimeout(() => {
+      setSimProgress(prev => ({ ...prev, arima: 60 }));
+      setSimLogs(prev => [...prev, "✓ ARIMA models converged successfully", "Diagnostics cycle complete. Report ready."]);
+      setSimStatus("complete");
+    }, 3500);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -70,97 +103,90 @@ export default function HomePage() {
 
   const howItWorksSteps = [
     {
-      title: "Upload Evidence",
-      desc: "Drag any CSV, Excel, or Parquet file into the secure sandbox. The Polars engine maps every column's type, detects encoding, and calculates a schema health index in under 12ms.",
+      title: "1. Upload Evidence",
+      desc: "Drag any CSV, Excel, or Parquet spreadsheet into the secure sandbox. The Polars engine profiles every column, identifies mapping schemas, and rates data integrity values in milliseconds.",
       icon: Upload,
-      stat: "12ms parse time",
+      stat: "12ms Polars ingest",
     },
     {
-      title: "Scan & Diagnose",
-      desc: "The engine runs IQR and Z-score sweeps across every numeric dimension, flags statistical outliers, identifies missing value clusters, and surfaces duplicate records automatically.",
+      title: "2. Scan & Diagnose",
+      desc: "The scanner applies standard IQR and Z-score distributions across all dimensions. It isolates outlier coordinates, missing cell blocks, and duplicate items automatically.",
       icon: ShieldAlert,
-      stat: "99.5% confidence",
+      stat: "IQR / Z-Score indices",
     },
     {
-      title: "Forecast & Test",
-      desc: "ARIMA(1,1,1) models project 90 periods forward with upper/lower confidence bounds. Run t-tests, ANOVA, and chi-square significance checks with plain-English interpretation.",
+      title: "3. Forecast & Test",
+      desc: "ARIMA auto-regressive models project 90 periods forward with multi-layered confidence bounds. Instantly run t-tests, ANOVA, and significance checks on any dataset target.",
       icon: LineChart,
-      stat: "90 period vectors",
+      stat: "Confidence waves",
     },
     {
-      title: "Export Briefing",
-      desc: "Compile every finding — anomalies, forecasts, hypotheses, and AI chat logs — into a download-ready PDF or Word executive report with one click.",
+      title: "4. Compile Briefings",
+      desc: "Generate comprehensive reports instantly. Save executive briefings complete with anomaly charts, projection trends, and chat history as download-ready PDF or Word files.",
       icon: FileText,
-      stat: "PDF + DOCX",
+      stat: "PDF + DOCX builders",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative overflow-hidden pt-20">
       
       {/* Background grid */}
       <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(212,110,85,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(212,110,85,0.012)_1px,transparent_1px)] bg-[size:40px_40px] opacity-65 pointer-events-none" aria-hidden="true" />
 
       {/* ═══════════════════ NAVBAR ═══════════════════ */}
-      <motion.header
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-        className="border-b border-border bg-card/45 backdrop-blur-md sticky top-0 z-50"
-      >
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          {/* Left: Logo + Name */}
-          <Link href="/" className="flex items-center gap-2.5 select-none group">
-            <LogoIcon className="w-5 h-5 group-hover:scale-105 transition-transform" />
-            <span className="font-bold text-[11px] uppercase tracking-widest text-foreground font-mono">DetectiveAI</span>
-          </Link>
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-full border border-border/80 bg-card/60 backdrop-blur-md px-6 h-12 flex items-center justify-between shadow-md">
+        {/* Left: Logo + Name */}
+        <Link href="/" className="flex items-center gap-2 select-none group">
+          <LogoIcon className="w-5 h-5 group-hover:scale-105 transition-transform" />
+          <span className="font-bold text-[10px] uppercase tracking-widest text-foreground font-mono">DetectiveAI</span>
+        </Link>
 
-          {/* Center: Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#how-it-works" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors">How it works</a>
-            <a href="#architecture" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors">Architecture</a>
-            <a href="#developer" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors">Developer</a>
-            <Link href="/history" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors">Case Archives</Link>
-          </nav>
+        {/* Center: Navigation Links */}
+        <nav className="hidden md:flex items-center gap-6">
+          <a href="#how-it-works" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">How it works</a>
+          <a href="#architecture" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Architecture</a>
+          <a href="#developer" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Developer</a>
+          <Link href="/history" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Case Archives</Link>
+        </nav>
 
-          {/* Right: CTA */}
-          <div className="flex items-center gap-4">
-            {loading ? null : isLoggedIn ? (
-              <Link href="/dashboard">
-                <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="h-8 rounded-small bg-primary hover:opacity-95 text-primary-foreground font-bold text-[10px] uppercase tracking-wider px-4 cursor-pointer flex items-center gap-1.5">
-                  Workspace <ArrowUpRight className="w-3 h-3" />
+        {/* Right: CTA */}
+        <div className="flex items-center gap-4">
+          {loading ? null : isLoggedIn ? (
+            <Link href="/dashboard">
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="h-7 rounded-full bg-primary hover:opacity-95 text-primary-foreground font-bold text-[9px] uppercase tracking-wider px-3.5 cursor-pointer flex items-center gap-1">
+                Workspace <ArrowUpRight className="w-3 h-3" />
+              </motion.button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors hidden sm:block">Sign in</Link>
+              <Link href="/register">
+                <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="h-7 rounded-full bg-primary hover:opacity-95 text-primary-foreground font-bold text-[9px] uppercase tracking-wider px-3.5 cursor-pointer">
+                  Get Started
                 </motion.button>
               </Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors hidden sm:block">Sign in</Link>
-                <Link href="/register">
-                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="h-8 rounded-small bg-primary hover:opacity-95 text-primary-foreground font-bold text-[10px] uppercase tracking-wider px-4 cursor-pointer">
-                    Get Started
-                  </motion.button>
-                </Link>
-              </>
-            )}
-          </div>
+            </>
+          )}
         </div>
-      </motion.header>
+      </div>
 
       {/* ═══════════════════ HERO BENTO GRID ═══════════════════ */}
-      <section className="py-12 md:py-20 max-w-6xl mx-auto px-6 relative z-10">
+      <section className="py-8 md:py-16 max-w-6xl mx-auto px-6 relative z-10">
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* Main Title Card (Span 2x2) */}
+          {/* Main Elevator Pitch Card (Span 2x2) */}
           <motion.div variants={itemVariants} className="md:col-span-2 md:row-span-2 p-8 md:p-12 bg-card border border-border rounded-cards flex flex-col justify-between min-h-[380px] relative overflow-hidden text-left">
             <div className="absolute top-6 right-6 flex items-center gap-1.5 font-mono text-[9px] font-bold text-primary select-none">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              FORENSIC ENGINE READY
+              FORENSIC WORKSPACE READY
             </div>
             <div className="space-y-6 pt-4">
               <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight leading-none uppercase">
                 Turn raw datasets <br />into <span className="text-primary">clean briefings.</span>
               </h1>
               <p className="text-xs text-muted-foreground leading-relaxed font-semibold max-w-lg">
-                DetectiveAI is a high-fidelity data forensics engine. Upload any CSV, Excel, or Parquet spreadsheet to automatically scan anomalies, run ARIMA projections, test hypotheses, and export professional PDF/Word briefs.
+                DetectiveAI is an autonomous data diagnostics engine. Upload any CSV, Excel, or Parquet spreadsheet to automatically scan anomalies, run ARIMA projections, test hypotheses, and export professional PDF/Word briefs.
               </p>
             </div>
             <div className="pt-8 flex flex-wrap items-center gap-4">
@@ -175,69 +201,92 @@ export default function HomePage() {
           </motion.div>
 
           {/* Bento: Data Cleaning */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[180px]">
+          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
               <span>DATA CLEANING</span>
               <Sparkles className="w-3.5 h-3.5 text-primary/70" />
             </div>
-            <div className="my-3"><h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Schema Normalization</h3><p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Prunes nulls, drops duplicates, scales outliers, and aligns data types automatically.</p></div>
+            <div className="my-2">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Interactive Normalization</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Prunes null points, drops duplicate records, scales metrics, and maps schemas instantly.</p>
+            </div>
             <div className="h-7 border border-border/40 rounded bg-background/50 flex items-center justify-around font-mono text-[8px] text-muted-foreground">
-              <span>[Raw File]</span><ChevronRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Clean Output]</span>
+              <span>[Raw Dataset]</span><ChevronRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Polars Clean]</span>
             </div>
           </motion.div>
 
           {/* Bento: Anomaly */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[180px]">
+          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
               <span>ANOMALY SCAN</span>
               <ShieldAlert className="w-3.5 h-3.5 text-primary/70" />
             </div>
-            <div className="my-3"><h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Outlier Detection</h3><p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">IQR and Z-score sweeps isolate distribution failures and missing value clusters.</p></div>
+            <div className="my-2">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Forensic Outlier Scan</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Isolate data anomalies and drift spikes using dynamic Z-score calculations and IQR thresholds.</p>
+            </div>
             <div className="h-7 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-1.5 px-3 select-none">
               {[0.3, 0.3, 1, 0.3, 0.3, 0.3].map((o, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${o === 1 ? "bg-primary" : "bg-muted-foreground/30"}`} />)}
-              <span className="font-mono text-[8px] text-primary font-bold ml-1.5">Z = +3.8</span>
+              <span className="font-mono text-[8px] text-primary font-bold ml-1.5">Z-Score = +3.8</span>
             </div>
           </motion.div>
 
           {/* Bento: Forecast Waveform */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[180px] overflow-hidden">
+          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px] overflow-hidden">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
               <span>FORECASTING</span>
               <LineChart className="w-3.5 h-3.5 text-primary/70" />
             </div>
-            <div className="h-14 w-full relative my-1.5 border border-border/30 rounded bg-background/50 p-1 overflow-hidden">
-              <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 opacity-[0.03] pointer-events-none">
-                {Array.from({ length: 8 }).map((_, i) => <div key={i} className="border border-foreground" />)}
+            {/* Highly detailed, professional ARIMA SVG forecasting chart */}
+            <div className="h-16 w-full relative my-1 border border-border/30 rounded bg-background/50 p-1 overflow-hidden flex items-center justify-center">
+              {/* Chart grid lines */}
+              <div className="absolute inset-0 grid grid-cols-6 grid-rows-3 opacity-15 pointer-events-none">
+                {Array.from({ length: 18 }).map((_, i) => (
+                  <div key={i} className="border-r border-b border-border/40" />
+                ))}
               </div>
-              <svg className="w-full h-full overflow-visible z-10 relative" viewBox="0 0 200 50" preserveAspectRatio="none">
-                <path d="M5,30 Q35,8 70,35 T140,18 T195,25 L195,48 L5,48 Z" fill="url(#gs)" className="opacity-15" />
-                <path d="M5,30 Q35,8 70,35 T140,18 T195,25" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" />
-                <defs><linearGradient id="gs" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.5" /><stop offset="100%" stopColor="var(--primary)" stopOpacity="0" /></linearGradient></defs>
+              <svg className="w-full h-full overflow-visible z-10 relative" viewBox="0 0 200 60" preserveAspectRatio="none">
+                {/* 95% Confidence Interval (Wide, Translucent) */}
+                <path d="M5,35 Q35,5 70,30 T140,10 T195,20 L195,50 L140,40 L70,48 L35,25 L5,45 Z" fill="var(--primary)" className="opacity-[0.04]" />
+                {/* 80% Confidence Interval (Narrower, Slightly darker) */}
+                <path d="M5,35 Q35,10 70,32 T140,15 T195,22 L195,40 L140,30 L70,40 L35,20 L5,40 Z" fill="var(--primary)" className="opacity-[0.08]" />
+                {/* Historical Data path */}
+                <path d="M5,35 L20,38 L35,22 L50,42 L70,32" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground" />
+                {/* Forecast projection line */}
+                <path d="M70,32 Q105,15 140,25 T195,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2" className="text-primary animate-pulse" />
+                {/* Origin pointer */}
+                <circle cx="70" cy="32" r="3" className="fill-primary stroke-background" strokeWidth="1" />
               </svg>
             </div>
-            <div className="text-[10px] text-muted-foreground font-semibold">90 periods forward with confidence bounds.</div>
+            <div className="text-[10px] text-muted-foreground font-semibold">Predictive ARIMA projections with 95% bounds.</div>
           </motion.div>
 
           {/* Bento: Chat */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[180px]">
+          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
               <span>AI ASSISTANT</span>
               <MessageSquare className="w-3.5 h-3.5 text-primary/70" />
             </div>
-            <div className="my-3"><h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Source-Backed Chat</h3><p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Ask questions in plain English — answers reference your actual data metrics.</p></div>
+            <div className="my-2">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Intelligent Assistant</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Interact directly with findings in natural language. Copilot translates schema correlations instantly.</p>
+            </div>
             <div className="p-2 border border-border/40 rounded bg-background/50 font-mono text-[8px] text-left text-muted-foreground space-y-0.5">
               <div className="text-primary font-bold">&gt; Any spikes in values?</div>
-              <div>Outlier at row 428 (+5.4x mean deviation).</div>
+              <div>Outlier detected at index 428 (+5.4x mean).</div>
             </div>
           </motion.div>
 
           {/* Bento: Reports */}
-          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[180px]">
+          <motion.div variants={itemVariants} className="p-6 bg-card border border-border rounded-cards flex flex-col justify-between text-left min-h-[190px]">
             <div className="flex items-center justify-between font-mono text-[9px] font-bold text-muted-foreground/60 tracking-wider">
               <span>REPORT COMPILER</span>
               <FileText className="w-3.5 h-3.5 text-primary/70" />
             </div>
-            <div className="my-3"><h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Executive Briefing</h3><p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Compile anomalies, forecasts, and chat logs into download-ready professional reports.</p></div>
+            <div className="my-2">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">Briefing Generator</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold leading-relaxed mt-1">Compile anomaly logs, projection paths, and significance tests into print-ready PDF/Word reports.</p>
+            </div>
             <div className="flex gap-2 font-mono text-[8px] font-bold text-primary">
               <span className="px-2 py-0.5 rounded border border-primary/30 bg-primary/5">REPORT.PDF</span>
               <span className="px-2 py-0.5 rounded border border-border bg-background text-muted-foreground">REPORT.DOCX</span>
@@ -271,7 +320,7 @@ export default function HomePage() {
                       onClick={() => setActiveHowStep(i)}
                       className={`w-full text-left p-4 rounded-cards border cursor-pointer transition-all duration-200 flex items-start gap-3 ${
                         isActive
-                          ? "bg-card border-primary/40"
+                          ? "bg-card border-primary/40 shadow-sm"
                           : "bg-transparent border-border/40 hover:bg-card/50"
                       }`}
                     >
@@ -370,22 +419,58 @@ export default function HomePage() {
             <div className="space-y-4 text-left">
               <div className="flex items-center justify-between border-b border-border/30 pb-2.5">
                 <span className="font-mono text-[9px] font-bold text-muted-foreground/60 uppercase">ACTIVE_THREAD_POOL</span>
-                <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-mono text-[9px] font-bold">SYSTEM_OK</span>
+                <button
+                  onClick={triggerCoreSimulation}
+                  disabled={simStatus === "running"}
+                  className="px-2.5 py-1 rounded bg-primary/10 border border-primary/30 text-primary font-mono text-[9px] font-bold flex items-center gap-1.5 hover:bg-primary/20 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all cursor-pointer"
+                >
+                  <RefreshCw className={`w-3 h-3 ${simStatus === "running" ? "animate-spin" : ""}`} />
+                  {simStatus === "running" ? "SIMULATING..." : "RUN SIMULATION"}
+                </button>
               </div>
+              
+              {/* Telemetry Visual Simulator */}
               <div className="space-y-3 font-mono text-[10px] text-muted-foreground">
-                {[
-                  { label: "> Ingesting spreadsheet...", result: "COMPLETE (12ms)", width: "100%" },
-                  { label: "> Profiling outlier Z-scores...", result: "FOUND 2 ANOMALIES", width: "85%", highlight: true },
-                  { label: "> Compiling ARIMA time vector...", result: "COMPLETE", width: "60%" },
-                ].map((row, i) => (
-                  <div key={i}>
-                    <div className="flex items-center justify-between">
-                      <span>{row.label}</span>
-                      <span className={row.highlight ? "text-primary font-bold" : "text-foreground"}>{row.result}</span>
-                    </div>
-                    <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
-                      <div className="bg-primary h-full rounded-full transition-all duration-700" style={{ width: row.width }} />
-                    </div>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span>&gt; Ingesting spreadsheet...</span>
+                    <span className="text-foreground">{simProgress.ingest === 100 ? "COMPLETE (12ms)" : "RUNNING"}</span>
+                  </div>
+                  <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
+                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${simProgress.ingest}%` }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span>&gt; Profiling outlier Z-scores...</span>
+                    <span className={simProgress.anomalies === 85 ? "text-primary font-bold" : "text-foreground"}>
+                      {simProgress.anomalies === 85 ? "FOUND 2 ANOMALIES" : simProgress.ingest === 100 ? "RUNNING" : "PENDING"}
+                    </span>
+                  </div>
+                  <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
+                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${simProgress.anomalies}%` }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span>&gt; Compiling ARIMA time vector...</span>
+                    <span className="text-foreground">
+                      {simProgress.arima === 60 ? "COMPLETE" : simProgress.anomalies === 85 ? "RUNNING" : "PENDING"}
+                    </span>
+                  </div>
+                  <div className="w-full bg-background border border-border/40 h-2 rounded-full overflow-hidden mt-1.5">
+                    <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${simProgress.arima}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Console log outputs */}
+              <div className="mt-4 p-3 bg-background border border-border/40 rounded font-mono text-[9px] text-muted-foreground/80 space-y-1 max-h-[80px] overflow-y-auto">
+                {simLogs.map((log, i) => (
+                  <div key={i} className={log.startsWith("✓") ? "text-emerald-500" : log.startsWith("⚠️") ? "text-primary font-bold" : ""}>
+                    {log}
                   </div>
                 ))}
               </div>
@@ -398,6 +483,7 @@ export default function HomePage() {
       <section id="developer" className="py-20 border-b border-border bg-card/20 relative z-10">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
+          {/* Left Side: Code Editor with Console response view */}
           <RevealSection className="lg:col-span-7 order-2 lg:order-1 bg-black border border-border rounded-cards overflow-hidden shadow-2xl flex flex-col">
             <div className="flex items-center justify-between px-4 py-2.5 bg-card/60 border-b border-border/40">
               <div className="flex gap-2">
@@ -413,30 +499,58 @@ export default function HomePage() {
               </div>
               <Terminal className="w-3.5 h-3.5 text-muted-foreground/50" />
             </div>
-            <div className="p-6 font-mono text-[10px] text-left leading-relaxed text-muted-foreground/90 overflow-x-auto min-h-[180px]">
-              {selectedCodeTab === "python" ? (
-                <pre>
-                  <span className="text-primary">import</span> detective_ai <span className="text-primary">as</span> det{"\n\n"}
-                  <span className="text-muted-foreground/50"># Ingest evidence parquet dataset</span>{"\n"}
-                  case = det.IngestionPipeline(<span className="text-emerald-500">&quot;case_telemetry.parquet&quot;</span>){"\n\n"}
-                  <span className="text-muted-foreground/50"># Run automated anomaly detection</span>{"\n"}
-                  report = case.scan_anomalies(iqr_threshold=<span className="text-amber-500">1.5</span>){"\n"}
-                  forecast = case.project_arima(periods=<span className="text-amber-500">90</span>){"\n\n"}
-                  <span className="text-muted-foreground/50"># Export diagnostic briefing</span>{"\n"}
-                  case.export_report(format=<span className="text-emerald-500">&quot;pdf&quot;</span>)
-                </pre>
-              ) : (
-                <pre>
-                  <span className="text-muted-foreground/50"># Install the diagnostics worker</span>{"\n"}
-                  pip install detective-ai-engine{"\n"}
-                  python -m detective_ai initialize --sandbox{"\n\n"}
-                  <span className="text-primary">✓ Diagnostics engine running</span>{"\n"}
-                  <span className="text-primary">✓ Sandbox isolation confirmed</span>
-                </pre>
-              )}
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-b border-border/20">
+              <div className="md:col-span-7 p-6 font-mono text-[10px] text-left leading-relaxed text-muted-foreground/90 overflow-x-auto min-h-[180px] border-b md:border-b-0 md:border-r border-border/20">
+                {selectedCodeTab === "python" ? (
+                  <pre>
+                    <span className="text-primary">import</span> detective_ai <span className="text-primary">as</span> det{"\n\n"}
+                    <span className="text-muted-foreground/50"># Ingest parquet file</span>{"\n"}
+                    case = det.IngestionPipeline(<br/>
+                    &nbsp;&nbsp;<span className="text-emerald-500">&quot;case_telemetry.parquet&quot;</span><br/>
+                    ){"\n\n"}
+                    <span className="text-muted-foreground/50"># Run anomaly scan & ARIMA</span>{"\n"}
+                    res = case.scan_anomalies()<br/>
+                    f = case.project_arima(periods=<span className="text-amber-500">90</span>){"\n\n"}
+                    print(res.health_score)
+                  </pre>
+                ) : (
+                  <pre>
+                    <span className="text-muted-foreground/50"># Install via pip manager</span>{"\n"}
+                    pip install detective-ai-engine{"\n\n"}
+                    <span className="text-muted-foreground/50"># Boot secure local worker</span>{"\n"}
+                    python -m detective_ai initialize
+                  </pre>
+                )}
+              </div>
+
+              {/* API Response simulation panel */}
+              <div className="md:col-span-5 p-6 bg-[#040405] font-mono text-[9px] text-left leading-relaxed text-muted-foreground">
+                <span className="text-muted-foreground/40 uppercase block mb-3 font-bold select-none">// stdout response</span>
+                {selectedCodeTab === "python" ? (
+                  <pre className="text-emerald-500">
+                    {JSON.stringify({
+                      status: "completed",
+                      health_score: 98.4,
+                      anomalies_found: 2,
+                      forecast_periods: 90,
+                      latency: "12ms"
+                    }, null, 2)}
+                  </pre>
+                ) : (
+                  <pre className="text-primary">
+                    [SYSTEM CONFIG]{"\n"}
+                    ✓ Thread pooling initialized{"\n"}
+                    ✓ Sandbox connection check OK{"\n"}
+                    ✓ Host target: localhost:8000{"\n"}
+                    ✓ Listening active...
+                  </pre>
+                )}
+              </div>
             </div>
           </RevealSection>
 
+          {/* Right Side: Description */}
           <RevealSection className="lg:col-span-5 order-1 lg:order-2 space-y-6 text-left">
             <div className="flex items-center gap-2">
               <Code className="w-4 h-4 text-primary" />
@@ -482,7 +596,7 @@ export default function HomePage() {
               <span className="font-bold text-[11px] uppercase tracking-widest text-foreground font-mono">DetectiveAI</span>
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed max-w-sm font-semibold">
-              High-fidelity autonomous data forensics. Profile schemas, scan outliers, project ARIMA models, and compile executive briefings inside a secure sandbox.
+              High-fidelity data diagnostics. Profile schemas, scan outliers, project ARIMA models, and compile executive briefings inside a secure sandbox.
             </p>
             <span className="text-[10px] font-mono text-muted-foreground/50 block pt-2">
               © {new Date().getFullYear()} DetectiveAI. All evidence files sandboxed.
