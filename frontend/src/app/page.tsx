@@ -7,10 +7,10 @@ import {
   FileText, Terminal, ShieldCheck, Database,
   Cpu, Upload, ArrowUpRight, RefreshCw,
   ExternalLink, BarChart3, Layers, HardDrive, Settings,
-  CheckCircle2, Sun, Moon, Sparkles, ChevronRight, Play
+  CheckCircle2, Sparkles, ChevronRight, Play
 } from "lucide-react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { useTheme } from "next-themes";
+import { ThemeToggleButton } from "@/components/ui/ThemeToggle";
 
 /* ─────────────────────────────────────────────────────────────
    LOGO — geometric magnifying lens + neural data nodes
@@ -173,7 +173,7 @@ export default function HomePage() {
   const [simStatus, setSimStatus] = useState<"idle" | "running" | "done">("idle");
   const [simP, setSimP] = useState({ a: 100, b: 85, c: 60 });
   const [simLogs, setSimLogs] = useState(["System ready."]);
-  const { theme, setTheme } = useTheme();
+  // Theme toggle is handled by ThemeToggleButton component
   const [mounted, setMounted] = useState(false);
 
   // Advanced Interactive Mockup Workspace States
@@ -419,17 +419,14 @@ export default function HomePage() {
             <a href="https://github.com/mannaxsara/detective-ai" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors px-2">
               <ExternalLink className="w-3 h-3" /> GitHub
             </a>
-            {/* Theme Toggle */}
+            {/* Theme Toggle — same animated circle-reveal as the dashboard */}
             {mounted && (
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="w-7 h-7 rounded-full border border-border bg-muted/40 hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
-                aria-label="Toggle theme"
-              >
-                {theme === "dark"
-                  ? <Sun className="w-3.5 h-3.5 text-muted-foreground" />
-                  : <Moon className="w-3.5 h-3.5 text-muted-foreground" />}
-              </button>
+              <ThemeToggleButton
+                variant="circle"
+                start="center"
+                blur={true}
+                className="w-7 h-7 p-1 rounded-full border border-border bg-muted/40 hover:bg-muted"
+              />
             )}
             {!loading && (
               isLoggedIn ? (

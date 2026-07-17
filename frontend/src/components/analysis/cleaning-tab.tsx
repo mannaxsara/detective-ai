@@ -28,9 +28,18 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
     mutationFn: (fixId: string) => cleaningAPI.applyFixes(datasetId, [fixId]),
     onSuccess: (data) => {
       toast.success(data.message || "Fix successfully applied!");
+      // Invalidate ALL cached queries for this dataset so every tab refetches
       queryClient.invalidateQueries({ queryKey: ["dataset", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["dataset-profile", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["analysis", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-anomalies", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-statistics", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-kpis", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-insights", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-charts", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-forecast", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-recommendations", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["analysis-rootcause", datasetId] });
       refetch();
     },
     onError: (err: any) => {
