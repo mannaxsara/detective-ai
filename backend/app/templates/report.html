@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>DetectiveAI - Business Intelligence Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right {
+                content: counter(page);
+                font-size: 9pt;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                color: #71717A;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #FAFAFA;
+            background-color: #09090B;
+            margin: 0;
+            padding: 0;
+            font-size: 10.5pt;
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4 {
+            color: #FAFAFA;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 26pt;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #A78BFA 0%, #60A5FA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h2 {
+            font-size: 18pt;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .tagline {
+            color: #A1A1AA;
+            font-size: 12pt;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+        .metadata {
+            color: #71717A;
+            font-size: 9pt;
+            margin-top: 15px;
+        }
+        .summary-box {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .summary-box h3 {
+            margin-top: 0;
+            color: #A78BFA;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        th {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: #A1A1AA;
+            font-weight: 500;
+        }
+        td {
+            color: #FAFAFA;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8.5pt;
+            font-weight: 500;
+        }
+        .badge-high {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .badge-medium {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #FBBF24;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .badge-low {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #60A5FA;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .insight-card {
+            background-color: rgba(255, 255, 255, 0.01);
+            border-left: 3px solid #8B5CF6;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 0 6px 6px 0;
+        }
+        .insight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .insight-title {
+            font-weight: 600;
+            color: #FAFAFA;
+        }
+        .insight-desc {
+            color: #A1A1AA;
+            margin: 0;
+        }
+        .rec-item {
+            margin-bottom: 12px;
+        }
+        .rec-number {
+            color: #60A5FA;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DetectiveAI</h1>
+        <div class="tagline">Automated Business Intelligence & Dataset Insights Report</div>
+        <div class="metadata">
+            Generated on: {{ date }} | Dataset: {{ dataset_name }} | Analysis ID: #{{ analysis_id }}
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <h3>Executive Summary</h3>
+        <p>{{ summary }}</p>
+    </div>
+
+    <h2>Key Performance Indicators (KPIs)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>KPI Name</th>
+                <th>Current Value</th>
+                <th>Trend</th>
+                <th>Change %</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for k in kpis %}
+            <tr>
+                <td><strong>{{ k.name }}</strong></td>
+                <td>{{ k.formatted_value }}</td>
+                <td>{{ k.trend.upper() }}</td>
+                <td>{{ k.change_percentage if k.change_percentage is not none else 'N/A' }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Discovered Insights</h2>
+    {% for i in insights %}
+    <div class="insight-card">
+        <div class="insight-header">
+            <span class="insight-title">{{ i.category }}</span>
+            <span class="badge badge-{{ i.priority }}">{{ i.priority.upper() }} (Conf: {{ i.confidence_score }}%)</span>
+        </div>
+        <p class="insight-desc">{{ i.description }}</p>
+    </div>
+    {% endfor %}
+
+    <h2>Statistical Summary</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Statistic</th>
+                <th>P-Value</th>
+                <th>Significant?</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in statistics %}
+            <tr>
+                <td><strong>{{ s.test_name }}</strong></td>
+                <td>{{ "%.4f"|format(s.statistic) }}</td>
+                <td>{{ "%.4f"|format(s.p_value) }}</td>
+                <td>{{ 'YES' if s.significant else 'NO' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Recommendations</h2>
+    {% for r in recommendations %}
+    <div class="rec-item">
+        <span class="rec-number">{{ loop.index }}.</span>
+        {{ r }}
+    </div>
+    {% endfor %}
+</body>
+</html>
