@@ -7,9 +7,9 @@ import {
   FileText, Terminal, ShieldCheck, Database,
   Cpu, Upload, ArrowUpRight, RefreshCw,
   ExternalLink, BarChart3, Layers, HardDrive, Settings,
-  CheckCircle2, Sun, Moon
+  CheckCircle2, Sun, Moon, Sparkles, ChevronRight, Play
 } from "lucide-react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 
 /* ─────────────────────────────────────────────────────────────
@@ -18,17 +18,13 @@ import { useTheme } from "next-themes";
 function LogoMark({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Outer lens ring */}
       <circle cx="13" cy="13" r="9.5" stroke="currentColor" strokeWidth="2" />
-      {/* Inner data-node cluster */}
       <circle cx="11" cy="12" r="1.2" fill="currentColor" />
       <circle cx="15" cy="10" r="1.2" fill="currentColor" />
       <circle cx="15" cy="15" r="1.2" fill="currentColor" />
-      {/* Node connector lines */}
       <line x1="11" y1="12" x2="15" y2="10" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
       <line x1="15" y1="10" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
       <line x1="11" y1="12" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      {/* Handle */}
       <line x1="20" y1="20" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
@@ -59,19 +55,12 @@ function Reveal({ children, className = "", delay = 0 }: { children: React.React
 function ArimaChart() {
   return (
     <svg className="w-full h-full" viewBox="0 0 200 64" preserveAspectRatio="none">
-      {/* Grid lines */}
       {[16, 32, 48].map(y => (
         <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="currentColor" strokeWidth="0.4" className="text-primary/10" />
       ))}
-      {/* 95% CI band */}
       <path d="M0,44 Q50,12 80,36 T150,14 L200,22 L200,44 L150,36 L80,54 Q50,36 0,52 Z" fill="currentColor" className="text-primary/6" />
-      {/* 80% CI band */}
-      <path d="M0,44 Q50,18 80,36 T150,18 L200,26 L200,40 L150,32 L80,48 Q50,28 0,48 Z" fill="currentColor" className="text-primary/10" />
-      {/* Historical line — solid */}
       <polyline points="0,44 25,40 50,28 75,38 80,36" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary/50" />
-      {/* Forecast line — dashed */}
       <polyline points="80,36 110,20 140,22 170,16 200,18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" className="text-primary" />
-      {/* Inflection dot */}
       <circle cx="80" cy="36" r="3" fill="currentColor" stroke="#11120d" strokeWidth="1.5" className="text-primary" />
     </svg>
   );
@@ -91,7 +80,10 @@ export default function HomePage() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Mockup preview interaction states
+  // Advanced Interactive Mockup Workspace States
+  const [mockDataset, setMockDataset] = useState<"server_telemetry" | "retail_spikes" | "energy_drift" | null>(null);
+  const [mockIngestProgress, setMockIngestProgress] = useState(0);
+  const [mockIngestStatus, setMockIngestStatus] = useState("");
   const [previewTab, setPreviewTab] = useState<"database" | "chart" | "anomaly" | "chat">("database");
   const [forecastHorizon, setForecastHorizon] = useState<30 | 60 | 90>(90);
   const [selectedAnomalyIndex, setSelectedAnomalyIndex] = useState<number | null>(null);
@@ -99,7 +91,60 @@ export default function HomePage() {
   const [mockChatA, setMockChatA] = useState("");
   const [isTypingChat, setIsTypingChat] = useState(false);
 
+  // Capability card interactive states
+  const [cardFormat, setCardFormat] = useState<"CSV" | "Parquet" | "JSON">("CSV");
+  const [cardSigma, setCardSigma] = useState<2.5 | 3.0 | 3.5>(3.0);
+  const [cardPeriods, setCardPeriods] = useState<30 | 60 | 90>(90);
+  const [cardAlpha, setCardAlpha] = useState(0.05);
+  const [cardPrompt, setCardPrompt] = useState<0 | 1>(0);
+  const [cardExport, setCardExport] = useState<"PDF" | "DOCX">("PDF");
+
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("detective_token")) setIsLoggedIn(true);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveStep(p => (p + 1) % 4), 4500);
+    return () => clearInterval(t);
+  }, []);
+
+  // Multi-template loading simulator
+  const loadMockDataset = (type: "server_telemetry" | "retail_spikes" | "energy_drift") => {
+    setMockDataset(type);
+    setMockIngestProgress(0);
+    setMockIngestStatus("Initializing sandbox context...");
+    
+    const statuses = [
+      "Reading binary byte frames...",
+      "Mapping schema columns...",
+      "Profiling outlier distributions...",
+      "Converging ARIMA matrices...",
+      "Case file diagnostics locked."
+    ];
+
+    let step = 0;
+    const interval = setInterval(() => {
+      setMockIngestProgress(prev => {
+        const next = prev + 20;
+        if (next >= 100) {
+          clearInterval(interval);
+          setMockIngestStatus("Ingestion complete.");
+          // reset view tabs to default
+          setPreviewTab("database");
+          setSelectedAnomalyIndex(null);
+          setMockChatQ("");
+          setMockChatA("");
+        } else {
+          setMockIngestStatus(statuses[step]);
+          step++;
+        }
+        return next;
+      });
+    }, 450);
+  };
 
   const triggerMockChat = (question: string, answer: string) => {
     if (isTypingChat) return;
@@ -116,16 +161,6 @@ export default function HomePage() {
       }
     }, 15);
   };
-
-  useEffect(() => {
-    if (localStorage.getItem("detective_token")) setIsLoggedIn(true);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => setActiveStep(p => (p + 1) % 4), 4500);
-    return () => clearInterval(t);
-  }, []);
 
   const runSim = () => {
     if (simStatus === "running") return;
@@ -150,17 +185,78 @@ export default function HomePage() {
     "AI Copilot", "Parquet Support", "Data Cleaning", "Correlation Matrix",
   ];
 
+  // Dataset-specific mockup parameters
+  const datasetMeta = {
+    server_telemetry: {
+      name: "server_telemetry.parquet",
+      health: "98.4%",
+      rows: "10.2k",
+      cols: [
+        { name: "timestamp", type: "datetime" },
+        { name: "cpu_utilization", type: "float64" },
+        { name: "status_code", type: "int64" }
+      ],
+      anomalies: [
+        { index: 428, desc: "Value Spike: +5.4× Rolling Mean", detail: "Row 428 (cpu_utilization = 98.42). Normal bounds: 10.0 - 65.0. Action: Impute rolling median." },
+        { index: 1022, desc: "Duplicate index validation error", detail: "Row 1022 timestamp collision matching index 1021. Action: Drop duplicate row." }
+      ],
+      chat: [
+        { q: "What caused the spike at row 428?", a: "Row 428 CPU utilization exceeded 5.4× rolling mean bounds (Z-score outlier)." },
+        { q: "Verify status_code health", a: "Zero null values found. status_code column maintains a 100% distinct data mapping." }
+      ]
+    },
+    retail_spikes: {
+      name: "retail_promos.csv",
+      health: "94.2%",
+      rows: "8.4k",
+      cols: [
+        { name: "date", type: "string" },
+        { name: "revenue_usd", type: "float64" },
+        { name: "discount_applied", type: "boolean" }
+      ],
+      anomalies: [
+        { index: 1205, desc: "Extreme discount discount_applied", detail: "Row 1205 (revenue_usd = 12050.5). Discount applied field mismatch. Action: Flag for verification." },
+        { index: 3411, desc: "Negative value drift check", detail: "Row 3411 revenue contains negative numeric float values. Action: Cap at zero baseline." }
+      ],
+      chat: [
+        { q: "Analyze discount anomaly", a: "Discount field validation mismatch at row 1205. Suggested imputation: True." },
+        { q: "Check seasonal trend", a: "Revenue shows cyclic weekend peaks. ARIMA forecasts a 12% rise over 30 periods." }
+      ]
+    },
+    energy_drift: {
+      name: "grid_stability.json",
+      health: "91.8%",
+      rows: "15.0k",
+      cols: [
+        { name: "timestamp", type: "datetime" },
+        { name: "megawatts", type: "float64" },
+        { name: "stability_index", type: "float64" }
+      ],
+      anomalies: [
+        { index: 892, desc: "Sudden load drop (grid failure)", detail: "Row 892 (megawatts = 12.0). Drop deviation matches grid load failure. Action: Keep raw marker." },
+        { index: 7401, desc: "Constant value drift warning", detail: "Stability index constant values mapped across 12 consecutive hours. Action: Impute rolling mean." }
+      ],
+      chat: [
+        { q: "Explain stability drop", a: "Grid stability index dropped below 0.12 at index 892, matching load drop." },
+        { q: "Forecasting capacity limit", a: "ARIMA projects negative power capacity drift for the next 90 periods." }
+      ]
+    }
+  };
+
+  const activeMeta = mockDataset ? datasetMeta[mockDataset] : null;
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans overflow-x-hidden">
 
-      {/* ── SUBTLE BACKGROUND TEXTURE ── */}
+      {/* ── BACKGROUND COORDINATE DRAWING GRID ── */}
       <div className="fixed inset-0 z-0 pointer-events-none select-none">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(216,207,188,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(216,207,188,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(216,207,188,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(216,207,188,0.035)_1px,transparent_1px)] bg-[size:48px_48px]" />
+        {/* Glow accent */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] rounded-full bg-primary/6 blur-[130px]" />
       </div>
 
       {/* ══════════════════════════════════════════════════════
-          NAVBAR — floating pill
+          NAVBAR — floating capsule
       ══════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ y: -16, opacity: 0 }}
@@ -168,14 +264,14 @@ export default function HomePage() {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[1040px]"
       >
-        <div className="rounded-full border border-border bg-card/70 backdrop-blur-xl px-5 h-[46px] flex items-center justify-between shadow-lg shadow-black/10">
+        <div className="rounded-full border border-border bg-card/75 backdrop-blur-xl px-5 h-[46px] flex items-center justify-between shadow-lg shadow-black/10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity select-none group">
             <LogoMark size={20} />
             <span className="font-mono font-bold text-[10px] uppercase tracking-[0.18em] text-foreground">DetectiveAI</span>
           </Link>
 
-          {/* Nav links */}
+          {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-0">
             {["#features", "#process", "#core", "#api"].map((href, i) => {
               const labels = ["Features", "Process", "Core", "API"];
@@ -192,7 +288,7 @@ export default function HomePage() {
             <a href="https://github.com/mannaxsara/detective-ai" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors px-2">
               <ExternalLink className="w-3 h-3" /> GitHub
             </a>
-            {/* Theme toggle */}
+            {/* Theme Toggle */}
             {mounted && (
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -227,11 +323,11 @@ export default function HomePage() {
       </motion.div>
 
       {/* ══════════════════════════════════════════════════════
-          HERO — split layout, left text / right product
+          HERO — left aligned asymmetric layout
       ══════════════════════════════════════════════════════ */}
       <section className="relative z-10 min-h-[100svh] flex items-center">
         <div className="w-full max-w-[1180px] mx-auto px-6 pt-28 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.25fr] gap-12 lg:gap-8 items-center">
 
             {/* ── LEFT: Headline block ── */}
             <motion.div
@@ -248,17 +344,17 @@ export default function HomePage() {
                 </span>
               </motion.div>
 
-              {/* Headline */}
+              {/* Title display */}
               <motion.h1
                 variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
                 className="text-[2.8rem] sm:text-[3.4rem] md:text-[3.8rem] font-black leading-[1.02] tracking-[-0.02em] uppercase"
               >
                 Raw data.
                 <br />
-                <span className="text-primary">Clean</span> briefings.
+                <span className="bg-gradient-to-r from-primary to-[#8c8a7e] bg-clip-text text-transparent">Clean</span> briefings.
               </motion.h1>
 
-              {/* Sub */}
+              {/* Sub-text */}
               <motion.p
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55 } } }}
                 className="text-[13px] text-muted-foreground leading-relaxed max-w-[420px]"
@@ -266,7 +362,7 @@ export default function HomePage() {
                 Upload any CSV, Excel, or Parquet spreadsheet. DetectiveAI automatically scans anomalies, projects ARIMA forecasts, and exports professional PDF/Word briefings — no code required.
               </motion.p>
 
-              {/* Stats row */}
+              {/* Quick stats grid */}
               <motion.div
                 variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
                 className="flex flex-wrap gap-4"
@@ -308,19 +404,20 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
-            {/* ── RIGHT: Interactive Product Preview Window ── */}
+            {/* ── RIGHT: Fully Interactive Product Preview Window (3D Perspective tilt) ── */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative"
+              className="relative perspective-1000"
             >
-              {/* Glow behind window */}
+              {/* Glow Accent behind browser mockup */}
               <div className="absolute -inset-6 bg-primary/8 rounded-3xl blur-2xl pointer-events-none" />
 
-              {/* Browser window */}
-              <div className="relative border border-border rounded-2xl overflow-hidden shadow-2xl bg-card">
-                {/* Chrome bar */}
+              {/* Browser window with slight 3D perspective skew */}
+              <div className="relative border border-border rounded-2xl overflow-hidden shadow-2xl bg-card transition-transform duration-500 hover:rotate-y-[-2deg] hover:rotate-x-[1deg] hover:scale-[1.01]">
+                
+                {/* Browser top chrome address bar */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-background/40 select-none">
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
@@ -328,15 +425,18 @@ export default function HomePage() {
                     <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
                   </div>
                   <div className="flex-1 h-5 rounded bg-muted/60 flex items-center px-3 justify-between">
-                    <span className="text-[9px] font-mono text-muted-foreground/50 truncate">detective.ai/analysis/case-428</span>
-                    <span className="text-[7px] font-mono text-primary/60 animate-pulse uppercase tracking-wider font-bold">Interactive Sandbox</span>
+                    <span className="text-[9px] font-mono text-muted-foreground/50 truncate">
+                      {activeMeta ? `detective.ai/analysis/${activeMeta.name}` : "detective.ai/ingest_evidence"}
+                    </span>
+                    <span className="text-[7px] font-mono text-primary/60 animate-pulse uppercase tracking-wider font-bold">Interactive Case Sandbox</span>
                   </div>
                 </div>
 
-                {/* App layout */}
-                <div className="grid grid-cols-[60px_1fr] min-h-[350px]">
-                  {/* Mini sidebar with active tab controls */}
-                  <div className="border-r border-border p-2 space-y-4 bg-background/20 flex flex-col items-center">
+                {/* Dashboard layout structure */}
+                <div className="grid grid-cols-[65px_1fr] min-h-[360px] text-left">
+                  
+                  {/* Left Mock Navigator Sidebar */}
+                  <div className="border-r border-border p-2 space-y-4 bg-background/20 flex flex-col items-center select-none justify-between">
                     <div className="flex flex-col gap-1 w-full">
                       {[
                         { tab: "database" as const, icon: Database, label: "Data" },
@@ -346,11 +446,13 @@ export default function HomePage() {
                       ].map((item, i) => {
                         const Icon = item.icon;
                         const active = previewTab === item.tab;
+                        const disabled = !mockDataset;
                         return (
                           <button
                             key={i}
-                            onClick={() => setPreviewTab(item.tab)}
-                            className={`flex flex-col items-center justify-center py-2.5 rounded-lg transition-all cursor-pointer ${
+                            onClick={() => !disabled && setPreviewTab(item.tab)}
+                            disabled={disabled}
+                            className={`flex flex-col items-center justify-center py-2.5 rounded-lg transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
                               active
                                 ? "bg-primary text-primary-foreground font-bold shadow-sm shadow-black/10"
                                 : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
@@ -358,193 +460,257 @@ export default function HomePage() {
                             title={item.label}
                           >
                             <Icon className="w-3.5 h-3.5" />
-                            <span className="text-[7px] font-mono tracking-tighter mt-1 block select-none scale-[0.9]">{item.label}</span>
+                            <span className="text-[6.5px] font-mono tracking-tighter mt-1 block select-none scale-[0.85]">{item.label}</span>
                           </button>
                         );
                       })}
                     </div>
+
+                    {/* Exit / Reset case selector */}
+                    {mockDataset && (
+                      <button
+                        onClick={() => setMockDataset(null)}
+                        className="w-full text-center text-[7px] font-mono text-muted-foreground/60 hover:text-primary transition-colors cursor-pointer border-t border-border/20 pt-3"
+                      >
+                        Reset Case
+                      </button>
+                    )}
                   </div>
 
-                  {/* Main panel - dynamically changes view based on active tab */}
-                  <div className="p-5 space-y-4 overflow-hidden flex flex-col justify-between">
-                    
-                    {/* Panel Top stats */}
-                    <div className="flex items-start justify-between border-b border-border/20 pb-3">
-                      <div>
-                        <div className="text-[7px] font-mono text-muted-foreground/50 uppercase tracking-widest">Active Workspace</div>
-                        <div className="text-[11px] font-bold text-foreground mt-0.5 truncate max-w-[180px]">server_telemetry.parquet</div>
-                      </div>
-                      <div className="flex gap-1.5 text-[8px] font-mono">
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">98.4% health</span>
-                        <span className="px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border">10.2k rows</span>
-                      </div>
-                    </div>
+                  {/* Main Work panel */}
+                  <div className="p-5 flex flex-col justify-between overflow-hidden bg-background/10">
+                    <AnimatePresence mode="wait">
 
-                    {/* View 1: Database Columns view */}
-                    {previewTab === "database" && (
-                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
-                        <div className="text-[9px] font-bold uppercase tracking-wider text-primary/90 font-mono">Schema Attributes Profile</div>
-                        <div className="space-y-1.5">
-                          {[
-                            { name: "timestamp", type: "datetime", check: true },
-                            { name: "cpu_utilization", type: "float64", check: true },
-                            { name: "status_code", type: "int64", check: true },
-                          ].map((col, i) => (
-                            <div key={i} className="flex items-center justify-between border border-border/30 rounded px-2.5 py-1.5 bg-background/20 font-mono text-[9px] text-muted-foreground">
-                              <span className="text-foreground font-bold">{col.name}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[8px] opacity-60">[{col.type}]</span>
-                                {col.check && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                      {/* STAGE 0: Dataset Picker Dropzone */}
+                      {!mockDataset && (
+                        <motion.div
+                          key="dropzone"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex-1 flex flex-col justify-between py-2 space-y-4"
+                        >
+                          <div className="text-center p-5 border border-dashed border-border/60 rounded-xl bg-background/25">
+                            <Upload className="w-6 h-6 text-primary/60 mx-auto mb-2" />
+                            <div className="text-[10px] font-bold uppercase tracking-wide">Select Telemetry Case to Load</div>
+                            <p className="text-[8px] text-muted-foreground/50 mt-1 max-w-[200px] mx-auto leading-relaxed">Choose a forensic template dataset below to initialize the interactive workspace panels.</p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <span className="font-mono text-[7px] text-muted-foreground/55 uppercase tracking-wider block font-bold">Forensics Templates</span>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { id: "server_telemetry" as const, name: "Server Logs", type: "PARQUET" },
+                                { id: "retail_spikes" as const, name: "Retail sales", type: "CSV" },
+                                { id: "energy_drift" as const, name: "Grid load", type: "JSON" }
+                              ].map(tpl => (
+                                <button
+                                  key={tpl.id}
+                                  onClick={() => loadMockDataset(tpl.id)}
+                                  className="border border-border/40 hover:border-primary/50 hover:bg-primary/5 rounded px-2 py-2 text-left transition-all cursor-pointer flex flex-col justify-between min-h-[52px]"
+                                >
+                                  <span className="text-[9px] font-bold block truncate text-foreground">{tpl.name}</span>
+                                  <span className="font-mono text-[6.5px] text-primary bg-primary/10 rounded px-1.5 py-0.5 mt-1 self-start">{tpl.type}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* STAGE 1: Ingestion Progress Loader */}
+                      {mockDataset && mockIngestProgress < 100 && (
+                        <motion.div
+                          key="loader"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="flex-1 flex flex-col justify-center items-center space-y-4 py-8"
+                        >
+                          <div className="relative flex items-center justify-center">
+                            <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                            <span className="absolute font-mono text-[8px] text-foreground font-bold">{mockIngestProgress}%</span>
+                          </div>
+                          <div className="text-center space-y-1">
+                            <div className="text-[9px] font-bold uppercase tracking-wider">Parsing Case Evidence</div>
+                            <div className="font-mono text-[8px] text-muted-foreground/60 transition-all">{mockIngestStatus}</div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* STAGE 2: Interactive Tabs Dashboard */}
+                      {mockDataset && mockIngestProgress === 100 && activeMeta && (
+                        <motion.div
+                          key="dashboard"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex-1 flex flex-col justify-between space-y-4"
+                        >
+                          {/* Case Header Info */}
+                          <div className="flex justify-between items-start border-b border-border/20 pb-3 select-none">
+                            <div>
+                              <div className="text-[7px] font-mono text-muted-foreground/50 uppercase tracking-widest">Active Case File</div>
+                              <h4 className="text-[11px] font-bold text-foreground mt-0.5 truncate max-w-[190px]">{activeMeta.name}</h4>
+                            </div>
+                            <div className="flex gap-1.5 text-[8px] font-mono">
+                              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">{activeMeta.health} health</span>
+                              <span className="px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border">{activeMeta.rows} rows</span>
+                            </div>
+                          </div>
+
+                          {/* View A: Data Schema */}
+                          {previewTab === "database" && (
+                            <div className="space-y-3 animate-fade-in">
+                              <div className="text-[8.5px] font-bold uppercase tracking-wider text-primary/80 font-mono">Mapped Schema Coordinates</div>
+                              <div className="space-y-1.5">
+                                {activeMeta.cols.map((col, i) => (
+                                  <div key={i} className="flex items-center justify-between border border-border/30 rounded px-2.5 py-1.5 bg-background/20 font-mono text-[9px] text-muted-foreground">
+                                    <span className="text-foreground font-bold">{col.name}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[7.5px] opacity-60">[{col.type}]</span>
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ))}
-                        </div>
-                        <div className="text-[8px] text-muted-foreground/50 leading-relaxed font-mono">
-                          * Polars dataframe context initialized. Outlier scans are active on all numeric float coordinates.
-                        </div>
-                      </div>
-                    )}
+                          )}
 
-                    {/* View 2: ARIMA forecasting chart view */}
-                    {previewTab === "chart" && (
-                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-primary/90 font-mono">ARIMA Predictions (Horizon)</span>
-                          <div className="flex border border-border rounded-md overflow-hidden font-mono text-[8px]">
-                            {([30, 60, 90] as const).map(d => (
-                              <button
-                                key={d}
-                                onClick={() => setForecastHorizon(d)}
-                                className={`px-2 py-0.5 transition-colors cursor-pointer ${forecastHorizon === d ? "bg-primary text-primary-foreground" : "hover:bg-muted/40 text-muted-foreground"}`}
-                              >
-                                {d}d
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                          {/* View B: ARIMA Forecasting with changing curves */}
+                          {previewTab === "chart" && (
+                            <div className="space-y-3 animate-fade-in">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[8.5px] font-bold uppercase tracking-wider text-primary/80 font-mono">ARIMA Predictive Waves</span>
+                                <div className="flex border border-border rounded-md overflow-hidden font-mono text-[8px]">
+                                  {([30, 60, 90] as const).map(d => (
+                                    <button
+                                      key={d}
+                                      onClick={() => setForecastHorizon(d)}
+                                      className={`px-2 py-0.5 transition-colors cursor-pointer ${forecastHorizon === d ? "bg-primary text-primary-foreground" : "hover:bg-muted/40 text-muted-foreground"}`}
+                                    >
+                                      {d}d
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
 
-                        {/* Interactive SVG path changing based on forecastHorizon state */}
-                        <div className="h-20 w-full border border-border/40 rounded-lg p-2 bg-background/30 text-primary">
-                          <svg className="w-full h-full" viewBox="0 0 200 64" preserveAspectRatio="none">
-                            {/* Grid lines */}
-                            {[16, 32, 48].map(y => (
-                              <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="currentColor" strokeWidth="0.4" className="text-primary/10" />
-                            ))}
-                            {/* Confidence Interval band scaling with horizon selection */}
-                            <path
-                              d={`M0,44 Q50,12 80,36 T150,${forecastHorizon === 30 ? 28 : forecastHorizon === 60 ? 20 : 14} L200,${forecastHorizon === 30 ? 32 : forecastHorizon === 60 ? 26 : 22} L200,44 L150,36 L80,54 Q50,36 0,52 Z`}
-                              fill="currentColor"
-                              className="text-primary/6 transition-all duration-300"
-                            />
-                            {/* Historical path */}
-                            <polyline points="0,44 25,40 50,28 75,38 80,36" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary/50" />
-                            {/* Interactive forecast path */}
-                            <path
-                              d={forecastHorizon === 30 
-                                ? "M80,36 Q110,28 140,30 T200,32"
-                                : forecastHorizon === 60 
-                                  ? "M80,36 Q110,24 140,26 T200,26"
-                                  : "M80,36 Q110,20 140,22 T200,18"
-                              }
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeDasharray="4 3"
-                              className="text-primary transition-all duration-300"
-                            />
-                            <circle cx="80" cy="36" r="3" fill="currentColor" stroke="#11120d" strokeWidth="1.5" className="text-primary" />
-                          </svg>
-                        </div>
+                              <div className="h-20 w-full border border-border/40 rounded-lg p-2 bg-background/30 text-primary">
+                                <svg className="w-full h-full" viewBox="0 0 200 64" preserveAspectRatio="none">
+                                  {/* Grid lines */}
+                                  {[16, 32, 48].map(y => (
+                                    <line key={y} x1="0" y1={y} x2="200" y2={y} stroke="currentColor" strokeWidth="0.4" className="text-primary/10" />
+                                  ))}
+                                  {/* Confidence band scales dynamically depending on dataset selection & forecast horizon */}
+                                  <path
+                                    d={mockDataset === "server_telemetry"
+                                      ? `M0,44 Q50,12 80,36 T150,${forecastHorizon === 30 ? 28 : forecastHorizon === 60 ? 20 : 14} L200,${forecastHorizon === 30 ? 32 : forecastHorizon === 60 ? 26 : 22} L200,44 L150,36 L80,54 Q50,36 0,52 Z`
+                                      : mockDataset === "retail_spikes"
+                                        ? `M0,32 Q40,4 80,24 T160,${forecastHorizon === 30 ? 34 : forecastHorizon === 60 ? 28 : 22} L200,${forecastHorizon === 30 ? 40 : forecastHorizon === 60 ? 34 : 28} L200,44 L160,40 L80,32 Q40,24 0,38 Z`
+                                        : `M0,22 Q60,42 90,32 T150,${forecastHorizon === 30 ? 44 : forecastHorizon === 60 ? 48 : 52} L200,${forecastHorizon === 30 ? 48 : forecastHorizon === 60 ? 52 : 56} L200,56 L150,48 L90,44 Q60,56 0,34 Z`
+                                    }
+                                    fill="currentColor"
+                                    className="text-primary/6 transition-all duration-300"
+                                  />
+                                  {/* Historical path */}
+                                  <polyline
+                                    points={mockDataset === "server_telemetry"
+                                      ? "0,44 25,40 50,28 75,38 80,36"
+                                      : mockDataset === "retail_spikes"
+                                        ? "0,32 30,12 60,34 70,22 80,24"
+                                        : "0,22 40,48 70,30 80,35 90,32"
+                                    }
+                                    fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary/50"
+                                  />
+                                  {/* Forecast path updates dynamically based on forecastHorizon state */}
+                                  <path
+                                    d={mockDataset === "server_telemetry"
+                                      ? (forecastHorizon === 30 ? "M80,36 Q110,28 140,30 T200,32" : forecastHorizon === 60 ? "M80,36 Q110,24 140,26 T200,26" : "M80,36 Q110,20 140,22 T200,18")
+                                      : mockDataset === "retail_spikes"
+                                        ? (forecastHorizon === 30 ? "M80,24 Q120,44 160,34 T200,40" : forecastHorizon === 60 ? "M80,24 Q120,38 160,28 T200,32" : "M80,24 Q120,32 160,22 T200,24")
+                                        : (forecastHorizon === 30 ? "M90,32 Q120,42 160,44 T200,48" : forecastHorizon === 60 ? "M90,32 Q120,44 160,48 T200,52" : "M90,32 Q120,46 160,52 T200,56")
+                                    }
+                                    fill="none" stroke="currentColor" strokeWidth="1.8" strokeDasharray="4 3" className="text-primary transition-all duration-300"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
 
-                        <div className="flex justify-between items-center text-[7px] font-mono text-muted-foreground/60 select-none pt-1">
-                          <span>Horizon: {forecastHorizon} periods</span>
-                          <span>Confidence Level: 95% threshold</span>
-                        </div>
-                      </div>
-                    )}
+                          {/* View C: Outlier Log with details selection drawer */}
+                          {previewTab === "anomaly" && (
+                            <div className="space-y-2 animate-fade-in">
+                              <div className="text-[8.5px] font-bold uppercase tracking-wider text-primary/80 font-mono">Outliers Mapping Scan</div>
+                              <div className="space-y-1.5">
+                                {activeMeta.anomalies.map((anom) => {
+                                  const active = selectedAnomalyIndex === anom.index;
+                                  return (
+                                    <div key={anom.index}>
+                                      <button
+                                        onClick={() => setSelectedAnomalyIndex(active ? null : anom.index)}
+                                        className={`w-full text-left border rounded px-3 py-1.5 font-mono text-[9px] cursor-pointer transition-all flex justify-between items-center ${
+                                          active
+                                            ? "bg-primary/10 border-primary text-primary font-bold"
+                                            : "border-border/30 hover:bg-muted/40 text-muted-foreground"
+                                        }`}
+                                      >
+                                        <span>Row {anom.index} — {anom.desc.substring(0, 16)}...</span>
+                                        <span className="text-[8px] opacity-60">{active ? "Hide" : "View"}</span>
+                                      </button>
+                                      {active && (
+                                        <div className="mt-1 p-2 bg-background border border-border/30 rounded text-[8px] font-mono text-muted-foreground leading-relaxed animate-slide-down">
+                                          {anom.detail}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
 
-                    {/* View 3: Outlier Log view */}
-                    {previewTab === "anomaly" && (
-                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
-                        <div className="text-[9px] font-bold uppercase tracking-wider text-primary/90 font-mono">Select Outlier for Details</div>
-                        <div className="space-y-1.5">
-                          {[
-                            { index: 428, desc: "Value Spike: +5.4× Rolling Mean", detail: "Row 428 (cpu_utilization = 98.42). Normal bounds: 10.0 - 65.0. Action: Replace with rolling median." },
-                            { index: 1022, desc: "Duplicate index validation error", detail: "Row 1022 timestamp collision matching index 1021. Action: Drop duplicate item." },
-                          ].map((anom) => {
-                            const active = selectedAnomalyIndex === anom.index;
-                            return (
-                              <div key={anom.index}>
-                                <button
-                                  onClick={() => setSelectedAnomalyIndex(active ? null : anom.index)}
-                                  className={`w-full text-left border rounded px-3 py-1.5 font-mono text-[9px] cursor-pointer transition-all flex justify-between items-center ${
-                                    active
-                                      ? "bg-primary/10 border-primary text-primary font-bold"
-                                      : "border-border/30 hover:bg-muted/40 text-muted-foreground"
-                                  }`}
-                                >
-                                  <span>Row {anom.index} — {anom.desc.substring(0, 16)}...</span>
-                                  <span className="text-[8px] opacity-60">{active ? "Hide Details" : "View Details"}</span>
-                                </button>
-                                {active && (
-                                  <div className="mt-1 p-2 bg-background border border-border/30 rounded text-[8px] font-mono text-muted-foreground leading-relaxed animate-slide-down">
-                                    {anom.detail}
+                          {/* View D: AI Assistant Chat */}
+                          {previewTab === "chat" && (
+                            <div className="space-y-3 animate-fade-in">
+                              <div className="flex flex-wrap gap-1.5">
+                                {activeMeta.chat.map((item, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => triggerMockChat(item.q, item.a)}
+                                    disabled={isTypingChat}
+                                    className="text-[7.5px] font-mono border border-border hover:bg-muted/40 rounded-full px-2.5 py-0.5 cursor-pointer disabled:opacity-50 transition-colors"
+                                  >
+                                    &gt; {item.q}
+                                  </button>
+                                ))}
+                              </div>
+
+                              <div className="border border-border/40 rounded-lg p-3 bg-background/40 min-h-[90px] flex flex-col justify-between">
+                                {mockChatQ ? (
+                                  <div className="space-y-2">
+                                    <div className="text-[8.5px] font-mono text-primary font-bold">&gt; {mockChatQ}</div>
+                                    <div className="text-[8.5px] font-mono text-muted-foreground leading-relaxed">
+                                      {mockChatA}
+                                      {isTypingChat && <span className="w-1.5 h-3 bg-primary inline-block ml-0.5 animate-pulse" />}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30 font-mono text-[9px] select-none text-center">
+                                    <span>Select query prompt to initialize Copilot</span>
                                   </div>
                                 )}
                               </div>
-                            );
-                          })}
-                        </div>
-                        <div className="text-[8px] font-mono text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Z-Score validation checks complete</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* View 4: Chat assistant view */}
-                    {previewTab === "chat" && (
-                      <div className="flex-1 flex flex-col justify-between py-1 space-y-3 animate-fade-in">
-                        {/* Chat suggestion prompts */}
-                        <div className="flex flex-wrap gap-1.5">
-                          {[
-                            { q: "What caused the spike?", a: "Row 428 value exceeded 5.4× rolling mean bounds (outlier threshold)." },
-                            { q: "Is the dataset healthy?", a: "Dataset health score is 98.4%. Standard deviation bounds are clean." },
-                          ].map((item, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => triggerMockChat(item.q, item.a)}
-                              disabled={isTypingChat}
-                              className="text-[7.5px] font-mono border border-border hover:bg-muted/40 rounded-full px-2.5 py-0.5 cursor-pointer disabled:opacity-50 transition-colors"
-                            >
-                              &gt; {item.q}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Typing / Query response box */}
-                        <div className="border border-border/40 rounded-lg p-3 bg-background/40 flex-1 flex flex-col justify-between min-h-[90px]">
-                          {mockChatQ ? (
-                            <div className="space-y-2">
-                              <div className="text-[8.5px] font-mono text-primary font-bold">&gt; {mockChatQ}</div>
-                              <div className="text-[8.5px] font-mono text-muted-foreground leading-relaxed transition-all">
-                                {mockChatA}
-                                {isTypingChat && <span className="w-1.5 h-3 bg-primary inline-block ml-0.5 animate-pulse" />}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30 font-mono text-[9px] select-none text-center">
-                              <span>Select a prompt above to chat with Copilot</span>
                             </div>
                           )}
-                        </div>
-                      </div>
-                    )}
+                        </motion.div>
+                      )}
 
+                    </AnimatePresence>
                   </div>
                 </div>
+
               </div>
             </motion.div>
+
           </div>
         </div>
       </section>
@@ -576,88 +742,183 @@ export default function HomePage() {
         </Reveal>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            {
-              num: "01", title: "Schema Normalizer", body: "Polars-powered. Prunes nulls, drops duplicates, coerces types, and emits a clean typed dataframe in under 15ms.",
-              icon: Database,
-              visual: (
-                <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-2 font-mono text-[8px] text-muted-foreground">
-                  <span>[Raw CSV]</span><ArrowRight className="w-3 h-3 text-primary" /><span className="text-primary font-bold">[Polars DF]</span>
+          {/* Card 01 — Schema Normalizer with format speed toggle */}
+          <Reveal delay={0} className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden">
+            <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center"><Database className="w-2.5 h-2.5 text-primary" /></span>
+                  <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step 01</span>
                 </div>
-              )
-            },
-            {
-              num: "02", title: "Outlier Detection", body: "IQR and Z-score sweeps across every numeric column. Surfaces anomaly coordinates and drift clusters automatically.",
-              icon: ShieldAlert,
-              visual: (
-                <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-center gap-1 px-3 font-mono text-[8px]">
-                  {[0.2, 0.2, 1, 0.2, 0.2, 0.2].map((o, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full ${o === 1 ? "bg-primary" : "bg-muted-foreground/25"}`} />)}
-                  <span className="text-primary font-bold ml-2">Z = +3.8σ</span>
+                <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">Schema Normalizer</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">Polars-powered. Prunes nulls, drops duplicates, coerces types, and emits a clean typed dataframe.</p>
+              </div>
+              <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">01</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-1 font-mono text-[8px]">
+                {(["CSV", "Parquet", "JSON"] as const).map(f => (
+                  <button key={f} onClick={() => setCardFormat(f)} className={`px-2 py-0.5 rounded border cursor-pointer transition-all ${cardFormat === f ? "bg-primary text-primary-foreground border-primary" : "border-border/40 text-muted-foreground hover:bg-muted/40"}`}>{f}</button>
+                ))}
+              </div>
+              <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-between px-3 font-mono text-[8px] text-muted-foreground">
+                <span>[{cardFormat}]<ArrowRight className="w-3 h-3 text-primary inline mx-1" /><span className="text-primary font-bold">[Polars DF]</span></span>
+                <span className="text-emerald-400 font-bold">{cardFormat === "Parquet" ? "4ms" : cardFormat === "CSV" ? "15ms" : "28ms"}</span>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Card 02 — Outlier Detection with sigma threshold toggle */}
+          <Reveal delay={0.04} className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden">
+            <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center"><ShieldAlert className="w-2.5 h-2.5 text-primary" /></span>
+                  <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step 02</span>
                 </div>
-              )
-            },
-            {
-              num: "03", title: "ARIMA Forecasting", body: "Auto-regressive integrated moving average models project 90 periods forward with 80% and 95% confidence intervals.",
-              icon: LineChart,
-              visual: (
-                <div className="h-8 border border-border/40 rounded bg-background/50 overflow-hidden text-primary">
-                  <ArimaChart />
+                <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">Outlier Detection</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">IQR and Z-score sweeps across every numeric column. Surfaces anomaly coordinates automatically.</p>
+              </div>
+              <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">02</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-1 font-mono text-[8px]">
+                {([2.5, 3.0, 3.5] as const).map(s => (
+                  <button key={s} onClick={() => setCardSigma(s)} className={`px-2 py-0.5 rounded border cursor-pointer transition-all ${cardSigma === s ? "bg-primary text-primary-foreground border-primary" : "border-border/40 text-muted-foreground hover:bg-muted/40"}`}>{s}σ</button>
+                ))}
+              </div>
+              <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-between px-3 font-mono text-[8px]">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 6 }).map((_, i) => {
+                    const flagged = cardSigma === 2.5 ? [0,2,4] : cardSigma === 3.0 ? [2] : [];
+                    return <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${flagged.includes(i) ? "bg-primary" : "bg-muted-foreground/25"}`} />;
+                  })}
                 </div>
-              )
-            },
-            {
-              num: "04", title: "Significance Tests", body: "Run t-tests, ANOVA, and chi-square tests on any column. Results are explained in plain English automatically.",
-              icon: CheckCircle2,
-              visual: (
-                <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center px-3 gap-2 font-mono text-[8px]">
-                  <span className="text-emerald-400 font-bold">p = 0.003</span><span className="text-muted-foreground">— Reject H₀ at α=0.05</span>
+                <span className={`font-bold ${cardSigma === 3.5 ? "text-emerald-400" : "text-primary"}`}>
+                  {cardSigma === 2.5 ? "3 flagged" : cardSigma === 3.0 ? "1 flagged" : "0 flagged ✓"}
+                </span>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Card 03 — ARIMA with period toggle */}
+          <Reveal delay={0.08} className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden">
+            <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center"><LineChart className="w-2.5 h-2.5 text-primary" /></span>
+                  <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step 03</span>
                 </div>
-              )
-            },
-            {
-              num: "05", title: "AI Copilot", body: "Chat with your data in plain English. The assistant references actual column values and computed findings in every response.",
-              icon: FileText,
-              visual: (
-                <div className="h-8 border border-border/40 rounded bg-background/50 p-2 font-mono text-[8px] text-muted-foreground">
-                  <span className="text-primary font-bold">&gt; </span>Outlier at row 428 — +5.4× rolling mean.
+                <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">ARIMA Forecasting</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">Auto-regressive integrated moving average models with 80% and 95% confidence intervals.</p>
+              </div>
+              <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">03</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[7px] text-muted-foreground/50">Horizon</span>
+                <div className="flex gap-1 font-mono text-[8px]">
+                  {([30, 60, 90] as const).map(p => (
+                    <button key={p} onClick={() => setCardPeriods(p)} className={`px-1.5 py-0.5 rounded border cursor-pointer transition-all ${cardPeriods === p ? "bg-primary text-primary-foreground border-primary" : "border-border/40 text-muted-foreground hover:bg-muted/40"}`}>{p}p</button>
+                  ))}
                 </div>
-              )
-            },
-            {
-              num: "06", title: "Report Compiler", body: "Compile every finding — anomalies, projections, test results, chat logs — into a download-ready PDF or Word report.",
-              icon: FileText,
-              visual: (
-                <div className="h-8 flex gap-2 items-center font-mono text-[8px] font-bold text-primary">
-                  <span className="px-2 py-0.5 rounded border border-primary/30 bg-primary/5">BRIEF.PDF</span>
-                  <span className="px-2 py-0.5 rounded border border-border text-muted-foreground">BRIEF.DOCX</span>
+              </div>
+              <div className="h-10 border border-border/40 rounded bg-background/50 overflow-hidden text-primary p-1">
+                <svg className="w-full h-full" viewBox="0 0 200 40" preserveAspectRatio="none">
+                  <polyline points="0,30 30,26 60,18 80,24 90,22" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary/50" />
+                  <path d={cardPeriods === 30 ? "M90,22 Q120,18 150,20 T200,22" : cardPeriods === 60 ? "M90,22 Q130,14 160,16 T200,14" : "M90,22 Q130,10 160,12 T200,8"} fill="none" stroke="currentColor" strokeWidth="1.8" strokeDasharray="4 3" className="text-primary transition-all duration-300" />
+                  <circle cx="90" cy="22" r="2.5" fill="currentColor" className="text-primary" />
+                </svg>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Card 04 — Significance Tests with alpha slider */}
+          <Reveal delay={0.12} className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden">
+            <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center"><CheckCircle2 className="w-2.5 h-2.5 text-primary" /></span>
+                  <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step 04</span>
                 </div>
-              )
-            },
-          ].map((card, i) => {
-            const Icon = card.icon;
-            return (
-              <Reveal key={i} delay={i * 0.04}
-                className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden"
-              >
-                {/* Left accent bar on hover */}
-                <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <Icon className="w-2.5 h-2.5 text-primary" />
-                      </span>
-                      <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step {card.num}</span>
-                    </div>
-                    <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">{card.title}</h3>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">{card.body}</p>
-                  </div>
-                  <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">{card.num}</span>
+                <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">Significance Tests</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">Run t-tests, ANOVA, and chi-square tests on any column. Results explained in plain English.</p>
+              </div>
+              <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">04</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between font-mono text-[8px]">
+                <span className="text-muted-foreground/50">α threshold</span>
+                <span className="text-foreground font-bold">{cardAlpha.toFixed(2)}</span>
+              </div>
+              <input type="range" min={1} max={10} step={1} value={cardAlpha * 100} onChange={e => setCardAlpha(Number(e.target.value) / 100)} className="w-full h-1 bg-border rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none" />
+              <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-between px-3 font-mono text-[8px]">
+                <span className="text-foreground">p = 0.003</span>
+                <span className={`font-bold ${0.003 < cardAlpha ? "text-emerald-400" : "text-amber-400"}`}>
+                  {0.003 < cardAlpha ? "→ Reject H₀ ✓" : "→ Fail to Reject"}
+                </span>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Card 05 — AI Copilot with prompt toggle */}
+          <Reveal delay={0.16} className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden">
+            <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center"><MessageSquare className="w-2.5 h-2.5 text-primary" /></span>
+                  <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step 05</span>
                 </div>
-                {card.visual}
-              </Reveal>
-            );
-          })}
+                <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">AI Copilot</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">Chat with your data in plain English. References actual column values in every response.</p>
+              </div>
+              <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">05</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-1 font-mono text-[7px]">
+                {(["Explain outlier", "Check nulls"] as const).map((q, idx) => (
+                  <button key={idx} onClick={() => setCardPrompt(idx as 0 | 1)} className={`px-2 py-0.5 rounded-full border cursor-pointer transition-all ${cardPrompt === idx ? "bg-primary/10 border-primary/40 text-primary font-bold" : "border-border/40 text-muted-foreground hover:bg-muted/40"}`}>&gt; {q}</button>
+                ))}
+              </div>
+              <div className="border border-border/40 rounded bg-background/50 p-2 font-mono text-[8px] text-muted-foreground min-h-[32px] transition-all">
+                {cardPrompt === 0
+                  ? <><span className="text-primary font-bold">&gt; </span>Row 428 spike: +5.4× rolling mean — statistical outlier.</>
+                  : <><span className="text-primary font-bold">&gt; </span>Zero null values across 12 columns. Schema is clean.</>}
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Card 06 — Report Compiler with export format toggle */}
+          <Reveal delay={0.20} className="group relative border border-border rounded-xl p-5 bg-card hover:border-primary/40 transition-all duration-300 flex flex-col gap-4 cursor-default overflow-hidden">
+            <div className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-5 h-5 rounded bg-primary/10 border border-primary/20 flex items-center justify-center"><FileText className="w-2.5 h-2.5 text-primary" /></span>
+                  <span className="font-mono text-[8px] font-bold text-muted-foreground/50 uppercase tracking-widest">Step 06</span>
+                </div>
+                <h3 className="text-[12px] font-bold uppercase tracking-wide text-foreground">Report Compiler</h3>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1.5">Compile every finding into a download-ready PDF or Word executive briefing report.</p>
+              </div>
+              <span className="font-mono text-[28px] font-black text-muted-foreground/8 select-none leading-none ml-2">06</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-1.5 font-mono text-[8px]">
+                {(["PDF", "DOCX"] as const).map(f => (
+                  <button key={f} onClick={() => setCardExport(f)} className={`px-3 py-1 rounded border cursor-pointer transition-all font-bold ${cardExport === f ? "bg-primary text-primary-foreground border-primary" : "border-border/40 text-muted-foreground hover:bg-muted/40"}`}>BRIEF.{f}</button>
+                ))}
+              </div>
+              <div className="h-8 border border-border/40 rounded bg-background/50 flex items-center justify-between px-3 font-mono text-[8px]">
+                <span className="text-muted-foreground">Export format:</span>
+                <span className="text-primary font-bold">{cardExport === "PDF" ? "forensic_brief.pdf (2.4 MB)" : "forensic_brief.docx (1.8 MB)"}</span>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
