@@ -195,6 +195,37 @@ export default function HomePage() {
   const [cardPrompt, setCardPrompt] = useState<0 | 1>(0);
   const [cardExport, setCardExport] = useState<"PDF" | "DOCX">("PDF");
 
+  // Timeline interaction states
+  const [timelineUploadDone, setTimelineUploadDone] = useState(false);
+  const [timelineScanPercent, setTimelineScanPercent] = useState(0);
+  const [timelineScanStatus, setTimelineScanStatus] = useState<"idle" | "scanning" | "done">("idle");
+  const [timelineForecastPeriod, setTimelineForecastPeriod] = useState<30 | 60 | 90>(90);
+  const [timelineExportStatus, setTimelineExportStatus] = useState<"idle" | "generating" | "done">("idle");
+
+  const runTimelineScan = () => {
+    if (timelineScanStatus === "scanning") return;
+    setTimelineScanStatus("scanning");
+    setTimelineScanPercent(0);
+    const interval = setInterval(() => {
+      setTimelineScanPercent(prev => {
+        const next = prev + 10;
+        if (next >= 100) {
+          clearInterval(interval);
+          setTimelineScanStatus("done");
+        }
+        return next;
+      });
+    }, 100);
+  };
+
+  const runTimelineExport = () => {
+    if (timelineExportStatus === "generating") return;
+    setTimelineExportStatus("generating");
+    setTimeout(() => {
+      setTimelineExportStatus("done");
+    }, 1200);
+  };
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
@@ -1048,20 +1079,142 @@ export default function HomePage() {
               })}
             </div>
 
-            {/* Detail card */}
-            <div className="border border-border bg-card rounded-xl p-8 md:p-10 min-h-[200px] flex flex-col justify-between relative">
+            {/* Interactive detail card */}
+            <div className="border border-border bg-card rounded-xl p-8 md:p-10 min-h-[250px] grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-8 relative overflow-hidden">
               <div className="absolute top-5 right-5 font-mono text-[9px] text-muted-foreground/30 select-none">{String(activeStep + 1).padStart(2, "0")} / 04</div>
-              <div className="space-y-3">
-                {React.createElement(steps[activeStep].icon, { className: "w-5 h-5 text-primary" })}
-                <h3 className="text-[18px] font-black uppercase tracking-tight">{steps[activeStep].title}</h3>
-                <p className="text-[12px] text-muted-foreground leading-relaxed max-w-lg">{steps[activeStep].detail}</p>
+              
+              <div className="flex flex-col justify-between space-y-6">
+                <div className="space-y-3">
+                  {React.createElement(steps[activeStep].icon, { className: "w-5 h-5 text-primary" })}
+                  <h3 className="text-[18px] font-black uppercase tracking-tight text-foreground">{steps[activeStep].title}</h3>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed max-w-md">{steps[activeStep].detail}</p>
+                </div>
+                <div className="flex gap-2 w-full pt-4">
+                  {steps.map((_, i) => (
+                    <div key={i} className="flex-1 h-0.5 rounded-full bg-muted overflow-hidden">
+                      <div className={`h-full bg-primary rounded-full transition-all duration-300 ${i <= activeStep ? "w-full" : "w-0"}`} />
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-2 pt-6">
-                {steps.map((_, i) => (
-                  <div key={i} className="flex-1 h-0.5 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full bg-primary rounded-full transition-all duration-300 ${i <= activeStep ? "w-full" : "w-0"}`} />
+
+              {/* Right side: Dynamic Interactive Preview Widget */}
+              <div className="border border-border/40 rounded-xl p-4 bg-background/25 flex flex-col justify-between min-h-[140px] font-mono text-[9px] relative">
+                
+                {activeStep === 0 && (
+                  <div className="flex-1 flex flex-col justify-between animate-fade-in">
+                    <span className="text-[7.5px] text-muted-foreground/50 uppercase tracking-wider block">Evidence Dropzone</span>
+                    
+                    {timelineUploadDone ? (
+                      <div className="space-y-2 py-2">
+                        <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> telemetry.parquet ingested
+                        </div>
+                        <div className="text-[8px] text-muted-foreground">10,240 rows parsed (12ms latency). Schema locked.</div>
+                        <button onClick={() => setTimelineUploadDone(false)} className="text-[7.5px] text-primary underline cursor-pointer">Reset upload</button>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col justify-center items-center py-4 space-y-2">
+                        <Upload className="w-5 h-5 text-muted-foreground/40 animate-pulse" />
+                        <button onClick={() => setTimelineUploadDone(true)} className="px-3 py-1 rounded bg-primary text-primary-foreground font-bold text-[8px] uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all cursor-pointer">
+                          Browse files
+                        </button>
+                        <span className="text-[7px] text-muted-foreground/40">Drop CSV, JSON, or Parquet here</span>
+                      </div>
+                    )}
                   </div>
-                ))}
+                )}
+
+                {activeStep === 1 && (
+                  <div className="flex-1 flex flex-col justify-between animate-fade-in">
+                    <span className="text-[7.5px] text-muted-foreground/50 uppercase tracking-wider block">Z-Score Outlier sweep</span>
+                    
+                    {timelineScanStatus === "idle" && (
+                      <div className="flex-1 flex flex-col justify-center items-center py-4 space-y-2">
+                        <ShieldAlert className="w-5 h-5 text-muted-foreground/40" />
+                        <button onClick={runTimelineScan} className="px-3 py-1 rounded bg-primary text-primary-foreground font-bold text-[8px] uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all cursor-pointer">
+                          Run Z-score Scan
+                        </button>
+                      </div>
+                    )}
+
+                    {timelineScanStatus === "scanning" && (
+                      <div className="flex-1 flex flex-col justify-center space-y-2.5 py-3">
+                        <div className="flex justify-between font-bold">
+                          <span>Scanning rows...</span>
+                          <span>{timelineScanPercent}%</span>
+                        </div>
+                        <div className="w-full h-1 rounded-full bg-border overflow-hidden">
+                          <div className="h-full bg-primary" style={{ width: `${timelineScanPercent}%` }} />
+                        </div>
+                      </div>
+                    )}
+
+                    {timelineScanStatus === "done" && (
+                      <div className="space-y-2 py-2">
+                        <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> 2 anomalies located
+                        </div>
+                        <div className="text-[8px] text-muted-foreground">Row 428 spike detected. Imputation rules applied.</div>
+                        <button onClick={() => setTimelineScanStatus("idle")} className="text-[7.5px] text-primary underline cursor-pointer">Run scan again</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeStep === 2 && (
+                  <div className="flex-1 flex flex-col justify-between animate-fade-in">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[7.5px] text-muted-foreground/50 uppercase tracking-wider">ARIMA Regression</span>
+                      <div className="flex border border-border rounded font-mono text-[7px]">
+                        {([30, 60, 90] as const).map(d => (
+                          <button key={d} onClick={() => setTimelineForecastPeriod(d)} className={`px-1 py-0.5 cursor-pointer ${timelineForecastPeriod === d ? "bg-primary text-primary-foreground" : "hover:bg-muted/40 text-muted-foreground"}`}>{d}d</button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="h-12 w-full text-primary border border-border/40 rounded bg-background/30 p-1.5 my-2">
+                      <svg className="w-full h-full" viewBox="0 0 200 40" preserveAspectRatio="none">
+                        <path d={`M0,30 Q40,12 80,24 T150,${timelineForecastPeriod === 30 ? 20 : timelineForecastPeriod === 60 ? 14 : 8} L200,30 L0,30 Z`} fill="currentColor" className="text-primary/6" />
+                        <polyline points="0,30 30,26 60,18 80,24" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-primary/50" />
+                        <path d={timelineForecastPeriod === 30 ? "M80,24 Q110,20 140,22 T200,24" : timelineForecastPeriod === 60 ? "M80,24 Q110,14 140,16 T200,14" : "M80,24 Q110,8 140,10 T200,6"} fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2" className="text-primary transition-all duration-300" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                {activeStep === 3 && (
+                  <div className="flex-1 flex flex-col justify-between animate-fade-in">
+                    <span className="text-[7.5px] text-muted-foreground/50 uppercase tracking-wider block">Briefing compiler</span>
+                    
+                    {timelineExportStatus === "idle" && (
+                      <div className="flex-1 flex flex-col justify-center items-center py-4 space-y-2">
+                        <FileText className="w-5 h-5 text-muted-foreground/40 animate-pulse" />
+                        <button onClick={runTimelineExport} className="px-3 py-1 rounded bg-primary text-primary-foreground font-bold text-[8px] uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all cursor-pointer">
+                          Generate Briefing
+                        </button>
+                      </div>
+                    )}
+
+                    {timelineExportStatus === "generating" && (
+                      <div className="flex-1 flex flex-col justify-center items-center py-4 space-y-2">
+                        <RefreshCw className="w-5 h-5 text-primary animate-spin" />
+                        <span>Assembling PDF report...</span>
+                      </div>
+                    )}
+
+                    {timelineExportStatus === "done" && (
+                      <div className="space-y-2 py-2">
+                        <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> PDF briefing ready
+                        </div>
+                        <div className="text-[8px] text-muted-foreground">forensic_brief.pdf successfully compiled.</div>
+                        <button onClick={() => setTimelineExportStatus("idle")} className="text-[7.5px] text-primary underline cursor-pointer">Recompile report</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
