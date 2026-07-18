@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Database, AlertTriangle, Loader2 } from "lucide-react";
+import { Database, AlertTriangle, Loader2, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,28 @@ export default function AnalysisDetailPage() {
   const { id } = useParams() as { id: string };
   const datasetId = id;
   const { setDataset, setAnalysis, activeTab, setActiveTab } = useAnalysisStore();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!dataset) return;
+    setDownloading(true);
+    try {
+      const blob = await datasetsAPI.download(datasetId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${dataset.name.toLowerCase().replace(/\s+/g, "_")}.${dataset.file_type.toLowerCase()}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success("Cleaned dataset downloaded successfully!");
+    } catch (err) {
+      toast.error("Failed to download dataset file.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const { data: dataset, isLoading: datasetLoading, error: datasetError } = useQuery({
     queryKey: ["dataset", datasetId],
@@ -145,19 +168,34 @@ export default function AnalysisDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Dataset Health</p>
-              <p className="text-xs font-mono font-black text-foreground mt-0.5">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "N/A"}</p>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Dataset Health</p>
+                <p className="text-xs font-mono font-black text-foreground mt-0.5">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "N/A"}</p>
+              </div>
+              <div className="w-1.5 h-10 rounded-full bg-background border border-border relative overflow-hidden">
+                {dataset.health_score && (
+                  <div
+                    className="absolute bottom-0 inset-x-0 bg-primary"
+                    style={{ height: `${dataset.health_score}%` }}
+                  />
+                )}
+              </div>
             </div>
-            <div className="w-1.5 h-10 rounded-full bg-background border border-border relative overflow-hidden">
-              {dataset.health_score && (
-                <div
-                  className="absolute bottom-0 inset-x-0 bg-primary"
-                  style={{ height: `${dataset.health_score}%` }}
-                />
+
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-cards bg-primary text-primary-foreground font-mono text-[9px] uppercase tracking-wider font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {downloading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
               )}
-            </div>
+              Export Cleaned Data
+            </button>
           </div>
         </CardContent>
       </Card>

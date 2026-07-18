@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
@@ -144,3 +145,40 @@ async def get_dataset_preview(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load preview: {str(e)}")
+
+@router.get("/{dataset_id}/download")
+async def download_dataset_file(
+    dataset_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    from app.core.slug import decode_id
+    resolved_id = decode_id(dataset_id)
+    if resolved_id is None:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+        
+    repo = DatasetRepository(db)
+    dataset = await repo.get_by_id(resolved_id)
+    if not dataset or dataset.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+        
+    if not os.path.exists(dataset.file_path):
+        raise HTTPException(status_code=404, detail="Dataset file not found on disk")
+        
+    # Get media type based on file type
+    media_type = "application/octet-stream"
+    if dataset.file_type == "csv":
+        media_type = "text/csv"
+    elif dataset.file_type in ("xlsx", "xls"):
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    elif dataset.file_type == "json":
+        media_type = "application/json"
+    elif dataset.file_type == "parquet":
+        media_type = "application/octet-stream"
+        
+    return FileResponse(
+        path=dataset.file_path,
+        media_type=media_type,
+        filename=os.path.basename(dataset.file_path),
+    )
+

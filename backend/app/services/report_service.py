@@ -25,6 +25,20 @@ from app.core.config import settings
 REPORTS_DIR = Path(settings.UPLOAD_DIR) / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
+def _md_to_html(text: str) -> str:
+    import re
+    # Remove headers that are redundant
+    text = re.sub(r'#+\s*(Executive Summary|Key Metrics|Primary Insights|Data Quality & Anomalies)', '', text)
+    # Convert remaining headers to bold
+    text = re.sub(r'#+\s*(.*)', r'<b>\1</b>', text)
+    # Convert bold markdown to bold HTML tags
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+    # Convert newlines to breaks
+    text = text.replace('\n', '<br/>')
+    # Replace bullet point characters if they are there
+    text = text.replace('•', '&bull;')
+    return text
+
 class ReportService:
     def __init__(self) -> None:
         pass
@@ -55,11 +69,12 @@ class ReportService:
         
         styles = getSampleStyleSheet()
         
-        # Color definitions
-        brand_orange = colors.HexColor('#ea580c')
-        dark_text = colors.HexColor('#09090b')
-        light_border = colors.HexColor('#e4e4e7')
-        gray_bg = colors.HexColor('#f9fafb')
+        # Color definitions matching brand Sand & Charcoal system
+        brand_charcoal = colors.HexColor('#1D1A18')
+        brand_sand = colors.HexColor('#8A8380')
+        dark_text = colors.HexColor('#1D1A18')
+        light_border = colors.HexColor('#E4E4E7')
+        gray_bg = colors.HexColor('#F5F5F5')
         zinc_500 = colors.HexColor('#71717a')
 
         # Custom Paragraph styles
@@ -69,7 +84,7 @@ class ReportService:
             fontName='Helvetica-Bold',
             fontSize=22,
             leading=26,
-            textColor=brand_orange,
+            textColor=brand_charcoal,
             alignment=1, # Center
             spaceAfter=10
         )
@@ -89,9 +104,9 @@ class ReportService:
             'ReportH1',
             parent=styles['Heading2'],
             fontName='Helvetica-Bold',
-            fontSize=14,
-            leading=18,
-            textColor=dark_text,
+            fontSize=13,
+            leading=17,
+            textColor=brand_charcoal,
             spaceBefore=18,
             spaceAfter=8,
             keepWithNext=True
@@ -139,7 +154,8 @@ class ReportService:
         
         # Executive Summary
         story.append(Paragraph("Executive Summary", h1_style))
-        story.append(Paragraph(summary or "No executive summary compiled for this case.", body_style))
+        formatted_summary = _md_to_html(summary) if summary else "No executive summary compiled for this case."
+        story.append(Paragraph(formatted_summary, body_style))
         story.append(Spacer(1, 10))
 
         # KPIs Section
@@ -161,7 +177,7 @@ class ReportService:
             
             kpi_table = Table(kpi_data, colWidths=[200, 100, 100, 120])
             kpi_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), brand_orange),
+                ('BACKGROUND', (0, 0), (-1, 0), brand_charcoal),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
@@ -206,7 +222,7 @@ class ReportService:
             
             stat_table = Table(stat_data, colWidths=[220, 100, 100, 100])
             stat_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), brand_orange),
+                ('BACKGROUND', (0, 0), (-1, 0), brand_charcoal),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 8),

@@ -156,6 +156,13 @@ export const datasetsApi = {
     const { data } = await api.get(`/datasets/${id}/profile`);
     return data;
   },
+
+  download: async (id: string | number): Promise<Blob> => {
+    const { data } = await api.get(`/datasets/${id}/download`, {
+      responseType: 'blob',
+    });
+    return data;
+  },
 };
 
 // ========== Cleaning API ==========
