@@ -24,19 +24,20 @@ export default function Header() {
       <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
-          className="p-1.5 rounded-lg border border-border bg-card hover:bg-background text-muted-foreground hover:text-foreground md:hidden shrink-0 cursor-pointer"
+          className="p-1.5 rounded-cards border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground md:hidden shrink-0 cursor-pointer"
           title="Toggle Navigation"
         >
           <Menu className="w-4 h-4" />
         </button>
-        <div className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+        <div className="text-xs font-mono font-medium text-foreground tracking-tight">
           {getBreadcrumbs()}
         </div>
       </div>
 
-      {/* Right side is intentionally empty for a ultra-minimalist design */}
-      <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground/60 uppercase tracking-wider font-mono">
-        <span>DetectiveAI Session</span>
+      {/* Right side: Session status */}
+      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <span>Session Active</span>
       </div>
     </header>
   );

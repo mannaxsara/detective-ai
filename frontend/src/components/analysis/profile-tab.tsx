@@ -27,7 +27,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-20 rounded-xl bg-white/[0.01] border border-[#27272A]" />
+          <div key={i} className="h-20 rounded-xl bg-muted/20 border border-border/40" />
         ))}
       </div>
     );
@@ -47,13 +47,13 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <Card key={idx} className="border-[#27272A] bg-[#18181B] shadow-none">
+            <Card key={idx} className="border-border bg-card shadow-none">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">{card.label}</p>
-                  <p className="text-lg font-mono font-extrabold text-zinc-200 mt-1">{card.value}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{card.label}</p>
+                  <p className="text-lg font-mono font-extrabold text-foreground mt-1">{card.value}</p>
                 </div>
-                <div className="p-2 rounded-lg bg-[#09090B] text-[#ea580c] border border-[#27272A]">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20">
                   <Icon className="w-4 h-4" />
                 </div>
               </CardContent>
@@ -63,36 +63,36 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
       </div>
 
       {/* Columns Profile Table */}
-      <Card className="border-[#27272A] bg-[#18181B] shadow-none">
-        <CardHeader className="pb-3 border-b border-[#27272A]">
-          <CardTitle className="text-sm font-bold text-zinc-200">Column Schema & Profiling</CardTitle>
+      <Card className="border-border bg-card shadow-none">
+        <CardHeader className="pb-3 border-b border-border">
+          <CardTitle className="text-sm font-bold text-foreground">Column Schema & Profiling</CardTitle>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader className="bg-[#09090B] border-b border-[#27272A]">
-              <TableRow className="border-b border-[#27272A] hover:bg-transparent">
-                <TableHead className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Column Name</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Data Type</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Classification</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-bold uppercase tracking-wider text-right">Unique Values</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-bold uppercase tracking-wider text-right">Missing Count</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-bold uppercase tracking-wider text-right">Missing %</TableHead>
+            <TableHeader className="bg-muted/50 border-b border-border">
+              <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Column Name</TableHead>
+                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Data Type</TableHead>
+                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Classification</TableHead>
+                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider text-right">Unique Values</TableHead>
+                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider text-right">Missing Count</TableHead>
+                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider text-right">Missing %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {profile.columns.map((col: any, idx: number) => {
                 return (
-                  <TableRow key={idx} className="border-b border-[#27272A] hover:bg-[#111217]/50">
-                    <TableCell className="font-bold text-xs text-zinc-200">{col.name}</TableCell>
-                    <TableCell className="font-mono text-[10px] text-zinc-500">{col.dtype}</TableCell>
+                  <TableRow key={idx} className="border-b border-border/40 hover:bg-muted/40 transition-colors">
+                    <TableCell className="font-bold text-xs text-foreground">{col.name}</TableCell>
+                    <TableCell className="font-mono text-[10px] text-muted-foreground">{col.dtype}</TableCell>
                     <TableCell>
-                      <Badge className="text-[9px] px-2 py-0.5 rounded capitalize bg-[#09090B] text-zinc-400 border border-[#27272A] font-bold">
+                      <Badge variant="outline" className="text-[9px] px-2 py-0.5 rounded capitalize border-border text-muted-foreground font-semibold">
                         {col.classification}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-zinc-300 font-mono text-xs">{col.unique_count.toLocaleString()}</TableCell>
-                    <TableCell className="text-right text-zinc-300 font-mono text-xs">{col.null_count.toLocaleString()}</TableCell>
-                    <TableCell className={`text-right font-mono text-xs font-bold ${col.null_percentage > 20 ? "text-[#EF4444]" : col.null_percentage > 0 ? "text-[#F59E0B]" : "text-zinc-500"}`}>
+                    <TableCell className="text-right text-foreground/80 font-mono text-xs">{col.unique_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right text-foreground/80 font-mono text-xs">{col.null_count.toLocaleString()}</TableCell>
+                    <TableCell className={`text-right font-mono text-xs font-bold ${col.null_percentage > 20 ? "text-destructive" : col.null_percentage > 0 ? "text-amber-500" : "text-muted-foreground"}`}>
                       {col.null_percentage}%
                     </TableCell>
                   </TableRow>

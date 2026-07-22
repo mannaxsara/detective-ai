@@ -149,7 +149,7 @@ export default function UploadPage() {
                     </div>
                     <Button
                       onClick={handleUpload}
-                      className="bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs px-5 h-9 rounded-full transition-colors active:scale-[0.98]"
+                      className="bg-primary hover:opacity-90 text-primary-foreground font-mono text-[10px] font-bold uppercase tracking-wider px-5 h-9 rounded-cards transition-colors active:scale-[0.98]"
                     >
                       Start Investigation
                     </Button>
@@ -197,7 +197,7 @@ export default function UploadPage() {
               >
                 <CheckCircle className="w-12 h-12 text-primary mx-auto" />
                 <div className="space-y-2">
-                  <h3 className="text-sm font-black text-foreground">Evidence Analyzed — Case Ready</h3>
+                  <h3 className="text-sm font-bold text-foreground">Evidence Analyzed — Case Ready</h3>
                   <p className="text-muted-foreground text-xs max-w-sm mx-auto font-medium">
                     Profiling completed. Outliers identified, categories correlated, and case files formatted.
                   </p>
@@ -209,13 +209,13 @@ export default function UploadPage() {
                       setFile(null);
                     }}
                     variant="outline"
-                    className="border-border bg-background hover:bg-card text-foreground text-xs font-bold px-5 h-9 rounded-full"
+                    className="border-border bg-background hover:bg-card text-foreground text-xs font-mono font-bold uppercase tracking-wider px-5 h-9 rounded-cards"
                   >
                     File New Evidence
                   </Button>
                   <Button
                     onClick={handleViewAnalysis}
-                    className="bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs px-5 h-9 rounded-full shadow-sm"
+                    className="bg-primary hover:opacity-90 text-primary-foreground font-mono text-[10px] font-bold uppercase tracking-wider px-5 h-9 rounded-cards shadow-sm"
                   >
                     Inspect Case File
                   </Button>

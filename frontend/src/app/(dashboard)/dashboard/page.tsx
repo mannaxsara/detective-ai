@@ -34,38 +34,27 @@ function DashboardMetricCard({
   value,
   description,
   icon: Icon,
-  sparklinePath,
 }: {
   title: string;
   value: string | number;
   description: string | React.ReactNode;
   icon?: any;
-  sparklinePath?: string;
 }) {
   return (
-    <div
-      className="group/metric shadow-sm flex flex-col justify-between p-5 rounded-cards border border-border bg-card transition-all duration-300 relative overflow-hidden min-h-[120px]"
-    >
-      <div className="relative z-10 flex flex-col justify-between h-full w-full">
-        <div className="flex items-center justify-between">
-          <p className="text-[9px] text-muted-foreground/60 uppercase font-bold tracking-widest">{title}</p>
-          {Icon && <Icon className="w-4 h-4 text-muted-foreground/40 group-hover/metric:text-primary group-hover/metric:scale-105 transition-all duration-300" />}
-        </div>
-        
-        <div className="flex items-end justify-between mt-3">
-          <p className="text-3xl font-black text-foreground font-mono tracking-tight transition-colors">
-            {value}
-          </p>
-          {sparklinePath && (
-            <svg className="w-12 h-6 text-primary/30 group-hover/metric:text-primary/60 transition-colors shrink-0 mb-1" viewBox="0 0 40 10" fill="none">
-              <path d={sparklinePath} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </div>
+    <div className="p-5 rounded-cards border border-border bg-card flex flex-col justify-between min-h-[120px] shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider">{title}</p>
+        {Icon && <Icon className="w-4 h-4 text-primary" />}
+      </div>
+      
+      <div className="mt-3">
+        <p className="text-3xl font-bold text-foreground font-mono tracking-tight">
+          {value}
+        </p>
+      </div>
 
-        <div className="text-[10px] text-muted-foreground font-bold mt-4 flex items-center gap-1.5">
-          {description}
-        </div>
+      <div className="mt-2 text-xs">
+        {description}
       </div>
     </div>
   );
@@ -121,75 +110,47 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-6xl mx-auto font-sans text-muted-foreground">
       
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">
-            {greeting}, {user?.full_name || "Agent"}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-6">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            {greeting}, {user?.full_name || "Investigator"}
           </h1>
-          <p className="text-muted-foreground/60 text-[10px] font-bold uppercase tracking-wider">
-            Your data intelligence center
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Forensics workspace summary and active evidence archives.
           </p>
         </div>
         <Link href="/upload">
-          <button className="h-9 rounded-full bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 px-5 transition-all cursor-pointer shadow-md active:scale-[0.98]">
+          <button className="h-9 rounded-cards bg-primary hover:opacity-90 text-primary-foreground font-mono text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-2 px-4 transition-all cursor-pointer shadow-sm active:scale-[0.98]">
             <Upload className="w-3.5 h-3.5 text-primary-foreground" />
             File New Case
           </button>
         </Link>
       </div>
 
-      {/* System Status Banner */}
-      <div className="p-3.5 border border-border bg-card rounded-cards flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[9px] font-mono text-muted-foreground shadow-sm relative overflow-hidden">
-        <div className="absolute left-0 inset-y-0 w-1 bg-primary" />
-        
-        <div className="flex items-center gap-2 relative z-10">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-primary font-black uppercase">DETECTIVE CORE:</span>
-          <span>Analyst nodes synchronized. Ingest loop online.</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-4 text-muted-foreground/50 font-bold relative z-10">
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground/60">CPU:</span>
-            <span className="text-primary/80">1.2%</span>
-          </div>
-          <span className="text-muted-foreground/30">|</span>
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground/60">SHARDS:</span>
-            <span className="text-muted-foreground/80">4/4 ACTIVE</span>
-          </div>
-          <span className="text-muted-foreground/30">|</span>
-          <span>v1.4.2</span>
-        </div>
-      </div>
-
       {/* Dynamic Data-First Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         
         {/* Dataset Health Gauge */}
-        <div
-          className="group/metric shadow-sm p-5 rounded-cards border border-border bg-card transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[120px]"
-        >
-          <div className="relative z-10 flex flex-col justify-between h-full w-full">
-            <div className="flex items-center justify-between">
-              <p className="text-[9px] text-muted-foreground/60 uppercase font-bold tracking-widest">Average Case Health</p>
-              <Activity className="w-3.5 h-3.5 text-muted-foreground/40 group-hover/metric:text-primary transition-colors" />
+        <div className="p-5 rounded-cards border border-border bg-card flex flex-col justify-between min-h-[120px] shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Average Case Health</p>
+            <Activity className="w-4 h-4 text-primary" />
+          </div>
+          
+          <div className="space-y-2 mt-4">
+            <div className="flex justify-between items-center text-xs font-mono font-bold">
+              <span className="text-muted-foreground">Average Index</span>
+              <span className="text-foreground">{avgHealthScore}%</span>
             </div>
-            
-            <div className="space-y-2 mt-4 w-full">
-              <div className="flex justify-between items-center text-[10px] font-mono font-bold">
-                <span className="text-muted-foreground/60 uppercase">Avg Index</span>
-                <span className="text-foreground">{avgHealthScore}%</span>
-              </div>
-              <div className="w-full h-1.5 rounded-full bg-background border border-border overflow-hidden relative">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500"
-                  style={{ width: `${avgHealthScore}%` }}
-                />
-              </div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider pt-0.5">
-                {avgHealthScore > 80 ? "Optimal Schema" : avgHealthScore > 50 ? "Warning Schema" : "Degraded Schema"}
-              </p>
+            <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-500"
+                style={{ width: `${avgHealthScore}%` }}
+              />
             </div>
+            <p className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider">
+              {avgHealthScore > 80 ? "Optimal Schema Integrity" : avgHealthScore > 50 ? "Quality Flags Present" : "Degraded Schema"}
+            </p>
           </div>
         </div>
 
@@ -198,12 +159,9 @@ export default function DashboardPage() {
           title="Total Records Logged"
           value={totalRowsParsed.toLocaleString()}
           description={
-            <div className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-primary" />
-              <span>Rows parsed across all files</span>
-            </div>
+            <span className="text-muted-foreground text-[11px] font-medium">Rows parsed across all files</span>
           }
-          sparklinePath="M0 8 Q10 4 20 5 T40 1"
+          icon={Database}
         />
 
         {/* Metric 2: Total Columns */}
@@ -211,89 +169,69 @@ export default function DashboardPage() {
           title="Attributes Scanned"
           value={totalColumnsScanned}
           description={
-            <div className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-primary" />
-              <span>Columns profiled & mapped</span>
-            </div>
+            <span className="text-muted-foreground text-[11px] font-medium">Columns profiled & mapped</span>
           }
-          sparklinePath="M0 6 L10 6 L20 4 L30 5 L40 3"
+          icon={Activity}
         />
 
         {/* Metric 3: Total Cases */}
         <DashboardMetricCard
-          title="Active Investigations"
+          title="Active Cases"
           value={totalCases}
           description={
-            <div className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-primary" />
-              <span>Evidence datasets archived</span>
-            </div>
+            <span className="text-muted-foreground text-[11px] font-medium">Evidence datasets archived</span>
           }
-          sparklinePath="M0 8 L15 8 L15 5 L30 5 L30 2 L40 2"
+          icon={FolderOpen}
         />
       </div>
 
       {/* Full Width Grid */}
-      <div className="space-y-4 pt-2">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <FolderOpen className="w-4 h-4 text-primary" />
-          Active Case Files Archive
-        </h2>
+      <div className="space-y-4 pt-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <FolderOpen className="w-4 h-4 text-primary" />
+            Evidence Case Files
+          </h2>
+          <span className="text-xs font-mono text-muted-foreground">{datasetsList.length} cases</span>
+        </div>
 
         {datasetsList.length > 0 ? (
           <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-border bg-muted/20">
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Case ID</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Dataset Name</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Type</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Status</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-left">Schema Health</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-right">Rows</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-right">Cols</th>
-                    <th className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-6 py-3.5 text-center">Actions</th>
+                  <tr className="border-b border-border/40 bg-muted/30">
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Case ID</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Dataset Name</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Format</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Status</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Health</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right">Rows</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right">Cols</th>
+                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {datasetsList.map((dataset: any) => {
-                    const isExcel = dataset.file_type === "xlsx" || dataset.file_type === "xls";
-                    const isCSV = dataset.file_type === "csv";
-                    const isParquet = dataset.file_type === "parquet";
-                    const isJSON = dataset.file_type === "json";
-
-                    let badgeColor = "border-border text-muted-foreground/60 bg-background";
-                    if (isExcel) badgeColor = "border-emerald-900/30 text-emerald-400 bg-emerald-950/10";
-                    else if (isCSV) badgeColor = "border-primary/30 text-primary bg-primary/5";
-                    else if (isParquet) badgeColor = "border-purple-900/30 text-purple-400 bg-purple-950/10";
-                    else if (isJSON) badgeColor = "border-cyan-900/30 text-cyan-400 bg-cyan-950/10";
-
                     return (
                       <tr
                         key={dataset.id}
                         onClick={() => handleOpenCase(dataset.slug || dataset.id, "profile")}
-                        className="group border-b border-border last:border-b-0 hover:bg-background/50 transition-colors cursor-pointer"
+                        className="group border-b border-border/40 last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
                       >
-                        <td className="px-6 py-4 text-xs font-mono text-muted-foreground/80 font-bold">
+                        <td className="px-6 py-3.5 text-xs font-mono text-muted-foreground font-bold">
                           #{dataset.id}
                         </td>
-                        <td className="px-6 py-4 text-xs font-semibold text-foreground truncate max-w-[200px]">
+                        <td className="px-6 py-3.5 text-xs font-semibold text-foreground truncate max-w-[220px]">
                           {dataset.name}
                         </td>
-                        <td className="px-6 py-4 text-[10px] font-mono font-bold">
-                          <span className={`px-2 py-0.5 rounded-full border uppercase tracking-wider ${badgeColor}`}>
+                        <td className="px-6 py-3.5 text-[10px] font-mono font-bold">
+                          <span className="px-2 py-0.5 rounded border border-border bg-background uppercase text-foreground">
                             {dataset.file_type}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-[10px] font-mono font-bold">
-                          <span className={`px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5 ${
-                            dataset.status === "completed"
-                              ? "border-emerald-900/30 text-emerald-400 bg-emerald-950/15"
-                              : dataset.status === "running"
-                              ? "border-amber-900/30 text-amber-400 bg-amber-950/15 animate-pulse"
-                              : "border-rose-900/30 text-rose-400 bg-rose-950/15"
-                          }`}>
+                        <td className="px-6 py-3.5 text-[10px] font-mono font-bold">
+                          <span className="inline-flex items-center gap-1.5 text-foreground uppercase">
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               dataset.status === "completed"
                                 ? "bg-emerald-500"
@@ -304,32 +242,42 @@ export default function DashboardPage() {
                             {dataset.status || "uploaded"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-xs font-mono font-bold align-middle">
+                        <td className="px-6 py-3.5 text-xs font-mono font-bold align-middle">
                           <div className="flex items-center gap-2">
-                            <div className="w-12 h-1 rounded-full bg-border overflow-hidden relative">
+                            <div className="w-12 h-1 rounded-full bg-muted overflow-hidden relative">
                               <div
                                 className="h-full bg-primary rounded-full"
                                 style={{ width: `${dataset.health_score || 0}%` }}
                               />
                             </div>
-                            <span>{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "—"}</span>
+                            <span className="text-foreground">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "—"}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-xs font-mono text-foreground text-right font-bold">
+                        <td className="px-6 py-3.5 text-xs font-mono text-foreground text-right font-bold">
                           {dataset.row_count?.toLocaleString() || "—"}
                         </td>
-                        <td className="px-6 py-4 text-xs font-mono text-foreground text-right font-bold">
+                        <td className="px-6 py-3.5 text-xs font-mono text-foreground text-right font-bold">
                           {dataset.column_count || "—"}
                         </td>
-                        <td className="px-6 py-4 text-xs text-center align-middle">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-6 py-3.5 text-xs text-right align-middle">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenCase(dataset.slug || dataset.id, "profile");
+                              }}
+                              className="h-7 px-2.5 rounded border border-border bg-background text-foreground text-[10px] font-mono font-bold hover:bg-muted transition-all cursor-pointer flex items-center gap-1"
+                              title="Inspect Case Details"
+                            >
+                              Inspect <ArrowUpRight className="w-3 h-3" />
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDatasetToDelete(dataset);
                                 setDeleteConfirmOpen(true);
                               }}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground/60 hover:text-rose-500 transition-all cursor-pointer border border-transparent hover:border-rose-500/20"
+                              className="h-7 w-7 rounded border border-border bg-background text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-all cursor-pointer flex items-center justify-center"
                               title="Delete Case File"
                             >
                               <Trash className="w-3.5 h-3.5" />
@@ -346,28 +294,27 @@ export default function DashboardPage() {
         ) : (
           <Link
             href="/upload"
-            className="block rounded-cards border-2 border-dashed border-border bg-card/10 hover:border-primary/30 hover:bg-primary/[0.01] transition-all duration-300 py-14 px-6 text-center group/uploader cursor-pointer relative overflow-hidden"
+            className="block rounded-cards border-2 border-dashed border-border bg-card hover:border-primary/40 transition-all duration-200 py-14 px-6 text-center group cursor-pointer relative overflow-hidden"
           >
             <div className="space-y-4 max-w-sm mx-auto">
-              <div className="w-12 h-12 rounded-cards bg-background border border-border flex items-center justify-center mx-auto text-muted-foreground group-hover/uploader:text-primary group-hover/uploader:border-primary/20 group-hover/uploader:scale-105 transition-all duration-300">
+              <div className="w-12 h-12 rounded-cards bg-background border border-border flex items-center justify-center mx-auto text-muted-foreground group-hover:text-primary transition-all">
                 <Upload className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-foreground text-xs tracking-wide">Ingest new case file</h4>
-                <p className="text-muted-foreground/60 text-[10px] mt-1.5 leading-relaxed font-semibold">
-                  Drag and drop your dataset here, or click to browse files from your computer.
+                <h4 className="font-bold text-foreground text-sm tracking-tight">File new evidence case</h4>
+                <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                  Upload CSV, Excel, Parquet, or JSON datasets for automated forensic profiling and analysis.
                 </p>
               </div>
-              {/* Supported formats */}
-              <div className="flex flex-wrap justify-center gap-1.5 pt-2">
+              <div className="flex flex-wrap justify-center gap-1.5 pt-1">
                 {["CSV", "Excel", "Parquet", "JSON"].map((f) => (
-                  <span key={f} className="text-[8px] font-mono font-bold px-2 py-0.5 rounded bg-background border border-border text-muted-foreground">
+                  <span key={f} className="text-[9px] font-mono font-bold px-2 py-0.5 rounded border border-border bg-background text-muted-foreground">
                     {f}
                   </span>
                 ))}
               </div>
-              <span className="inline-flex items-center justify-center border border-border bg-background group-hover/uploader:bg-primary group-hover/uploader:text-primary-foreground text-muted-foreground text-[9px] uppercase font-bold tracking-wider px-5 h-8 rounded-full transition-all">
-                Upload Case File
+              <span className="inline-flex items-center justify-center border border-border bg-background group-hover:bg-primary group-hover:text-primary-foreground text-foreground text-[10px] font-mono uppercase font-bold tracking-wider px-5 h-9 rounded-cards transition-all">
+                Upload File
               </span>
             </div>
           </Link>

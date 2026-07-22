@@ -2,7 +2,7 @@
  
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Calculator, Info, CheckCircle2, AlertCircle } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { analysisAPI, datasetsAPI } from "@/lib/api";
 
@@ -25,9 +25,9 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 py-6 animate-pulse">
-        <div className="h-32 rounded-2xl bg-[#111217]/50 border border-zinc-900" />
-        <div className="h-32 rounded-2xl bg-[#111217]/50 border border-zinc-900" />
+      <div className="space-y-4 py-6 animate-pulse font-sans">
+        <div className="h-32 rounded-2xl bg-muted/20 border border-border/40" />
+        <div className="h-32 rounded-2xl bg-muted/20 border border-border/40" />
       </div>
     );
   }
@@ -77,8 +77,8 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
       
       {/* Header */}
       <div>
-        <h2 className="text-base font-bold text-white tracking-tight">Statistical Summary & Model Diagnostics</h2>
-        <p className="text-zinc-555 text-xs font-semibold mt-0.5 uppercase tracking-wider">
+        <h2 className="text-base font-bold text-foreground tracking-tight">Statistical Summary & Model Diagnostics</h2>
+        <p className="text-muted-foreground text-xs font-semibold mt-0.5 uppercase tracking-wider">
           Automatic mathematical verification of variable independence and distribution skew
         </p>
       </div>
@@ -86,12 +86,12 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
       {/* Descriptive Statistics Table */}
       {profile && profile.columns && (
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Descriptive Column Statistics</h3>
-          <div className="rounded-2xl border border-zinc-900 bg-[#09090B] overflow-hidden">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Descriptive Column Statistics</h3>
+          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-none">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-black/60 border-b border-zinc-900 text-zinc-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="bg-muted/50 border-b border-border text-muted-foreground font-bold uppercase tracking-wider text-[10px]">
                     <th className="p-4">Column</th>
                     <th className="p-4">Type</th>
                     <th className="p-4 text-right">Mean</th>
@@ -102,33 +102,33 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
                     <th className="p-4 text-right">Missing %</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-950/40">
+                <tbody className="divide-y divide-border/40">
                   {profile.columns.map((col: any, idx: number) => {
                     const isNum = col.classification === "numeric";
                     return (
-                      <tr key={idx} className="hover:bg-zinc-900/30 transition-colors">
-                        <td className="p-4 font-bold text-zinc-250">{col.name}</td>
+                      <tr key={idx} className="hover:bg-muted/40 transition-colors">
+                        <td className="p-4 font-bold text-foreground">{col.name}</td>
                         <td className="p-4">
-                          <Badge className="bg-black border border-zinc-900 text-zinc-400 text-[9px] px-2 py-0.5 rounded uppercase font-bold">
+                          <Badge variant="outline" className="bg-muted/50 border-border text-muted-foreground text-[9px] px-2 py-0.5 rounded uppercase font-bold">
                             {col.dtype}
                           </Badge>
                         </td>
-                        <td className="p-4 text-right font-mono text-zinc-350">
+                        <td className="p-4 text-right font-mono text-foreground/80">
                           {isNum && col.mean != null ? col.mean.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                         </td>
-                        <td className="p-4 text-right font-mono text-zinc-350">
+                        <td className="p-4 text-right font-mono text-foreground/80">
                           {isNum && col.median != null ? col.median.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                         </td>
-                        <td className="p-4 text-right font-mono text-zinc-350">
+                        <td className="p-4 text-right font-mono text-foreground/80">
                           {isNum && col.std != null ? col.std.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                         </td>
-                        <td className="p-4 text-right font-mono text-zinc-350">
+                        <td className="p-4 text-right font-mono text-foreground/80">
                           {isNum && col.min != null ? col.min.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                         </td>
-                        <td className="p-4 text-right font-mono text-zinc-350">
+                        <td className="p-4 text-right font-mono text-foreground/80">
                           {isNum && col.max != null ? col.max.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                         </td>
-                        <td className={`p-4 text-right font-mono font-bold ${col.null_percentage > 20 ? "text-[#EF4444]" : col.null_percentage > 0 ? "text-[#F59E0B]" : "text-zinc-650"}`}>
+                        <td className={`p-4 text-right font-mono font-bold ${col.null_percentage > 20 ? "text-destructive" : col.null_percentage > 0 ? "text-amber-500" : "text-muted-foreground"}`}>
                           {col.null_percentage}%
                         </td>
                       </tr>
@@ -143,7 +143,7 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
 
       {/* Model Diagnostics Section Title */}
       {statList.length > 0 && (
-        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 pt-4">Model Diagnostics & Inference Tests</h3>
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground pt-4">Model Diagnostics & Inference Tests</h3>
       )}
 
       {/* Stats List */}
@@ -157,30 +157,28 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
             return (
               <div
                 key={idx}
-                className="p-5 rounded-2xl border border-zinc-900 bg-[#09090B] flex flex-col lg:flex-row gap-5 relative overflow-hidden"
+                className="p-5 rounded-2xl border border-border bg-card flex flex-col lg:flex-row gap-5 relative overflow-hidden shadow-none"
               >
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-zinc-900 to-transparent" />
-                
                 {/* Left Section: Details */}
                 <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-2 text-[#ea580c]">
+                  <div className="flex items-center gap-2 text-primary">
                     <Calculator className="w-5 h-5" />
-                    <h4 className="font-black text-xs uppercase tracking-widest text-zinc-150">{test.test_name}</h4>
+                    <h4 className="font-black text-xs uppercase tracking-widest text-foreground">{test.test_name}</h4>
                   </div>
                   
-                  <p className="text-zinc-350 text-xs font-semibold leading-relaxed">{test.description}</p>
+                  <p className="text-foreground/90 text-xs font-semibold leading-relaxed">{test.description}</p>
                   
                   {/* Hypothesis box */}
-                  <div className="p-4 rounded-xl border border-zinc-950 bg-black/45 space-y-2 text-[10px] leading-relaxed">
-                    <p className="text-zinc-500 font-bold uppercase tracking-wide">{hInfo.concept}</p>
+                  <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-2 text-[10px] leading-relaxed">
+                    <p className="text-muted-foreground font-bold uppercase tracking-wide">{hInfo.concept}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-left">
                       <div>
-                        <span className="text-[#EF4444] font-black uppercase tracking-wider block">Null Hypothesis (H₀):</span>
-                        <span className="text-zinc-400 font-medium">{hInfo.h0}</span>
+                        <span className="text-destructive font-black uppercase tracking-wider block">Null Hypothesis (H₀):</span>
+                        <span className="text-muted-foreground font-medium">{hInfo.h0}</span>
                       </div>
                       <div>
-                        <span className="text-[#10B981] font-black uppercase tracking-wider block">Alternative Hypothesis (H₁):</span>
-                        <span className="text-zinc-400 font-medium">{hInfo.h1}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-wider block">Alternative Hypothesis (H₁):</span>
+                        <span className="text-muted-foreground font-medium">{hInfo.h1}</span>
                       </div>
                     </div>
                   </div>
@@ -188,28 +186,28 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
                   {/* ELI5 Plain English Interpretation */}
                   <div className="p-3 bg-muted/40 border border-border rounded-xl">
                     <span className="text-[8px] text-primary font-black uppercase tracking-wider block">Plain English Interpretation</span>
-                    <p className="text-zinc-300 text-xs font-semibold mt-1 italic">
+                    <p className="text-foreground/90 text-xs font-semibold mt-1 italic">
                       "{test.interpretation}"
                     </p>
                   </div>
                 </div>
 
                 {/* Right Section: Scores Box */}
-                <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-4 shrink-0 bg-zinc-950 border border-zinc-900 p-4.5 rounded-xl min-w-[220px]">
-                  <div className="text-left lg:text-right w-full border-b border-zinc-900/60 pb-2.5">
-                    <span className="text-[8px] text-zinc-500 uppercase font-black tracking-wider block">Test Statistic</span>
-                    <span className="text-sm font-mono font-black text-zinc-200 mt-0.5">{(test.statistic ?? 0).toFixed(4)}</span>
+                <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-4 shrink-0 bg-muted/30 border border-border p-4.5 rounded-xl min-w-[220px]">
+                  <div className="text-left lg:text-right w-full border-b border-border/60 pb-2.5">
+                    <span className="text-[8px] text-muted-foreground uppercase font-black tracking-wider block">Test Statistic</span>
+                    <span className="text-sm font-mono font-black text-foreground mt-0.5">{(test.statistic ?? 0).toFixed(4)}</span>
                   </div>
                   
-                  <div className="text-left lg:text-right w-full border-b border-zinc-900/60 pb-2.5">
-                    <span className="text-[8px] text-zinc-500 uppercase font-black tracking-wider block">Calculated p-value</span>
-                    <span className="text-sm font-mono font-black text-[#ea580c] mt-0.5">{test.p_value.toFixed(4)}</span>
+                  <div className="text-left lg:text-right w-full border-b border-border/60 pb-2.5">
+                    <span className="text-[8px] text-muted-foreground uppercase font-black tracking-wider block">Calculated p-value</span>
+                    <span className="text-sm font-mono font-black text-primary mt-0.5">{test.p_value.toFixed(4)}</span>
                   </div>
 
                   <div className="flex flex-col gap-1.5 items-start lg:items-end w-full pt-1">
-                    <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">{rating}</span>
-                    <Badge className={`text-[8px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${
-                      isSig ? "bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]" : "bg-zinc-950 border-zinc-900 text-zinc-500"
+                    <span className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">{rating}</span>
+                    <Badge variant="outline" className={`text-[8px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${
+                      isSig ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-muted/50 border-border text-muted-foreground"
                     }`}>
                       {isSig ? "Significant (Reject H₀)" : "Insignificant (Fail to Reject H₀)"}
                     </Badge>
@@ -220,11 +218,11 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
           })}
         </div>
       ) : (
-        <div className="p-12 rounded-2xl border border-zinc-900 bg-[#09090B] text-center max-w-sm mx-auto space-y-4">
-          <Calculator className="w-12 h-12 text-zinc-650 mx-auto" />
+        <div className="p-12 rounded-2xl border border-border bg-card/50 text-center max-w-sm mx-auto space-y-4 shadow-none">
+          <Calculator className="w-12 h-12 text-muted-foreground/60 mx-auto" />
           <div>
-            <h4 className="font-bold text-zinc-300">No tests executed</h4>
-            <p className="text-zinc-500 text-xs mt-1 font-semibold">
+            <h4 className="font-bold text-foreground">No tests executed</h4>
+            <p className="text-muted-foreground text-xs mt-1 font-semibold">
               This dataset does not show proper distributions to run regression or ANOVA tests.
             </p>
           </div>

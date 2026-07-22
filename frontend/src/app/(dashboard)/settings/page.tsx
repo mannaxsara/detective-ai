@@ -45,10 +45,10 @@ export default function SettingsPage() {
         <div className="space-y-1.5 flex flex-col items-stretch">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`w-full text-left flex items-center h-10 px-4.5 text-xs font-bold rounded-full transition-all border cursor-pointer ${
+            className={`w-full text-left flex items-center h-10 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-cards transition-all border cursor-pointer ${
               activeTab === "profile"
-                ? "text-primary bg-primary/10 border-primary/25 shadow-sm"
-                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-card/50"
+                ? "text-primary bg-primary/10 border-primary/20 shadow-sm"
+                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-muted/30"
             }`}
           >
             <UserIcon className="w-4 h-4 mr-2.5 shrink-0" />
@@ -57,10 +57,10 @@ export default function SettingsPage() {
           
           <button
             onClick={() => setActiveTab("ui")}
-            className={`w-full text-left flex items-center h-10 px-4.5 text-xs font-bold rounded-full transition-all border cursor-pointer ${
+            className={`w-full text-left flex items-center h-10 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-cards transition-all border cursor-pointer ${
               activeTab === "ui"
-                ? "text-primary bg-primary/10 border-primary/25 shadow-sm"
-                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-card/50"
+                ? "text-primary bg-primary/10 border-primary/20 shadow-sm"
+                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-muted/30"
             }`}
           >
             <Layout className="w-4 h-4 mr-2.5 shrink-0" />
@@ -69,10 +69,10 @@ export default function SettingsPage() {
           
           <button
             onClick={() => setActiveTab("security")}
-            className={`w-full text-left flex items-center h-10 px-4.5 text-xs font-bold rounded-full transition-all border cursor-pointer ${
+            className={`w-full text-left flex items-center h-10 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-cards transition-all border cursor-pointer ${
               activeTab === "security"
-                ? "text-primary bg-primary/10 border-primary/25 shadow-sm"
-                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-card/50"
+                ? "text-primary bg-primary/10 border-primary/20 shadow-sm"
+                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-muted/30"
             }`}
           >
             <Shield className="w-4 h-4 mr-2.5 shrink-0" />
@@ -83,22 +83,20 @@ export default function SettingsPage() {
         {/* Right Side: Settings panels */}
         <div className="md:col-span-2 space-y-6">
           {activeTab === "profile" && (
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6.5 flex flex-col gap-5 text-left shadow-sm">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
-              
+            <div className="rounded-cards border border-border bg-card p-6 flex flex-col gap-5 text-left shadow-sm">
               <div>
-                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Agent Information</h4>
-                <p className="text-muted-foreground/60 text-[10px] font-semibold mt-0.5">Update account credentials and authentication targets.</p>
+                <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Agent Information</h4>
+                <p className="text-muted-foreground text-xs mt-1">Update account credentials and authentication targets.</p>
               </div>
               
-              <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="border-t border-border/40 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label htmlFor="name" className="text-muted-foreground text-xs font-bold">Full Name</label>
                   <input
                     id="name"
                     type="text"
                     defaultValue={user?.full_name || "User"}
-                    className="h-10 w-full rounded-lg border border-border bg-background px-3.5 text-xs text-foreground placeholder:text-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                    className="h-10 w-full rounded-cards border border-border bg-background px-3.5 text-xs text-foreground placeholder:text-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -108,7 +106,7 @@ export default function SettingsPage() {
                     type="email"
                     defaultValue={user?.email || "user@company.com"}
                     disabled
-                    className="h-10 w-full rounded-lg border border-border bg-background/50 px-3.5 text-xs text-muted-foreground/40 cursor-not-allowed"
+                    className="h-10 w-full rounded-cards border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -116,7 +114,7 @@ export default function SettingsPage() {
               <div className="pt-2">
                 <button
                   onClick={handleSave}
-                  className="bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs h-9 px-5 rounded-full shadow-sm active:scale-[0.98] transition-all cursor-pointer"
+                  className="bg-primary hover:opacity-90 text-primary-foreground font-mono text-[10px] font-bold uppercase tracking-wider h-9 px-5 rounded-cards shadow-sm active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Save Profile
                 </button>
@@ -125,27 +123,25 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "ui" && (
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6.5 flex flex-col gap-5 text-left shadow-sm">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
-              
+            <div className="rounded-cards border border-border bg-card p-6 flex flex-col gap-5 text-left shadow-sm">
               <div>
-                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Application Settings</h4>
-                <p className="text-muted-foreground/60 text-[10px] font-semibold mt-0.5">Toggle interface styling and engine behaviors.</p>
+                <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Application Settings</h4>
+                <p className="text-muted-foreground text-xs mt-1">Toggle interface styling and engine behaviors.</p>
               </div>
               
-              <div className="border-t border-border pt-4 space-y-4.5">
+              <div className="border-t border-border/40 pt-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-foreground">Obsidian Dark Interface</h4>
-                    <p className="text-[10px] text-muted-foreground/50 font-semibold mt-0.5">Toggle interface styling mode between dark and light.</p>
+                    <h4 className="text-xs font-bold text-foreground">Dark Theme Interface</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">Toggle interface styling mode between dark and light.</p>
                   </div>
                   <Switch checked={isDark} onCheckedChange={toggleTheme} className="data-[state=checked]:bg-primary" />
                 </div>
                 
-                <div className="flex items-center justify-between border-t border-border pt-4">
+                <div className="flex items-center justify-between border-t border-border/40 pt-4">
                   <div>
                     <h4 className="text-xs font-bold text-foreground">Strict Investigation Checks</h4>
-                    <p className="text-[10px] text-muted-foreground/50 font-semibold mt-0.5">Always execute detailed anomaly checks during upload.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Always execute detailed anomaly checks during upload.</p>
                   </div>
                   <Switch checked={analytics} onCheckedChange={setAnalytics} className="data-[state=checked]:bg-primary" />
                 </div>
@@ -154,19 +150,17 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "security" && (
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6.5 flex flex-col gap-5 text-left shadow-sm">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
-              
+            <div className="rounded-cards border border-border bg-card p-6 flex flex-col gap-5 text-left shadow-sm">
               <div>
-                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Security Controls</h4>
-                <p className="text-muted-foreground/60 text-[10px] font-semibold mt-0.5">Manage session credentials and active API keys.</p>
+                <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Security Controls</h4>
+                <p className="text-muted-foreground text-xs mt-1">Manage session credentials and active API keys.</p>
               </div>
               
-              <div className="border-t border-border pt-4 space-y-4">
-                <div className="p-3.5 rounded-lg bg-background border border-border flex items-center justify-between text-[10px] font-mono text-muted-foreground/50">
+              <div className="border-t border-border/40 pt-4 space-y-4">
+                <div className="p-3.5 rounded-cards bg-background border border-border flex items-center justify-between text-xs font-mono text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-primary" />
-                    <span>SESSION SECURE: JWT bearer loop online</span>
+                    <span>SESSION SECURE: JWT bearer active</span>
                   </div>
                   <span className="text-primary font-bold">ACTIVE</span>
                 </div>
@@ -175,20 +169,20 @@ export default function SettingsPage() {
           )}
 
           {/* Danger Zone */}
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex flex-col gap-5 text-left shadow-sm">
+          <div className="rounded-cards border border-destructive/30 bg-destructive/5 p-6 flex flex-col gap-5 text-left shadow-sm">
             <div>
-              <h4 className="text-xs font-bold text-rose-500 uppercase tracking-wider">Danger Zone</h4>
-              <p className="text-rose-500/60 text-[10px] font-semibold mt-0.5">Permanently delete your profile and all active case logs.</p>
+              <h4 className="text-xs font-mono font-bold text-destructive uppercase tracking-wider">Danger Zone</h4>
+              <p className="text-destructive/80 text-xs mt-1 font-medium">Permanently delete your profile and all active case logs.</p>
             </div>
             
-            <div className="border-t border-rose-500/10 pt-4 flex items-center justify-between">
+            <div className="border-t border-destructive/20 pt-4 flex items-center justify-between">
               <div>
                 <h4 className="text-xs font-bold text-foreground">Delete Agent Profile</h4>
-                <p className="text-[10px] text-muted-foreground/55 font-semibold mt-0.5">This action cannot be undone. All database records will be erased.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">This action cannot be undone. All database records will be erased.</p>
               </div>
               <button
                 onClick={handleDeleteAccount}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-9 rounded-full flex items-center gap-1.5 px-5 cursor-pointer transition-colors"
+                className="bg-destructive hover:opacity-90 text-destructive-foreground font-mono text-[10px] font-bold uppercase tracking-wider h-9 rounded-cards flex items-center gap-1.5 px-4 cursor-pointer transition-all"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete Profile

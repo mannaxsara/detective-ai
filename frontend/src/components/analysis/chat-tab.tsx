@@ -2,9 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Send, Sparkles, MessageSquare, Bot, User, Trash2, Volume2 as VolumeIcon } from "lucide-react";
+import { Send, Sparkles, MessageSquare, Bot, User, Trash2 } from "lucide-react";
 import { analysisAPI } from "@/lib/api";
-import { toast } from "sonner";
 
 interface ChatTabProps {
   datasetId: number | string;
@@ -98,7 +97,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
         if (endIndex === -1) break;
         
         parts.push(remaining.substring(0, startIndex));
-        parts.push(<strong key={startIndex} className="font-extrabold text-white">{remaining.substring(startIndex + 2, endIndex)}</strong>);
+        parts.push(<strong key={startIndex} className="font-extrabold text-foreground">{remaining.substring(startIndex + 2, endIndex)}</strong>);
         remaining = remaining.substring(endIndex + 2);
       }
       parts.push(remaining);
@@ -106,14 +105,14 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
       if (isBullet) {
         return (
           <div key={idx} className="flex items-start gap-2 text-left pl-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ea580c] shrink-0 mt-1.5" />
-            <span className="text-zinc-300 text-xs">{parts}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
+            <span className="text-foreground/90 text-xs">{parts}</span>
           </div>
         );
       }
 
       return (
-        <p key={idx} className="text-zinc-300 text-xs leading-relaxed text-left py-0.5 font-medium">
+        <p key={idx} className="text-foreground/90 text-xs leading-relaxed text-left py-0.5 font-medium">
           {parts}
         </p>
       );
@@ -124,15 +123,13 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 font-sans">
       {/* Sidebar Suggestions */}
       <div className="lg:col-span-1 space-y-4">
-        <div className="rounded-2xl border border-zinc-900 bg-[#09090B] p-5.5 text-left relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#ea580c]/15 to-transparent" />
-          
+        <div className="rounded-2xl border border-border bg-card p-5.5 text-left relative overflow-hidden shadow-none">
           <div>
-            <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-[#ea580c]" />
+            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-primary" />
               Quick Queries
             </h4>
-            <p className="text-[10px] text-zinc-550 font-semibold mt-1">
+            <p className="text-[10px] text-muted-foreground font-semibold mt-1">
               Click any prompt below to query the case file.
             </p>
           </div>
@@ -143,7 +140,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
                 key={i}
                 onClick={() => handleSend(prompt)}
                 disabled={mutation.isPending}
-                className="w-full text-left p-3 rounded-xl border border-zinc-900 bg-black hover:border-zinc-800 transition-colors duration-150 text-xs text-zinc-450 hover:text-zinc-200 disabled:opacity-50 font-semibold cursor-pointer"
+                className="w-full text-left p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 transition-colors duration-150 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 font-semibold cursor-pointer"
               >
                 {prompt}
               </button>
@@ -154,18 +151,16 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
       {/* Main Chat Box */}
       <div className="lg:col-span-3">
-        <div className="rounded-2xl border border-zinc-900 bg-[#09090B] flex flex-col h-[600px] overflow-hidden relative">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#ea580c]/15 to-transparent" />
-          
+        <div className="rounded-2xl border border-border bg-card flex flex-col h-[600px] overflow-hidden relative shadow-none">
           {/* Header */}
-          <div className="p-4 border-b border-zinc-900/50 bg-black/90 flex flex-row items-center justify-between z-10">
+          <div className="p-4 border-b border-border bg-muted/30 flex flex-row items-center justify-between z-10">
             <div className="flex items-center gap-3 text-left">
-              <div className="w-9 h-9 rounded-lg bg-black border border-zinc-900 flex items-center justify-center text-[#ea580c]">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                 <MessageSquare className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-zinc-200">Investigation Log Panel</h4>
-                <p className="text-[10px] text-zinc-550 font-semibold">
+                <h4 className="text-sm font-bold text-foreground">Investigation Log Panel</h4>
+                <p className="text-[10px] text-muted-foreground font-semibold">
                   Query the evidence dataset metrics and health anomalies
                 </p>
               </div>
@@ -174,7 +169,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={clearChat}
-                className="text-zinc-650 hover:text-[#EF4444] hover:bg-[#EF4444]/5 transition-colors duration-150 rounded-lg w-8 h-8 flex items-center justify-center cursor-pointer border border-transparent"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-150 rounded-lg w-8 h-8 flex items-center justify-center cursor-pointer border border-transparent"
                 title="Clear Chat Logs"
               >
                 <Trash2 className="w-4 h-4" />
@@ -183,7 +178,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
           </div>
 
           {/* Messages view */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-black/10 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-background/50 scrollbar-thin">
             {messages.map((msg, index) => {
               const isBot = msg.role === "bot";
               return (
@@ -191,8 +186,8 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
                       isBot
-                        ? "bg-[#ea580c]/10 border-[#ea580c]/20 text-[#ea580c]"
-                        : "bg-black border-zinc-900 text-zinc-300"
+                        ? "bg-primary/10 border-primary/20 text-primary"
+                        : "bg-muted/50 border-border text-foreground"
                     }`}
                   >
                     {isBot ? <Bot className="w-4.5 h-4.5" /> : <User className="w-4.5 h-4.5" />}
@@ -202,13 +197,13 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
                     <div
                       className={`p-4 rounded-2xl text-xs leading-relaxed border ${
                         isBot
-                          ? "bg-zinc-950/40 border-zinc-900 text-zinc-300 rounded-tl-none"
-                          : "bg-zinc-900/30 border-zinc-900 text-zinc-200 rounded-tr-none"
+                          ? "bg-muted/40 border-border text-foreground rounded-tl-none"
+                          : "bg-primary/10 border-primary/20 text-foreground rounded-tr-none"
                       }`}
                     >
-                      {isBot ? formatMessage(msg.content) : <p className="font-semibold text-zinc-200">{msg.content}</p>}
+                      {isBot ? formatMessage(msg.content) : <p className="font-semibold text-foreground">{msg.content}</p>}
                     </div>
-                    <span className="text-[9px] font-mono text-zinc-600 px-1 block text-right">
+                    <span className="text-[9px] font-mono text-muted-foreground/70 px-1 block text-right">
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -221,7 +216,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border bg-primary/10 border-primary/20 text-primary">
                   <Bot className="w-4.5 h-4.5 animate-pulse" />
                 </div>
-                <div className="p-4 rounded-2xl bg-zinc-950/45 border border-zinc-900 text-zinc-450 text-xs rounded-tl-none flex items-center gap-2.5 font-semibold text-left">
+                <div className="p-4 rounded-2xl bg-muted/40 border border-border text-muted-foreground text-xs rounded-tl-none flex items-center gap-2.5 font-semibold text-left">
                   <span className="flex gap-1.5 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0ms" }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "150ms" }} />
@@ -240,7 +235,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               e.preventDefault();
               handleSend(input);
             }}
-            className="p-4 border-t border-zinc-900 bg-black/50 flex gap-3"
+            className="p-4 border-t border-border bg-card flex gap-3"
           >
             <input
               type="text"
@@ -248,7 +243,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={mutation.isPending}
-              className="flex-1 bg-black border border-zinc-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-xs h-11 rounded-xl px-4.5 placeholder:text-zinc-600 text-zinc-200 transition-all"
+              className="flex-1 bg-muted/30 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-xs h-11 rounded-xl px-4.5 placeholder:text-muted-foreground/60 text-foreground transition-all"
             />
             <button
               type="submit"

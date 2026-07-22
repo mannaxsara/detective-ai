@@ -2,45 +2,55 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import * as echarts from 'echarts';
+import { useTheme } from 'next-themes';
 
-export function useECharts(options: echarts.EChartsOption, theme: string = 'dark') {
+export function useECharts(options: echarts.EChartsOption) {
   const chartRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<echarts.ECharts | null>(null);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const initChart = useCallback(() => {
     if (!chartRef.current) return;
 
-    // Dispose existing instance
+    // Dispose existing instance to re-theme cleanly
     if (instanceRef.current) {
       instanceRef.current.dispose();
     }
 
     // Create new instance
-    instanceRef.current = echarts.init(chartRef.current, theme, {
+    instanceRef.current = echarts.init(chartRef.current, undefined, {
       renderer: 'canvas',
     });
 
-    // Apply default dark styling
-    const darkDefaults: echarts.EChartsOption = {
+    const textColor = isDark ? '#A1A1AA' : '#52525B';
+    const axisLabelColor = isDark ? '#71717A' : '#71717A';
+    const splitLineColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+    const axisLineColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const tooltipBg = isDark ? 'rgba(18, 18, 22, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipBorder = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const tooltipText = isDark ? '#FAFAFA' : '#18181B';
+
+    const defaultOptions: echarts.EChartsOption = {
       backgroundColor: 'transparent',
       textStyle: {
-        color: '#A1A1AA',
-        fontFamily: 'Inter, system-ui, sans-serif',
+        color: textColor,
+        fontFamily: 'var(--font-sans), Inter, system-ui, sans-serif',
       },
       legend: {
         show: false,
         textStyle: {
-          color: '#A1A1AA',
+          color: textColor,
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(15, 15, 20, 0.95)',
-        borderColor: 'rgba(255, 255, 255, 0.06)',
+        backgroundColor: tooltipBg,
+        borderColor: tooltipBorder,
         textStyle: {
-          color: '#FAFAFA',
+          color: tooltipText,
           fontSize: 12,
         },
-        extraCssText: 'backdrop-filter: blur(20px); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);',
+        extraCssText: 'backdrop-filter: blur(12px); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);',
       },
       grid: {
         containLabel: true,
@@ -50,25 +60,23 @@ export function useECharts(options: echarts.EChartsOption, theme: string = 'dark
         bottom: 16,
       },
       xAxis: {
-        axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.06)' } },
-        axisTick: { lineStyle: { color: 'rgba(255, 255, 255, 0.06)' } },
-        axisLabel: { color: '#71717A', fontSize: 11 },
-        splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.04)' } },
+        axisLine: { lineStyle: { color: axisLineColor } },
+        axisTick: { lineStyle: { color: axisLineColor } },
+        axisLabel: { color: axisLabelColor, fontSize: 11 },
+        splitLine: { lineStyle: { color: splitLineColor } },
       },
       yAxis: {
-        axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.06)' } },
-        axisTick: { lineStyle: { color: 'rgba(255, 255, 255, 0.06)' } },
-        axisLabel: { color: '#71717A', fontSize: 11 },
-        splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.04)' } },
+        axisLine: { lineStyle: { color: axisLineColor } },
+        axisTick: { lineStyle: { color: axisLineColor } },
+        axisLabel: { color: axisLabelColor, fontSize: 11 },
+        splitLine: { lineStyle: { color: splitLineColor } },
       },
     };
 
-    // Deep merge defaults with user options
-    const mergedOptions = deepMerge(darkDefaults, options);
+    const mergedOptions = deepMerge(defaultOptions, options);
     instanceRef.current.setOption(mergedOptions);
-  }, [options, theme]);
+  }, [options, isDark]);
 
-  // Init on mount
   useEffect(() => {
     initChart();
 
@@ -80,7 +88,6 @@ export function useECharts(options: echarts.EChartsOption, theme: string = 'dark
     };
   }, [initChart]);
 
-  // Handle resize
   useEffect(() => {
     const handleResize = () => {
       if (instanceRef.current) {
@@ -90,7 +97,6 @@ export function useECharts(options: echarts.EChartsOption, theme: string = 'dark
 
     window.addEventListener('resize', handleResize);
 
-    // Also use ResizeObserver for container resize
     let resizeObserver: ResizeObserver | null = null;
     if (chartRef.current) {
       resizeObserver = new ResizeObserver(() => {
@@ -112,7 +118,6 @@ export function useECharts(options: echarts.EChartsOption, theme: string = 'dark
   return { chartRef, instance: instanceRef.current };
 }
 
-// Helper: deep merge objects
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Record<string, unknown>): T {
   const output = { ...target } as Record<string, unknown>;
 
