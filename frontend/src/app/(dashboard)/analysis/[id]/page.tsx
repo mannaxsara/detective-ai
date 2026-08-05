@@ -170,7 +170,7 @@ export default function AnalysisDetailPage() {
             </div>
             <div className="text-left min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-base font-bold text-foreground tracking-tight min-w-0 truncate">{dataset.name}</h1>
+                <h1 className="text-lg font-serif font-bold text-foreground tracking-tight min-w-0 truncate">{dataset.name}</h1>
                 <Badge className="bg-background border border-border text-muted-foreground text-[9px] px-2.5 py-0.5 rounded font-mono uppercase font-bold">
                   {dataset.file_type}
                 </Badge>

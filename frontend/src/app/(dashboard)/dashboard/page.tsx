@@ -101,20 +101,20 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-6xl mx-auto font-sans text-muted-foreground">
       
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
         <div className="space-y-1 min-w-0">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight min-w-0 truncate">
-            {greeting}, {user?.full_name || "Investigator"}
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight min-w-0 truncate">
+            {greeting}, <span className="italic text-foreground">{user?.full_name || "Investigator"}</span>
           </h1>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Forensics workspace summary and active evidence archives.
+          <p className="text-xs sm:text-sm text-muted-foreground font-sans">
+            Data forensics workspace overview, active evidence archives, and schema quality metrics.
           </p>
         </div>
         <Link href="/upload">
-          <button className="h-9 rounded-cards bg-primary hover:opacity-90 text-primary-foreground font-mono text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-2 px-4 transition-all cursor-pointer shadow-sm active:scale-[0.98]">
-            <Upload className="w-3.5 h-3.5 text-primary-foreground" />
+          <Button className="h-9 px-4 text-xs font-bold uppercase tracking-wider gap-2 shadow-xs cursor-pointer">
+            <Upload className="w-4 h-4" />
             File New Case
-          </button>
+          </Button>
         </Link>
       </div>
 
