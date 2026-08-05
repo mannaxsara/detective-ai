@@ -90,14 +90,20 @@ async def on_startup() -> None:
             await session.rollback()
             print(f"Error seeding demo user: {e}")
 
-@app.get("/api/health")
+@app.api_route("/", methods=["GET", "HEAD"])
+async def root_path():
+    """Root endpoint for Render health checks (HEAD /)."""
+    return {"status": "ok", "app": "DetectiveAI Backend"}
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def root_health_check():
+    """Health endpoint for Render health checks."""
+    return {"status": "ok"}
+
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 async def health_check():
     """Simple API health endpoint."""
     return {"status": "ok", "app": "DetectiveAI Backend", "cors_origins": origins}
-
-@app.get("/health")
-async def root_health_check():
-    return {"status": "ok"}
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
