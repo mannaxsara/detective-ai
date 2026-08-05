@@ -11,6 +11,8 @@ interface AnomaliesTabProps {
 }
 
 export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
+  const [sensitivity, setSensitivity] = React.useState<number>(3.0);
+
   const { data: anomalies, isLoading } = useQuery({
     queryKey: ["analysis-anomalies", datasetId],
     queryFn: () => analysisAPI.getAnomalies(datasetId),
@@ -25,17 +27,46 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
     );
   }
 
-  const anomalyList = anomalies || [];
+  const rawAnomalyList = anomalies || [];
+  // Filter anomalies dynamically based on sensitivity threshold slider
+  const anomalyList = rawAnomalyList.filter((a: any) => {
+    if (!a.z_score) return true;
+    return Math.abs(a.z_score) >= sensitivity - 0.5;
+  });
 
   return (
     <div className="space-y-6 text-left font-sans">
       
-      {/* Description Header */}
-      <div>
-        <h2 className="text-base font-bold text-foreground tracking-tight">Data Anomaly & Outlier Logs</h2>
-        <p className="text-muted-foreground text-xs font-semibold mt-0.5 uppercase tracking-wider">
-          Statistical deviations computed via Isolation Forest, Z-score, and cluster density checks
-        </p>
+      {/* Description Header + Switch-Lit Interactive Slider Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <h2 className="text-base font-serif font-bold text-foreground tracking-tight">Data Anomaly & Outlier Logs</h2>
+          <p className="text-muted-foreground text-xs font-medium mt-0.5">
+            Statistical deviations computed via Isolation Forest, Z-score, and cluster density checks
+          </p>
+        </div>
+
+        {/* Switch-Lit Slider Control Container */}
+        <div className="p-3 rounded-lg border border-border bg-card flex items-center gap-4 text-xs">
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[10px] font-mono font-bold text-muted-foreground">
+              <span>Z-Score Sensitivity</span>
+              <span className="text-foreground">{sensitivity.toFixed(1)}σ</span>
+            </div>
+            <input
+              type="range"
+              min="1.5"
+              max="4.5"
+              step="0.5"
+              value={sensitivity}
+              onChange={(e) => setSensitivity(parseFloat(e.target.value))}
+              className="w-32 accent-primary cursor-pointer h-1.5 bg-muted rounded-lg"
+            />
+          </div>
+          <Badge variant="default" className="text-[10px] shrink-0 font-mono">
+            {anomalyList.length} Flagged
+          </Badge>
+        </div>
       </div>
 
       {/* Methodology Explanation Section */}

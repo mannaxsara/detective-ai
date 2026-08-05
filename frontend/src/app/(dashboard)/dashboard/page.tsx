@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 function DashboardMetricCard({
   title,
@@ -137,8 +138,56 @@ export default function DashboardPage() {
 
       {!isLoading && !isError && (
         <>
+          {/* Switch-Lit Editorial Process Banner */}
+          <div className="border border-border bg-card rounded-xl p-6 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-sm font-serif font-bold text-foreground tracking-tight flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+                The Forensics Process is Simple
+              </h2>
+              <span className="text-[11px] font-mono text-muted-foreground uppercase font-bold tracking-wider">
+                Automated Pipeline
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-lg border border-border bg-background/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-serif font-bold text-foreground">❶</span>
+                  <Badge variant="outline" className="text-[10px]">Ingestion</Badge>
+                </div>
+                <h3 className="text-xs font-serif font-bold text-foreground">Upload Case Evidence</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
+                  Drag & drop CSV, Excel, or Parquet files. Automatic type detection & delimiter parsing.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-lg border border-border bg-background/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-serif font-bold text-foreground">❷</span>
+                  <Badge variant="outline" className="text-[10px]">Profiling</Badge>
+                </div>
+                <h3 className="text-xs font-serif font-bold text-foreground">Schema & Anomaly Audit</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
+                  High-speed Polars engine detects missing values, 3-sigma outliers, & health scores.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-lg border border-border bg-background/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-serif font-bold text-foreground">❸</span>
+                  <Badge variant="default" className="text-[10px]">Export</Badge>
+                </div>
+                <h3 className="text-xs font-serif font-bold text-foreground">Executive Briefings</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
+                  Generate presentation-ready PDF & DOCX reports with remediation action items.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Dynamic Data-First Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Dataset Health Gauge */}
         <div className="p-5 rounded-cards border border-border bg-card flex flex-col justify-between min-h-[120px] shadow-sm">
