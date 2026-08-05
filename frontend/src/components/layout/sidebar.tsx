@@ -77,8 +77,8 @@ export default function Sidebar() {
                 <span className="text-sm font-black text-primary">D</span>
               </div>
             ) : (
-              <span className="font-black text-[13px] tracking-widest text-foreground uppercase select-none">
-                DetectiveAI
+              <span className="font-serif text-lg font-bold text-foreground select-none tracking-tight">
+                Detective<span className="text-primary italic">AI</span>
               </span>
             )}
           </Link>
