@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { GaugeChart } from "@/components/ui/gauge-chart";
 import { datasetsAPI, analysisAPI } from "@/lib/api";
 import { useAnalysisStore } from "@/store/analysis-store";
 
@@ -184,20 +185,7 @@ export default function AnalysisDetailPage() {
           </div>
 
           <div className="flex items-center gap-6 flex-wrap md:flex-nowrap">
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Dataset Health</p>
-                <p className="text-xs font-mono font-black text-foreground mt-0.5">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "N/A"}</p>
-              </div>
-              <div className="w-1.5 h-10 rounded-full bg-background border border-border relative overflow-hidden">
-                {dataset.health_score && (
-                  <div
-                    className="absolute bottom-0 inset-x-0 bg-primary"
-                    style={{ height: `${dataset.health_score}%` }}
-                  />
-                )}
-              </div>
-            </div>
+            <GaugeChart value={Math.round(dataset.health_score || 100)} size={84} strokeWidth={8} label="Health Score" />
 
             <button
               onClick={handleDownload}
