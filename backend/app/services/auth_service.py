@@ -113,16 +113,26 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
     else:
         # Fallback for Firebase ID tokens: decode JWT payload
         try:
-            unverified_claims = jwt.decode(credential, options={"verify_signature": False})
-            if unverified_claims.get("iss", "").startswith("https://securetoken.google.com/") or "accounts.google.com" in unverified_claims.get("iss", ""):
+            unverified_claims = jwt.decode(
+                credential,
+                algorithms=["RS256", "HS256", "ES256"],
+                options={"verify_signature": False}
+            )
+            sub = unverified_claims.get("sub") or unverified_claims.get("user_id") or unverified_claims.get("uid")
+            email_val = unverified_claims.get("email")
+            name_val = unverified_claims.get("name") or (email_val.split("@")[0] if email_val else "User")
+            picture_val = unverified_claims.get("picture")
+
+            if sub and email_val:
                 token_data = {
-                    "sub": unverified_claims.get("sub") or unverified_claims.get("user_id"),
-                    "email": unverified_claims.get("email"),
-                    "name": unverified_claims.get("name") or unverified_claims.get("email", "").split("@")[0],
-                    "picture": unverified_claims.get("picture"),
+                    "sub": str(sub),
+                    "email": str(email_val),
+                    "name": str(name_val),
+                    "picture": picture_val,
                 }
-        except Exception:
-            pass
+        except Exception as err:
+            import logging
+            logging.getLogger(__name__).warning(f"Failed to decode JWT credential: {err}")
 
     google_id: str = token_data.get("sub", "")
     email: str = token_data.get("email", "")
