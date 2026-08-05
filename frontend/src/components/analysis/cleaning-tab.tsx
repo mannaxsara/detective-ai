@@ -126,7 +126,7 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-                          {issue.issue_type.replace("_", " ").toUpperCase()}
+                          {(issue.issue_type || "quality_issue").replace(/_/g, " ").toUpperCase()}
                         </span>
                         {issue.column && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/50 border-border text-muted-foreground font-mono">
@@ -134,9 +134,9 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-foreground/90 text-xs sm:text-sm mt-1.5 font-semibold">{issue.description}</p>
+                      <p className="text-foreground/90 text-xs sm:text-sm mt-1.5 font-semibold">{issue.description || "Data anomaly identified."}</p>
                       <p className="text-[11px] text-muted-foreground mt-1 font-semibold">
-                        Suggested Action: <span className="text-primary font-bold">{issue.suggested_fix}</span>
+                        Suggested Action: <span className="text-primary font-bold">{issue.suggested_fix || "Automated data cleanup"}</span>
                       </p>
                     </div>
                   </div>

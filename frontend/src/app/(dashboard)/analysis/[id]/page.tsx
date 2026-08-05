@@ -90,6 +90,7 @@ export default function AnalysisDetailPage() {
   const { data: dataset, isLoading: datasetLoading, error: datasetError } = useQuery({
     queryKey: ["dataset", datasetId],
     queryFn: () => datasetsAPI.getById(datasetId),
+    retry: false,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       return status === "running" || status === "pending" || status === "uploaded" ? 3000 : false;
@@ -99,7 +100,8 @@ export default function AnalysisDetailPage() {
   const { data: analysis, isLoading: analysisLoading } = useQuery({
     queryKey: ["analysis", datasetId],
     queryFn: () => analysisAPI.getAnalysis(datasetId),
-    enabled: dataset?.status === "completed"
+    enabled: dataset?.status === "completed",
+    retry: false,
   });
 
   useEffect(() => {
@@ -119,12 +121,20 @@ export default function AnalysisDetailPage() {
 
   if (datasetError || !dataset) {
     return (
-      <div className="py-16 text-center max-w-md mx-auto space-y-4">
-        <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
-        <h2 className="text-lg font-bold text-foreground">Dataset case file not found</h2>
-        <p className="text-muted-foreground text-xs font-medium leading-relaxed">
-          We couldn't retrieve the requested case analysis. Please check cases archive or upload again.
-        </p>
+      <div className="py-20 text-center max-w-md mx-auto space-y-5">
+        <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-foreground">Case File Not Found</h2>
+          <p className="text-muted-foreground text-xs font-medium leading-relaxed">
+            The requested dataset analysis record (&quot;{datasetId}&quot;) does not exist or has been removed.
+          </p>
+        </div>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="h-10 px-5 rounded-xl bg-primary text-primary-foreground font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all cursor-pointer shadow-md shadow-primary/10"
+        >
+          Return to Dashboard
+        </button>
       </div>
     );
   }

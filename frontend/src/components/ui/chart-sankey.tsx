@@ -54,17 +54,17 @@ export function SankeyChart({
   const padding = { top: 20, right: 100, bottom: 20, left: 20 };
 
   const nodePositions = useMemo(() => {
-    // Simple linear layout for the 5-Whys use case
     const positions: any[] = [];
-    const maxVal = Math.max(...data.links.map(l => l.value), 1);
+    const linkValues = (data.links || []).map(l => l.value);
+    const maxVal = linkValues.length > 0 ? Math.max(...linkValues, 1) : 1;
     
-    data.nodes.forEach((_, i) => {
+    (data.nodes || []).forEach((_, i) => {
       // Find total value for this node
-      const inValue = data.links.filter(l => l.target === i).reduce((sum, l) => sum + l.value, 0);
-      const outValue = data.links.filter(l => l.source === i).reduce((sum, l) => sum + l.value, 0);
+      const inValue = (data.links || []).filter(l => l.target === i).reduce((sum, l) => sum + l.value, 0);
+      const outValue = (data.links || []).filter(l => l.source === i).reduce((sum, l) => sum + l.value, 0);
       const nodeValue = Math.max(inValue, outValue, 10);
       
-      const colWidth = (width - padding.left - padding.right) / Math.max(data.nodes.length - 1, 1);
+      const colWidth = (width - padding.left - padding.right) / Math.max((data.nodes || []).length - 1, 1);
       const x = padding.left + i * colWidth;
       const nodeHeight = (nodeValue / Math.max(maxVal, 100)) * (svgHeight - padding.top - padding.bottom);
       const y = (svgHeight - nodeHeight) / 2; // Center vertically

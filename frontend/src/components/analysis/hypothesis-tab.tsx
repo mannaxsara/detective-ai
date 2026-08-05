@@ -120,12 +120,13 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
           {testsList.map((test: any, index: number) => {
             const isTesting = testingIds[test.test_name];
             const isTested = testedIds[test.test_name];
-            const isSignificant = test.p_value < alpha;
+            const isSignificant = (test.p_value ?? 1) < alpha;
 
             // Dynamically adjust plain-English interpretation based on alpha
+            const rawInterpretation = test.interpretation || "Assessing statistical significance for hypothesis test.";
             const dynamicInterpretation = isSignificant
-              ? test.interpretation
-              : test.interpretation.replace(/is statistically significant/g, "is NOT statistically significant").replace(/we reject/g, "we fail to reject");
+              ? rawInterpretation
+              : rawInterpretation.replace(/is statistically significant/g, "is NOT statistically significant").replace(/we reject/g, "we fail to reject");
 
             return (
               <div

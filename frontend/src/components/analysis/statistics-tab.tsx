@@ -52,7 +52,8 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
 
   const statList = stats || [];
 
-  const getStarRating = (pVal: number) => {
+  const getStarRating = (pVal: number | null | undefined) => {
+    if (pVal == null) return "ns (Not Significant)";
     if (pVal < 0.001) return "⭐⭐⭐ (Extremely Significant)";
     if (pVal < 0.01) return "⭐⭐ (Highly Significant)";
     if (pVal < 0.05) return "⭐ (Significant)";
@@ -60,8 +61,8 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
   };
 
   // Hypotheses details mapper based on test type names
-  const getHypothesisDetails = (testName: string) => {
-    const name = testName.toLowerCase();
+  const getHypothesisDetails = (testName?: string) => {
+    const name = (testName || "").toLowerCase();
     if (name.includes("chi") || name.includes("independence")) {
       return {
         h0: "There is NO association between the tested variables. They are completely independent.",
