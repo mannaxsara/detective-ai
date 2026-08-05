@@ -149,6 +149,7 @@ export default function LoginPage() {
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
                 <input
                   type="email"
+                  autocomplete="email"
                   placeholder="agent@detective.ai"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -174,6 +175,7 @@ export default function LoginPage() {
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
                 <input
                   type={showPassword ? "text" : "password"}
+                  autocomplete="current-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
