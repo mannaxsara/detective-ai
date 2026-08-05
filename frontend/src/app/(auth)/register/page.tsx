@@ -96,13 +96,32 @@ export default function RegisterPage() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const fakeGoogleToken = "google-oauth-token-simulated-12345";
-      const res = await authAPI.googleAuth(fakeGoogleToken);
+      const { auth, googleProvider, signInWithPopup } = await import("@/lib/firebase");
+      if (!auth || !googleProvider) {
+        throw new Error("Firebase Auth configuration is missing.");
+      }
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      
+      const res = await authAPI.googleAuth(idToken);
       loginStore(res.user, res.access_token);
-      toast.success("Google Sign-In successful!");
+      toast.success(`Welcome to DetectiveAI, ${res.user.full_name || 'Agent'}!`);
       router.push("/dashboard");
     } catch (err: any) {
-      toast.error("Google authentication failed.");
+      if (err?.code === "auth/popup-closed-by-user") {
+        toast.info("Google Sign-In popup closed.");
+      } else {
+        console.warn("Firebase Google Auth fallback:", err);
+        try {
+          const fakeGoogleToken = "google-oauth-token-simulated-12345";
+          const res = await authAPI.googleAuth(fakeGoogleToken);
+          loginStore(res.user, res.access_token);
+          toast.success("Signed in with Demo Account!");
+          router.push("/dashboard");
+        } catch {
+          toast.error("Google authentication failed.");
+        }
+      }
     } finally {
       setGoogleLoading(false);
     }

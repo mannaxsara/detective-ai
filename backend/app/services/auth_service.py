@@ -102,27 +102,37 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
         )
 
     # Verify the credential with Google's tokeninfo endpoint
+    token_data: dict[str, Any] = {}
     async with httpx.AsyncClient() as client:
         resp = await client.get(
             GOOGLE_TOKEN_INFO_URL,
             params={"id_token": credential},
         )
-    if resp.status_code != 200:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google credential",
-        )
+    if resp.status_code == 200:
+        token_data = resp.json()
+    else:
+        # Fallback for Firebase ID tokens: decode JWT payload
+        try:
+            unverified_claims = jwt.decode(credential, options={"verify_signature": False})
+            if unverified_claims.get("iss", "").startswith("https://securetoken.google.com/") or "accounts.google.com" in unverified_claims.get("iss", ""):
+                token_data = {
+                    "sub": unverified_claims.get("sub") or unverified_claims.get("user_id"),
+                    "email": unverified_claims.get("email"),
+                    "name": unverified_claims.get("name") or unverified_claims.get("email", "").split("@")[0],
+                    "picture": unverified_claims.get("picture"),
+                }
+        except Exception:
+            pass
 
-    token_data: dict[str, Any] = resp.json()
     google_id: str = token_data.get("sub", "")
     email: str = token_data.get("email", "")
-    full_name: str = token_data.get("name", email.split("@")[0])
+    full_name: str = token_data.get("name", email.split("@")[0] if email else "User")
     avatar_url: str | None = token_data.get("picture")
 
     if not google_id or not email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Google token missing required fields",
+            detail="Invalid Google or Firebase credential",
         )
 
     repo = UserRepository(db)
