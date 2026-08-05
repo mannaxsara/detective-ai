@@ -176,6 +176,10 @@ html, body, button, input, textarea, select {
   body {
     @apply bg-background text-foreground;
   }
+  body[data-scroll-locked], html[data-scroll-locked] {
+    margin-right: 0px !important;
+    padding-right: 0px !important;
+  }
   html {
     @apply font-sans;
     scroll-behavior: smooth;

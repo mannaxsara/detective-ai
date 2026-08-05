@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex w-screen h-screen overflow-hidden bg-background text-foreground font-sans">
+    <div className="flex w-full h-screen overflow-hidden bg-background text-foreground font-sans">
       <Sidebar />
       <div className="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
         <Header />
