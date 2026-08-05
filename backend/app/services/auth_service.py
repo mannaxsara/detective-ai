@@ -93,7 +93,7 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
             user = await repo.create(
                 email="demo@example.com",
                 full_name="Demo User",
-                password="password123"
+                hashed_password=hash_password("password123"),
             )
         return TokenResponse(
             access_token=create_access_token(user.id),
