@@ -79,7 +79,7 @@ export default function LoginPage() {
     try {
       const { auth, googleProvider, signInWithPopup } = await import("@/lib/firebase");
       if (!auth || !googleProvider) {
-        throw new Error("Firebase Auth configuration is missing.");
+        throw new Error("Firebase Auth is not initialized. Please check environment variables.");
       }
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
@@ -89,19 +89,13 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${res.user.full_name || 'Agent'}!`);
       router.push("/dashboard");
     } catch (err: any) {
+      console.error("Google Auth error:", err);
       if (err?.code === "auth/popup-closed-by-user") {
-        toast.info("Google Sign-In popup closed.");
+        toast.info("Google Sign-In popup was closed.");
+      } else if (err?.code?.includes("requests-from-referer")) {
+        toast.error("Google Sign-In blocked: Please allow domain in Firebase & Google Cloud Console.");
       } else {
-        console.warn("Firebase Google Auth fallback:", err);
-        try {
-          const fakeGoogleToken = "google-oauth-token-simulated-12345";
-          const res = await authAPI.googleAuth(fakeGoogleToken);
-          loginStore(res.user, res.access_token);
-          toast.success("Signed in with Demo Account!");
-          router.push("/dashboard");
-        } catch {
-          toast.error("Google authentication failed.");
-        }
+        toast.error(err.response?.data?.detail || err.message || "Google authentication failed.");
       }
     } finally {
       setGoogleLoading(false);
