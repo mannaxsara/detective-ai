@@ -102,8 +102,8 @@ export default function DashboardPage() {
       
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+        <div className="space-y-1 min-w-0">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight min-w-0 truncate">
             {greeting}, {user?.full_name || "Investigator"}
           </h1>
           <p className="text-xs text-muted-foreground leading-relaxed">
@@ -119,7 +119,7 @@ export default function DashboardPage() {
       </div>
 
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="p-5 rounded-cards border border-border bg-card min-h-[120px] animate-pulse">
               <div className="h-3 w-24 bg-muted rounded mb-4" />
@@ -138,7 +138,7 @@ export default function DashboardPage() {
       {!isLoading && !isError && (
         <>
           {/* Dynamic Data-First Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Dataset Health Gauge */}
         <div className="p-5 rounded-cards border border-border bg-card flex flex-col justify-between min-h-[120px] shadow-sm">

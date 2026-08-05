@@ -55,17 +55,17 @@ function InsightCardItem({ insight, index }: { insight: any; index: number }) {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-lg border ${priorityColor}`}>
+            <Badge className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-lg border shrink-0 ${priorityColor}`}>
               {insight.priority} Priority
             </Badge>
-            <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-lg bg-muted/50 text-muted-foreground border-border">
+            <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-lg bg-muted/50 text-muted-foreground border-border shrink-0">
               {insight.confidence_score}% Conf
             </Badge>
           </div>
         </div>
 
         <div>
-          <p className="text-foreground/90 text-xs sm:text-sm font-semibold leading-relaxed">
+          <p className="text-foreground/90 text-xs sm:text-sm font-semibold leading-relaxed break-words">
             {insight.description}
           </p>
         </div>

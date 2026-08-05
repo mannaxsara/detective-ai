@@ -68,7 +68,7 @@ export default function ReportGenerator({ analysisId }: ReportGeneratorProps) {
             {/* Format choice */}
             <div className="space-y-2 text-left">
               <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest font-bold block">Briefing format</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                 {[
                   { id: "pdf", label: "PDF" },
                   { id: "docx", label: "DOCX" }

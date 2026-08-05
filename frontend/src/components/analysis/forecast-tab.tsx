@@ -144,7 +144,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 flex-wrap">
           {numericColumns.length > 0 && (
             <Select
               value={targetCol || ""}

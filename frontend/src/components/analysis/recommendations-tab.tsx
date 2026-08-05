@@ -71,7 +71,7 @@ export default function RecommendationsTab({ datasetId }: RecommendationsTabProp
 
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted/50 border border-border px-2 py-0.5 rounded">
+                      <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted/50 border border-border px-2 py-0.5 rounded shrink-0">
                         ACTION PLAN {i + 1}
                       </span>
                     </div>

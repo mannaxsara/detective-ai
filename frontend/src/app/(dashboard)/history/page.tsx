@@ -94,7 +94,7 @@ export default function HistoryPage() {
         </div>
       ) : historyData?.analyses && historyData.analyses.length > 0 ? (
         <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="w-full overflow-x-auto">
             <table className="w-full border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-border/40 bg-muted/30">

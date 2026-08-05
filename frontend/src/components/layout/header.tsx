@@ -29,7 +29,7 @@ export default function Header() {
         >
           <Menu className="w-4 h-4" />
         </button>
-        <div className="text-xs font-mono font-medium text-foreground tracking-tight">
+        <div className="text-xs font-mono font-medium text-foreground tracking-tight min-w-0 flex-1 truncate">
           {getBreadcrumbs()}
         </div>
       </div>

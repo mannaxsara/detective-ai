@@ -99,11 +99,11 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
                       <span className="font-mono font-bold text-xs text-foreground">
                         Record ID #{anomaly.entity_id}
                       </span>
-                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-muted/50 border border-border text-muted-foreground rounded">
+                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-muted/50 border border-border text-muted-foreground rounded shrink-0">
                         {anomaly.detection_method}
                       </span>
                     </div>
-                    <p className="text-foreground/90 text-xs mt-1.5 font-semibold">{anomaly.description}</p>
+                    <p className="text-foreground/90 text-xs mt-1.5 font-semibold break-words">{anomaly.description}</p>
                     <p className="text-[10px] text-muted-foreground mt-1 font-bold">
                       Reasoning: <span className="text-destructive font-mono">{anomaly.reason}</span>
                     </p>
@@ -116,7 +116,7 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
                     <p className="text-[8px] text-muted-foreground uppercase font-bold tracking-wider">Alert Confidence</p>
                     <p className="text-xs font-mono font-black text-foreground mt-0.5">{(anomaly as any).confidence_score ?? 95}%</p>
                   </div>
-                  <Badge variant="outline" className={`text-[8px] uppercase px-2 py-0.5 border ${severityStyle} rounded-full font-bold tracking-wider`}>
+                  <Badge variant="outline" className={`text-[8px] uppercase px-2 py-0.5 border ${severityStyle} rounded-full font-bold tracking-wider shrink-0`}>
                     {anomaly.severity}
                   </Badge>
                 </div>

@@ -78,7 +78,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-sm rounded-cards border border-border bg-card p-8 shadow-sm">
+      <div className="w-full max-w-sm rounded-cards border border-border bg-card p-6 sm:p-8 shadow-sm">
         {/* Header Wordmark */}
         <div className="text-center mb-8">
           <span className="font-mono text-xs font-bold tracking-widest text-muted-foreground uppercase select-none">

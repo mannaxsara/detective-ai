@@ -122,7 +122,7 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
                   <Button
                     onClick={() => handleApplyFix(issue.fix_id)}
                     disabled={applying === issue.fix_id}
-                    className="relative bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:scale-[1.01] transition-all cursor-pointer shadow-sm disabled:opacity-50 shrink-0"
+                    className="relative bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:scale-[1.01] transition-all cursor-pointer shadow-sm disabled:opacity-50 shrink-0 w-full sm:w-auto mt-3 sm:mt-0"
                   >
                     {applying === issue.fix_id ? (
                       <span className="flex items-center gap-1.5 font-bold">

@@ -65,7 +65,7 @@ export default function Sidebar() {
           x: isMobile && sidebarCollapsed ? -250 : 0
         }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className={`flex flex-col h-screen border-r border-border bg-card shrink-0 z-40 font-sans ${
+        className={`flex flex-col h-screen border-r border-border bg-card shrink-0 z-40 font-sans overflow-hidden ${
           isMobile ? "fixed left-0 top-0 bottom-0 shadow-2xl" : "relative"
         } ${isMobile && sidebarCollapsed ? "pointer-events-none border-none" : "pointer-events-auto"}`}
       >

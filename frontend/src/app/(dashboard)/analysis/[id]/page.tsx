@@ -168,9 +168,9 @@ export default function AnalysisDetailPage() {
             <div className="flex items-center justify-center w-12 h-12 rounded-cards bg-background border border-border text-primary">
               <Database className="w-5.5 h-5.5" />
             </div>
-            <div className="text-left">
+            <div className="text-left min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-base font-bold text-foreground tracking-tight">{dataset.name}</h1>
+                <h1 className="text-base font-bold text-foreground tracking-tight min-w-0 truncate">{dataset.name}</h1>
                 <Badge className="bg-background border border-border text-muted-foreground text-[9px] px-2.5 py-0.5 rounded font-mono uppercase font-bold">
                   {dataset.file_type}
                 </Badge>
@@ -183,7 +183,7 @@ export default function AnalysisDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-wrap md:flex-nowrap">
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Dataset Health</p>
@@ -216,7 +216,7 @@ export default function AnalysisDetailPage() {
       </Card>
 
       {/* Flat Horizontal Tab Navigation Bar */}
-      <div className="border-b border-border flex gap-6 overflow-x-auto scrollbar-none">
+      <div className="border-b border-border flex gap-6 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
         {TABS_CONFIG.map((tab) => {
           const isActive = activeTab === tab.value;
           return (

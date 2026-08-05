@@ -124,7 +124,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
       {/* Main Chat Box */}
       <div className="lg:col-span-3">
-        <div className="rounded-2xl border border-border bg-card flex flex-col h-[600px] overflow-hidden relative shadow-none">
+        <div className="rounded-2xl border border-border bg-card flex flex-col h-[calc(100vh-280px)] min-h-[450px] md:h-[600px] overflow-hidden relative shadow-none">
           {/* Header */}
           <div className="p-4 border-b border-border bg-muted/30 flex flex-row items-center justify-between z-10">
             <div className="flex items-center gap-3 text-left">
@@ -168,7 +168,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
                   <div className="space-y-1 text-left">
                     <div
-                      className={`p-4 rounded-2xl text-xs leading-relaxed border ${
+                      className={`p-4 rounded-2xl text-xs leading-relaxed border overflow-x-auto break-words ${
                         isBot
                           ? "bg-muted/40 border-border text-foreground rounded-tl-none"
                           : "bg-primary/10 border-primary/20 text-foreground rounded-tr-none"
