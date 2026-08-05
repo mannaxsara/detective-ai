@@ -80,10 +80,13 @@ export default function UploadPage() {
       setStatus("success");
       toast.success("Evidence loaded. Starting analysis...");
       
-      // Auto-redirect to the case page immediately
-      setActiveTab("profile");
-      router.push(`/analysis/${caseIdentifier}`);
+      // Auto-redirect to the case page after a delay
+      setTimeout(() => {
+        setActiveTab("profile");
+        router.push(`/analysis/${caseIdentifier}`);
+      }, 2000);
     } catch (err: any) {
+      setUploadProgress(0);
       setStatus("error");
       toast.error(err.response?.data?.detail || "Upload or profiling failed.");
     }

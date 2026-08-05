@@ -4,8 +4,7 @@ Dataset ORM model.
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, func
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, func, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.session import Base

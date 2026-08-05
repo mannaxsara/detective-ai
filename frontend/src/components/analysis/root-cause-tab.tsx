@@ -30,6 +30,27 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
   }
 
   const nodes = rootCause || [];
+  if (!nodes || nodes.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6 text-left font-sans">
+        <div>
+          <h2 className="text-base font-bold text-foreground tracking-tight">Root Cause Diagnosis (5 Whys Investigation)</h2>
+          <p className="text-muted-foreground text-xs font-semibold mt-0.5 uppercase tracking-wider">
+            Traces data variances and categorical skew down to core structural reasons
+          </p>
+        </div>
+        <div className="p-12 rounded-2xl border border-border bg-card/50 text-center max-w-sm mx-auto space-y-4 shadow-none">
+          <AlertCircle className="w-12 h-12 text-muted-foreground/60 mx-auto" />
+          <div>
+            <h4 className="font-bold text-foreground">Root Cause Diagnosis Unavailable</h4>
+            <p className="text-muted-foreground text-xs mt-1 font-semibold">
+              This dataset does not show sufficient variables to compute structural root cause tracks.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const rootNode = nodes[nodes.length - 1] || {};
 
   // Custom action plan builder based on final root cause

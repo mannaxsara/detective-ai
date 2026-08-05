@@ -42,6 +42,7 @@ export default function ReportGenerator({ analysisId }: ReportGeneratorProps) {
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
       setStatus("success");
       toast.success("Download started successfully");
     } catch (err) {

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,9 +36,9 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
                 return
 
             # 2. Run EDA services
-            kpis = detect_kpis(dataset.file_path, dataset.file_type)
-            insights = discover_insights(dataset.file_path, dataset.file_type)
-            charts = run_eda(dataset.file_path, dataset.file_type)
+            kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
+            insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
+            charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
 
             # Profile dataset and update dataset details
             from app.services.profiling_service import profile_dataset
@@ -147,9 +148,9 @@ async def get_analysis(
         dataset = await ds_repo.get_by_id(resolved_id)
         if dataset and dataset.user_id == current_user.id:
             try:
-                kpis = detect_kpis(dataset.file_path, dataset.file_type)
-                insights = discover_insights(dataset.file_path, dataset.file_type)
-                charts = run_eda(dataset.file_path, dataset.file_type)
+                kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
+                insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
+                charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
                 
                 # Profile dataset and update dataset details
                 from app.services.profiling_service import profile_dataset

@@ -66,7 +66,6 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { setActiveTab } = useAnalysisStore();
   const [greeting, setGreeting] = useState("Good Evening");
-  const [cardCoords, setCardCoords] = useState<{ [key: string]: { x: number; y: number } }>({});
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [datasetToDelete, setDatasetToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -78,7 +77,7 @@ export default function DashboardPage() {
     else setGreeting("Good Evening");
   }, []);
 
-  const { data: datasetsData } = useQuery({
+  const { data: datasetsData, isLoading, isError } = useQuery({
     queryKey: ["datasets"],
     queryFn: () => datasetsAPI.list(0, 10),
   });
@@ -90,20 +89,12 @@ export default function DashboardPage() {
   const totalColumnsScanned = datasetsList.reduce((acc: number, curr: any) => acc + (curr.column_count || 0), 0);
   
   const avgHealthScore = datasetsList.length
-    ? Math.round(datasetsList.reduce((acc: number, curr: any) => acc + (curr.health_score || 0), 0) / datasetsList.length)
-    : 100;
+    ? Math.round(datasetsList.reduce((acc: number, curr: any) => acc + (Number(curr.health_score) || 0), 0) / datasetsList.length)
+    : 0;
 
   const handleOpenCase = (identifier: string | number, tab: string) => {
     setActiveTab(tab);
     router.push(`/analysis/${identifier}`);
-  };
-
-  const handleCardMouseMove = (key: string, e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top } = e.currentTarget.getBoundingClientRect();
-    setCardCoords((prev) => ({
-      ...prev,
-      [key]: { x: e.clientX - left, y: e.clientY - top },
-    }));
   };
 
   return (

@@ -17,8 +17,8 @@ is_sqlite = "sqlite" in settings.DATABASE_URL
 engine_kwargs = {}
 if not is_sqlite:
     engine_kwargs.update({
-        "pool_size": 20,
-        "max_overflow": 10,
+        "pool_size": 5,
+        "max_overflow": 5,
         "pool_pre_ping": True,
     })
 

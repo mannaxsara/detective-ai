@@ -18,17 +18,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     initialize();
-    const token = localStorage.getItem("detective_token");
-    if (!token || !isAuthenticated) {
-      router.push("/login");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const token = localStorage.getItem("detective_token");
+      if (!token) {
+        router.push("/login");
+      }
     } else {
       setLoading(false);
     }
-  }, [initialize, isAuthenticated, router]);
+  }, [isAuthenticated, router]);
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-black text-zinc-400 font-mono text-[12px]">
+      <div className="flex h-screen w-screen items-center justify-center bg-background text-muted-foreground font-mono text-[12px]">
         Checking credentials...
       </div>
     );

@@ -51,7 +51,9 @@ export const useAuthStore = create<AuthState>((set) => ({
           const user = JSON.parse(userStr) as User;
           set({ user, token, isAuthenticated: true, isLoading: false });
         } catch {
-          set({ isLoading: false });
+          localStorage.removeItem('detective_token');
+          localStorage.removeItem('detective_user');
+          set({ user: null, token: null, isAuthenticated: false, isLoading: false });
         }
       } else {
         set({ isLoading: false });

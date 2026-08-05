@@ -85,7 +85,7 @@ async def generate_report(
     # 5. Save report record
     report_repo = ReportRepository(db)
     report = await report_repo.create(
-        analysis_id=analysis_id,
+        analysis_id=analysis.id,
         user_id=current_user.id,
         title=f"DetectiveAI Report for {dataset.name}",
         format=file_format,

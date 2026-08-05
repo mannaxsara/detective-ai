@@ -73,8 +73,12 @@ export function useECharts(options: echarts.EChartsOption) {
       },
     };
 
-    const mergedOptions = deepMerge(defaultOptions, options);
-    instanceRef.current.setOption(mergedOptions);
+    try {
+      const mergedOptions = deepMerge(defaultOptions, options);
+      instanceRef.current.setOption(mergedOptions);
+    } catch (e) {
+      console.error('ECharts: Failed to apply chart options', e);
+    }
   }, [options, isDark]);
 
   useEffect(() => {

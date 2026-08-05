@@ -35,13 +35,13 @@ class User(Base):
 
     # ── Relationships ─────────────────────────────────────────────────────
     datasets: Mapped[list["Dataset"]] = relationship(  # noqa: F821
-        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
+        back_populates="user", cascade="all, delete-orphan"
     )
     analyses: Mapped[list["Analysis"]] = relationship(  # noqa: F821
-        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
+        back_populates="user", cascade="all, delete-orphan"
     )
     reports: Mapped[list["Report"]] = relationship(  # noqa: F821
-        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
+        back_populates="user", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

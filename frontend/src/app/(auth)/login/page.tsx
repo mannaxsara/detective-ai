@@ -13,9 +13,23 @@ export default function LoginPage() {
   const loginStore = useAuthStore((state) => state.login);
 
   useEffect(() => {
-    const token = localStorage.getItem("detective_token");
+    const token = localStorage.getItem('detective_token');
     if (token) {
-      router.push("/dashboard");
+      try {
+        // Check if token is expired by decoding the payload
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 > Date.now()) {
+          router.push('/dashboard');
+        } else {
+          // Token expired, clean up
+          localStorage.removeItem('detective_token');
+          localStorage.removeItem('detective_user');
+        }
+      } catch {
+        // Malformed token, clean up
+        localStorage.removeItem('detective_token');
+        localStorage.removeItem('detective_user');
+      }
     }
   }, [router]);
 

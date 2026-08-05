@@ -5,7 +5,7 @@ Supports registration, login, token refresh, and Google OAuth callback (simulati
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
@@ -50,7 +50,7 @@ async def google_login(
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(
-    refresh_token: str,
+    refresh_token: str = Body(..., embed=True),
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
     auth_service = AuthService(db)

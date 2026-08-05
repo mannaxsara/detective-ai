@@ -63,8 +63,9 @@ api.interceptors.response.use(
       // Avoid redirecting on auth endpoints
       if (!url.includes('/auth/login') && !url.includes('/auth/register') && !url.includes('/auth/google')) {
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('detective_token');
-          localStorage.removeItem('detective_user');
+          // Clear Zustand auth state to prevent ghost sessions
+          const { useAuthStore } = require('@/store/auth-store');
+          useAuthStore.getState().logout();
           window.location.href = '/login';
         }
       }

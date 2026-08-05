@@ -31,10 +31,14 @@ class Settings(BaseSettings):
 
     # ── File uploads ──────────────────────────────────────────────────────
     UPLOAD_DIR: str = "./uploads"
-    MAX_UPLOAD_SIZE: int = 104_857_600  # 100 MB
+    MAX_UPLOAD_SIZE: int = 15_728_640  # 15 MB (free tier)
 
     # ── CORS ──────────────────────────────────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:3000,https://projectdetective.vercel.app"
 
 
 settings = Settings()
+
+import os
+if os.getenv("ENVIRONMENT", "development") != "development" and settings.SECRET_KEY == "your-secret-key-change-in-production":
+    raise ValueError("CRITICAL: SECRET_KEY must be changed in production!")

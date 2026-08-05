@@ -109,7 +109,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
   // Set default column once profile is loaded
   React.useEffect(() => {
     if (numericColumns.length > 0 && !targetCol) {
-      setTargetCol(numericColumns[0].name);
+      setTargetCol(numericColumns[0]?.name);
     }
   }, [numericColumns, targetCol]);
 
