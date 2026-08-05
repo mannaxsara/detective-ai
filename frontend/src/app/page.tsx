@@ -514,19 +514,23 @@ export default function HomePage() {
               >
                 <Link href={isLoggedIn ? "/dashboard" : "/login"}>
                   <motion.span
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center gap-2 h-10 rounded-lg bg-primary text-primary-foreground font-bold text-[11px] uppercase tracking-wider px-5 cursor-pointer hover:opacity-90 transition-opacity shadow-md"
+                    whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(216,207,188,0.25)" }} whileTap={{ scale: 0.97 }}
+                    className="relative inline-flex items-center gap-2.5 h-11 rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground font-bold text-[11px] uppercase tracking-wider px-6 cursor-pointer transition-all shadow-lg shadow-primary/20 overflow-hidden group"
                   >
-                    {isLoggedIn ? "Open Workspace" : "Start Investigation"}
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <span className="relative z-10 flex items-center gap-2">
+                      {isLoggedIn ? "Open Workspace" : "Start Investigation"}
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
                   </motion.span>
                 </Link>
                 <Link href="/history">
                   <motion.span
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    className="inline-flex items-center h-10 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground font-bold text-[11px] uppercase tracking-wider px-5 cursor-pointer transition-colors"
+                    whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-2 h-11 rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm hover:bg-muted/60 hover:border-primary/30 text-foreground font-bold text-[11px] uppercase tracking-wider px-6 cursor-pointer transition-all"
                   >
                     Case Archives
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                   </motion.span>
                 </Link>
               </motion.div>
