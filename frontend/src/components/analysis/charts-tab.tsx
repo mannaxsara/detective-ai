@@ -9,28 +9,85 @@ import { Badge } from "@/components/ui/badge";
 import { analysisAPI } from "@/lib/api";
 import { useECharts } from "@/hooks/use-echarts";
 
+import {
+  Legend,
+  LegendItemComponent,
+  LegendMarker,
+  LegendLabel,
+  LegendValue,
+  LegendProgress,
+  LegendItemData,
+} from "@/components/ui/chart-legend";
+import { Grid } from "@/components/ui/chart-grid";
+
 interface ChartsTabProps {
   datasetId: number | string;
 }
 
 function ChartItem({ chart }: { chart: any }) {
-  // Use direct ECharts custom hook
   const { chartRef } = useECharts(chart.config);
+  const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+
+  // Extract legend item data if available from config series/data
+  const legendItems: LegendItemData[] = React.useMemo(() => {
+    if (!chart.config?.series?.[0]?.data) return [];
+    const seriesData = chart.config.series[0].data;
+    const xAxisData = chart.config?.xAxis?.data || [];
+    const colors = ["#d8cfbc", "#565449", "#8c8a7e", "#bc3e3e", "#78c51c", "#bed4fb"];
+
+    if (Array.isArray(seriesData)) {
+      return seriesData.slice(0, 5).map((item: any, idx: number) => {
+        const val = typeof item === "number" ? item : item.value || 0;
+        const label = typeof item === "object" && item.name ? item.name : xAxisData[idx] || `Item ${idx + 1}`;
+        return {
+          label: String(label),
+          value: Number(val),
+          color: colors[idx % colors.length],
+        };
+      });
+    }
+    return [];
+  }, [chart]);
 
   return (
-    <Card className="border-border bg-card hover:border-border/80 transition-all duration-200 shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+    <Card className="border border-border bg-card shadow-xs hover:border-foreground/40 transition-all duration-200">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border">
         <div>
-          <CardTitle className="text-sm font-bold text-foreground">{chart.title}</CardTitle>
-          <p className="text-muted-foreground text-xs mt-0.5">{chart.description}</p>
+          <CardTitle className="text-sm font-serif font-bold text-foreground">{chart.title}</CardTitle>
+          <p className="text-muted-foreground text-xs font-medium mt-0.5">{chart.description}</p>
         </div>
-        <Badge variant="outline" className="text-[9px] uppercase bg-muted/50 text-muted-foreground border-border">
+        <Badge variant="outline" className="text-[9px] uppercase font-mono">
           {chart.chart_type}
         </Badge>
       </CardHeader>
-      <CardContent>
-        {/* Container for chart */}
-        <div ref={chartRef} className="w-full h-80 bg-muted/20 rounded-lg" />
+      
+      <CardContent className="p-4 space-y-4">
+        {/* Chart Canvas with Grid Overlay */}
+        <div className="relative w-full h-72 rounded-lg bg-background/50 border border-border p-2 overflow-hidden">
+          <Grid horizontal vertical numTicksRows={5} numTicksColumns={8} fadeHorizontal strokeDasharray="4,4" />
+          <div ref={chartRef} className="w-full h-full relative z-10" />
+        </div>
+
+        {/* Legend Component */}
+        {legendItems.length > 0 && (
+          <div className="pt-2 border-t border-border/60">
+            <Legend
+              items={legendItems}
+              title="Series Breakdown & Distribution"
+              hoveredIndex={hoveredIndex}
+              onHoverChange={setHoveredIndex}
+            >
+              <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2 rounded-md hover:bg-muted/40 transition-all">
+                <LegendMarker />
+                <LegendLabel />
+                <LegendValue showPercentage />
+                <div className="col-span-full">
+                  <LegendProgress />
+                </div>
+              </LegendItemComponent>
+            </Legend>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

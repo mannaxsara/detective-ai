@@ -17,6 +17,15 @@ import {
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { datasetsAPI, analysisAPI } from "@/lib/api";
+import {
+  Legend,
+  LegendItemComponent,
+  LegendMarker,
+  LegendLabel,
+  LegendValue,
+  LegendProgress,
+  type LegendItemData,
+} from "@/components/ui/chart-legend";
 
 interface KPITabProps {
   datasetId: number | string;
@@ -115,16 +124,38 @@ export default function KPITab({ datasetId }: KPITabProps) {
     }
   ];
 
+  const kpiLegendData: LegendItemData[] = [
+    { label: "Valid & Complete Cells", value: Math.max(0, totalCells - missingCount), maxValue: Math.max(1, totalCells), color: "#d8cfbc" },
+    { label: "Numeric Features", value: numericCols, maxValue: Math.max(1, colCount), color: "#565449" },
+    { label: "Categorical Features", value: categoricalCols, maxValue: Math.max(1, colCount), color: "#8c8a7e" },
+    { label: "Missing / Null Cells", value: missingCount, maxValue: Math.max(1, totalCells), color: "#bc3e3e" },
+    { label: "Duplicate Rows", value: duplicateCount, maxValue: Math.max(1, rowCount), color: "#78c51c" },
+  ];
+
   return (
     <div className="space-y-6 text-left font-sans">
       
-      {/* Description */}
+      {/* KPI Section Title */}
       <div>
-        <h2 className="text-base font-bold text-foreground tracking-tight">Key Performance Indicators & Integrity Metrics</h2>
-        <p className="text-muted-foreground text-xs font-semibold mt-0.5 uppercase tracking-wider">
-          Automatic data structure checks, cardinality indicators, and quality scores
+        <h2 className="text-base font-serif font-bold text-foreground tracking-tight">Key Performance Indicators & Data Quality Scorecards</h2>
+        <p className="text-muted-foreground text-xs font-medium mt-0.5">
+          Statistical integrity scores and dataset metrics calculated automatically.
         </p>
       </div>
+
+      {/* KPI Distribution & Progress Legend Card */}
+      <Card className="border border-border bg-card shadow-xs p-6">
+        <Legend items={kpiLegendData} title="Dataset Feature & Cell Composition Legend">
+          <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2.5 rounded-lg border border-border bg-background/50 hover:border-foreground/30 transition-all">
+            <LegendMarker />
+            <LegendLabel />
+            <LegendValue showPercentage />
+            <div className="col-span-full">
+              <LegendProgress />
+            </div>
+          </LegendItemComponent>
+        </Legend>
+      </Card>
 
       {/* 1. Core Technical KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
