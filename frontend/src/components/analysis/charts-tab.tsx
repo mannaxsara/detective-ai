@@ -19,6 +19,7 @@ import {
   LegendItemData,
 } from "@/components/ui/chart-legend";
 import { Grid } from "@/components/ui/chart-grid";
+import { BarChart, Bar, BarXAxis, BarYAxis, BarGrid, BarTooltip } from "@/components/ui/chart-bar";
 
 interface ChartsTabProps {
   datasetId: number | string;
@@ -67,6 +68,19 @@ function ChartItem({ chart }: { chart: any }) {
           <Grid horizontal vertical numTicksRows={5} numTicksColumns={8} fadeHorizontal strokeDasharray="4,4" />
           <div ref={chartRef} className="w-full h-full relative z-10" />
         </div>
+
+        {/* Custom BarChart underneath */}
+        {(chart.chart_type === 'bar' || chart.chart_type === 'histogram') && legendItems.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border/40">
+            <BarChart data={legendItems} xDataKey="label" height={180}>
+              <BarGrid horizontal strokeDasharray="4 4" />
+              <BarXAxis dataKey="label" />
+              <BarYAxis numTicks={4} />
+              <Bar dataKey="value" fill="#d8cfbc" radius={[4, 4, 0, 0]} />
+              <BarTooltip />
+            </BarChart>
+          </div>
+        )}
 
         {/* Legend Component */}
         {legendItems.length > 0 && (

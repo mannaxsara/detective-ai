@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cleaningAPI } from "@/lib/api";
+import { cleaningAPI, datasetsAPI } from "@/lib/api";
 import { LoaderOne } from "@/components/ui/loader";
+import { FunnelChart, type FunnelStage } from "@/components/ui/chart-funnel";
 
 interface CleaningTabProps {
   datasetId: number | string;
@@ -22,6 +23,11 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
   const { data: cleanData, isLoading, refetch } = useQuery({
     queryKey: ["cleaning-suggestions", datasetId],
     queryFn: () => cleaningAPI.getSuggestions(datasetId),
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["dataset-profile", datasetId],
+    queryFn: () => datasetsAPI.getProfile(datasetId),
   });
 
   const applyFixMutation = useMutation({
@@ -67,6 +73,15 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
 
   const suggestions = cleanData?.suggestions || [];
 
+  const totalIssues = cleanData?.total_issues || 0;
+  const appliedCount = suggestions.filter((s: any) => s.applied).length || 0;
+  const cleaningPipeline: FunnelStage[] = [
+    { label: 'Raw Records', value: profile?.row_count || 0, displayValue: (profile?.row_count || 0).toLocaleString() },
+    { label: 'Issues Found', value: totalIssues, displayValue: String(totalIssues) },
+    { label: 'Fixes Applied', value: appliedCount, displayValue: String(appliedCount) },
+    { label: 'Clean Output', value: Math.max(0, (profile?.row_count || 0) - totalIssues + appliedCount), displayValue: Math.max(0, (profile?.row_count || 0) - totalIssues + appliedCount).toLocaleString() },
+  ];
+
   return (
     <div className="space-y-6 font-sans">
       <div className="flex items-center justify-between border-b border-border pb-4">
@@ -80,6 +95,13 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
           {cleanData?.total_issues || 0} Quality Flags
         </Badge>
       </div>
+
+      <Card className="border-border bg-card shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="text-xs font-serif font-bold text-foreground mb-4">Cleaning Pipeline</h3>
+          <FunnelChart data={cleaningPipeline} height={120} />
+        </CardContent>
+      </Card>
 
       {suggestions.length > 0 ? (
         <div className="space-y-4">

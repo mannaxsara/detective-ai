@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowDown, ClipboardList, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { analysisAPI } from "@/lib/api";
+import { SankeyChart, SankeyNode, SankeyLink, SankeyTooltip, type SankeyData } from "@/components/ui/chart-sankey";
 
 interface RootCauseTabProps {
   datasetId: number | string;
@@ -80,6 +81,18 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
 
   const actionPlan = getActionPlan(rootNode.reason || "");
 
+  const causalFlow: SankeyData = {
+    nodes: nodes.map((w: any, i: number) => ({
+      name: w.why || `Why ${i + 1}`,
+      category: `level-${i}`,
+    })),
+    links: nodes.slice(1).map((_: any, i: number) => ({
+      source: i,
+      target: i + 1,
+      value: Math.round(((nodes as any[])[i]?.confidence || 0.5) * 100),
+    })),
+  };
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 text-left font-sans">
       
@@ -140,6 +153,20 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
               );
             })}
           </div>
+
+          {nodes.length > 1 && (
+            <div className="border border-border rounded-xl p-5 bg-card space-y-3 mt-6">
+              <div>
+                <h3 className="text-xs font-serif font-bold text-foreground">Causal Flow Analysis</h3>
+                <p className="text-muted-foreground text-[10px] mt-0.5">Root cause propagation pathways with confidence weights</p>
+              </div>
+              <SankeyChart data={causalFlow} nodeWidth={16} nodePadding={28} height={220}>
+                <SankeyLink opacity={0.5} hoverOpacity={0.8} />
+                <SankeyNode lineCap={4} showLabels showValueLabels />
+                <SankeyTooltip />
+              </SankeyChart>
+            </div>
+          )}
 
           {/* Actionable Remediation Summary Card */}
           <div className="p-5.5 rounded-2xl border border-border bg-card mt-6 space-y-4 relative overflow-hidden shadow-none">

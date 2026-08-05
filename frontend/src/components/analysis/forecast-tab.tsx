@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { analysisAPI, datasetsAPI } from "@/lib/api";
 import { useECharts } from "@/hooks/use-echarts";
 
+import { AreaChart, Area, AreaGradient, AreaXAxis, AreaYAxis, AreaGrid, AreaTooltip } from "@/components/ui/chart-area";
+
 import { Grid } from "@/components/ui/chart-grid";
 import {
   Legend,
@@ -156,6 +158,13 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
 
   const isLoading = profileLoading || forecastLoading;
 
+  const areaData = forecast ? forecast.dates.map((date: string, i: number) => ({
+    date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    predicted: forecast.values[i],
+    lower: forecast.lower_bound[i],
+    upper: forecast.upper_bound[i],
+  })) : [];
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse font-sans">
@@ -217,6 +226,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
       </div>
 
       {forecast ? (
+        <>
         <Card className="border-border bg-card shadow-none">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -233,6 +243,28 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
             <ForecastChartItem forecast={forecast} />
           </CardContent>
         </Card>
+        {forecast && areaData.length > 0 && (
+          <div className="border border-border rounded-xl p-5 bg-card space-y-3 shadow-none">
+            <div>
+              <h3 className="text-xs font-serif font-bold text-foreground">Confidence Interval Projection</h3>
+              <p className="text-muted-foreground text-[10px] mt-0.5">Predicted values with 80% confidence band</p>
+            </div>
+            <AreaChart data={areaData} xDataKey="date" height={260}>
+              <defs>
+                <AreaGradient id="predictedGrad" color="#d8cfbc" startOpacity={0.6} stopOpacity={0.05} />
+                <AreaGradient id="confidenceGrad" color="#565449" startOpacity={0.25} stopOpacity={0.02} />
+              </defs>
+              <AreaGrid horizontal strokeDasharray="4 4" />
+              <AreaXAxis dataKey="date" />
+              <AreaYAxis numTicks={5} />
+              <Area dataKey="upper" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
+              <Area dataKey="predicted" fill="url(#predictedGrad)" stroke="#d8cfbc" strokeWidth={2} />
+              <Area dataKey="lower" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
+              <AreaTooltip />
+            </AreaChart>
+          </div>
+        )}
+      </>
       ) : (
         <Card className="border-border bg-card/50 border-dashed py-16 text-center shadow-none">
           <CardContent className="space-y-4">

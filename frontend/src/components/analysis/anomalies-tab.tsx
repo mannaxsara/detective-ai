@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, AlertOctagon, HelpCircle, CheckCircle2, ShieldAlert, Server } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { analysisAPI } from "@/lib/api";
+import { LineChart, Line, LineXAxis, LineYAxis, LineGrid, LineTooltip } from "@/components/ui/chart-line";
 
 interface AnomaliesTabProps {
   datasetId: number | string;
@@ -33,6 +34,12 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
     if (!a.z_score) return true;
     return Math.abs(a.z_score) >= sensitivity - 0.5;
   });
+
+  const trendData = (rawAnomalyList || []).filter((a: any) => a.z_score != null).map((a: any, i: number) => ({
+    index: `#${i + 1}`,
+    z_score: Math.abs(a.z_score || 0),
+    threshold: sensitivity,
+  }));
 
   return (
     <div className="space-y-6 text-left font-sans">
@@ -100,6 +107,24 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
           );
         })}
       </div>
+
+      {/* Anomaly Trend Chart */}
+      {trendData.length > 0 && (
+        <div className="border border-border rounded-xl p-5 bg-card space-y-3 shadow-none">
+          <div>
+            <h3 className="text-xs font-serif font-bold text-foreground">Anomaly Score Distribution</h3>
+            <p className="text-muted-foreground text-[10px] mt-0.5">Z-score magnitude across detected anomalies</p>
+          </div>
+          <LineChart data={trendData} xDataKey="index" height={200}>
+            <LineGrid horizontal strokeDasharray="4 4" highlightRowValues={[sensitivity]} />
+            <LineXAxis dataKey="index" />
+            <LineYAxis numTicks={4} />
+            <Line dataKey="z_score" stroke="#d8cfbc" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            <Line dataKey="threshold" stroke="#bc3e3e" strokeWidth={1.5} strokeDasharray="6 4" dot={false} />
+            <LineTooltip />
+          </LineChart>
+        </div>
+      )}
 
       {/* Main Anomalies Listing */}
       {anomalyList.length > 0 ? (

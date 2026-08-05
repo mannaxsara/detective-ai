@@ -26,6 +26,8 @@ import {
   LegendProgress,
   type LegendItemData,
 } from "@/components/ui/chart-legend";
+import { RingChart, Ring, RingCenter, type RingData } from "@/components/ui/chart-ring";
+import { ProfitLossChart, ProfitLossLegend } from "@/components/ui/chart-profit-loss";
 
 interface KPITabProps {
   datasetId: number | string;
@@ -157,6 +159,19 @@ export default function KPITab({ datasetId }: KPITabProps) {
         </Legend>
       </Card>
 
+      <Card className="border border-border rounded-xl p-5 bg-card space-y-3 flex flex-col items-center justify-center">
+        <h3 className="text-sm font-serif font-bold w-full text-left">Data Composition</h3>
+        <RingChart 
+          data={[
+            { label: "Valid Cells", value: totalCells - missingCount, maxValue: Math.max(1, totalCells), color: "#78c51c" },
+            { label: "Null Cells", value: missingCount, maxValue: Math.max(1, totalCells), color: "#bc3e3e" },
+            { label: "Duplicate Rows", value: duplicateCount, maxValue: Math.max(1, rowCount), color: "#f59e0b" },
+          ]}
+        >
+          <RingCenter />
+        </RingChart>
+      </Card>
+
       {/* 1. Core Technical KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {technicalKpis.map((kpi, idx) => {
@@ -228,6 +243,18 @@ export default function KPITab({ datasetId }: KPITabProps) {
               );
             })}
           </div>
+
+          <Card className="border border-border rounded-xl p-5 bg-card space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-serif font-bold">Business KPI Trend</h3>
+              <ProfitLossLegend />
+            </div>
+            <ProfitLossChart
+              data={kpiList.map((k: any) => ({ period: k.name, change: k.change_percentage || 0 }))}
+              dataKey="change"
+              height={150}
+            />
+          </Card>
         </div>
       )}
 

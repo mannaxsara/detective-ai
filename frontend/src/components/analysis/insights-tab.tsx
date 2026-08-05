@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
   AccordionPanel,
 } from "@/components/animate-ui/components/base/accordion";
+import { PieChart, PieSlices, PieTooltip, PieLegend, PieDataItem } from "@/components/ui/chart-pie";
 
 interface InsightsTabProps {
   datasetId: number | string;
@@ -112,6 +113,18 @@ export default function InsightsTab({ datasetId }: InsightsTabProps) {
 
   const insightList = insights || [];
 
+  const categoryBreakdown: PieDataItem[] = Object.entries(
+    (insightList).reduce((acc: Record<string,number>, ins: any) => {
+      const cat = ins.category || 'General';
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+    }, {} as Record<string,number>)
+  ).map(([name, value], i) => ({
+    name,
+    value: value as number,
+    fill: ['#d8cfbc', '#78c51c', '#bed4fb', '#f59e0b', '#a855f7', '#bc3e3e'][i % 6],
+  }));
+
   return (
     <div className="space-y-6 font-sans">
       <div className="flex items-center justify-between border-b border-border pb-4">
@@ -122,6 +135,20 @@ export default function InsightsTab({ datasetId }: InsightsTabProps) {
           </p>
         </div>
       </div>
+
+      {insightList.length > 0 && categoryBreakdown.length > 0 && (
+        <div className="border border-border rounded-xl p-5 bg-card space-y-3">
+          <div>
+            <h3 className="text-xs font-serif font-bold text-foreground">Insight Categories</h3>
+            <p className="text-muted-foreground text-[10px] mt-0.5">Distribution of discovered insights</p>
+          </div>
+          <PieChart data={categoryBreakdown} innerRadius={40} outerRadius={75} paddingAngle={2} height={200}>
+            <PieSlices />
+            <PieTooltip />
+          </PieChart>
+          <PieLegend />
+        </div>
+      )}
 
       {insightList.length > 0 ? (
         <div className="space-y-4">

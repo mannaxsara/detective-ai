@@ -13,6 +13,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { RadialProfile } from "@/components/ui/radial-profile";
+import { PieChart, PieSlices, PieCenter, PieTooltip, PieLegend, PieDataItem } from "@/components/ui/chart-pie";
+import { RadarChart, RadarGrid, RadarAxis, RadarLabels, RadarArea, RadarMetric, RadarData } from "@/components/ui/chart-radar";
 
 interface ProfileTabProps {
   datasetId: number | string;
@@ -51,6 +53,39 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
     { label: "Null Cell Safety", score: Math.max(70, completeness - 5), color: "#f59e0b" },
   ];
 
+  const classifications = (profile?.columns || []).reduce((acc: Record<string,number>, col: any) => {
+    const cls = col.classification || 'unknown';
+    acc[cls] = (acc[cls] || 0) + 1;
+    return acc;
+  }, {} as Record<string,number>);
+  const typeDistribution: PieDataItem[] = [
+    { name: 'Numeric', value: classifications.numeric || 0, fill: '#d8cfbc' },
+    { name: 'Categorical', value: classifications.categorical || 0, fill: '#78c51c' },
+    { name: 'DateTime', value: classifications.datetime || 0, fill: '#bed4fb' },
+    { name: 'Boolean', value: classifications.boolean || 0, fill: '#f59e0b' },
+  ].filter(d => d.value > 0);
+
+  const avgNullPct = profile?.columns?.reduce((s: number, c: any) => s + (c.null_percentage || 0), 0) / (profile?.columns?.length || 1);
+  const numericRatio = ((profile?.columns?.filter((c: any) => c.classification === 'numeric').length || 0) / (profile?.column_count || 1)) * 100;
+  const qualityMetrics: RadarMetric[] = [
+    { key: 'completeness', label: 'Completeness' },
+    { key: 'uniqueness', label: 'Uniqueness' },
+    { key: 'typeIntegrity', label: 'Type Integrity' },
+    { key: 'nullSafety', label: 'Null Safety' },
+    { key: 'density', label: 'Density' },
+  ];
+  const qualityData: RadarData[] = [{
+    label: 'Dataset Quality',
+    color: '#d8cfbc',
+    values: {
+      completeness: Math.round(profile?.health_score || 95),
+      uniqueness: Math.round(100 - ((profile?.duplicate_row_count || 0) / (profile?.row_count || 1)) * 100),
+      typeIntegrity: Math.round(numericRatio),
+      nullSafety: Math.round(100 - avgNullPct),
+      density: Math.round(100 - avgNullPct * 0.8),
+    },
+  }];
+
   return (
     <div className="space-y-6 font-sans">
       {/* Stat Cards */}
@@ -75,6 +110,39 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
 
       {/* Bklit UI Radial Profile Component */}
       <RadialProfile metrics={radialMetrics} title="Multi-Dimensional Schema Quality Radar" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {typeDistribution.length > 0 && (
+          <div className="border border-border rounded-xl p-5 bg-card space-y-3">
+            <div>
+              <h3 className="text-xs font-serif font-bold text-foreground">Column Type Distribution</h3>
+              <p className="text-muted-foreground text-[10px] mt-0.5">Classification breakdown across schema</p>
+            </div>
+            <PieChart data={typeDistribution} innerRadius={50} outerRadius={85} paddingAngle={3} height={260}>
+              <PieSlices />
+              <PieCenter>
+                <span className="text-xl font-mono font-black text-foreground">{profile.column_count}</span>
+                <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Columns</span>
+              </PieCenter>
+              <PieTooltip />
+            </PieChart>
+            <PieLegend />
+          </div>
+        )}
+
+        <div className="border border-border rounded-xl p-5 bg-card space-y-3">
+          <div>
+            <h3 className="text-xs font-serif font-bold text-foreground">Quality Radar Assessment</h3>
+            <p className="text-muted-foreground text-[10px] mt-0.5">Multi-dimensional dataset quality scoring</p>
+          </div>
+          <RadarChart data={qualityData} metrics={qualityMetrics} size={280} levels={5}>
+            <RadarGrid showLabels stroke="var(--border)" />
+            <RadarAxis stroke="var(--border)" />
+            <RadarLabels offset={24} fontSize={10} />
+            <RadarArea index={0} fill="#d8cfbc" stroke="#d8cfbc" strokeWidth={2} />
+          </RadarChart>
+        </div>
+      </div>
 
       {/* Columns Profile Table */}
       <Card className="border-border bg-card shadow-none">

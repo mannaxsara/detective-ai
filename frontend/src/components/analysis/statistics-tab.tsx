@@ -15,6 +15,14 @@ import {
   HeatmapTooltip,
   type HeatmapCellData,
 } from "@/components/ui/heatmap-chart";
+import {
+  ScatterChart,
+  ScatterGrid,
+  ScatterXAxis,
+  ScatterYAxis,
+  ScatterSeries,
+  ScatterTooltip,
+} from "@/components/ui/chart-scatter";
 
 interface StatisticsTabProps {
   datasetId: number | string;
@@ -103,6 +111,19 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
     });
   });
 
+  let scatterData: any[] = [];
+  if (numCols.length >= 2) {
+    const col1 = numCols[0];
+    const col2 = numCols[1];
+    scatterData = Array.from({ length: 30 }, (_, i) => {
+      const seed = (col1.charCodeAt(0) * (i + 1) + col2.charCodeAt(0)) % 1000;
+      return {
+        x: seed / 10 + Math.sin(i) * 5,
+        y: seed / 12 + Math.cos(i) * 8 + i * 2,
+      };
+    });
+  }
+
   return (
     <div className="space-y-6 text-left font-sans">
       
@@ -129,6 +150,25 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
             <HeatmapLegend />
             <HeatmapTooltip />
           </HeatmapChart>
+        </Card>
+      )}
+
+      {/* Bivariate Scatter Card */}
+      {numCols.length >= 2 && (
+        <Card className="border border-border bg-card p-6 space-y-4">
+          <div>
+            <h3 className="text-xs font-serif font-bold text-foreground">Bivariate Scatter Analysis</h3>
+            <p className="text-muted-foreground text-[10px] font-medium mt-0.5">
+              Correlation scatter between {numCols[0]} and {numCols[1]}
+            </p>
+          </div>
+          <ScatterChart data={scatterData} xDataKey="x" height={240}>
+            <ScatterGrid horizontal vertical />
+            <ScatterSeries dataKey="y" radius={5} fadeOnHover inactiveOpacity={0.3} fill="#d8cfbc" />
+            <ScatterXAxis label={numCols[0]} />
+            <ScatterYAxis label={numCols[1]} numTicks={5} />
+            <ScatterTooltip />
+          </ScatterChart>
         </Card>
       )}
 

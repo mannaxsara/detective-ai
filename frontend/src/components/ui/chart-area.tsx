@@ -1,0 +1,268 @@
+"use client";
+
+import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+
+export interface AreaChartContextType {
+  data: Record<string, any>[];
+  xDataKey: string;
+  width: number;
+  height: number;
+  hoveredIndex: number | null;
+  setHoveredIndex: (idx: number | null) => void;
+  yMin: number;
+  yMax: number;
+}
+
+const AreaChartContext = createContext<AreaChartContextType | null>(null);
+
+export function useAreaChart() {
+  const ctx = useContext(AreaChartContext);
+  if (!ctx) {
+    throw new Error("useAreaChart must be used within <AreaChart />");
+  }
+  return ctx;
+}
+
+export interface AreaChartProps {
+  data: Record<string, any>[];
+  xDataKey?: string;
+  height?: number | string;
+  className?: string;
+  children: ReactNode;
+}
+
+export function AreaChart({ data, xDataKey = "date", height = 260, className, children }: AreaChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(800);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setWidth(entry.contentRect.width);
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const allValues = data.flatMap(d => Object.values(d).filter(v => typeof v === 'number')) as number[];
+  const yMin = allValues.length ? Math.min(...allValues, 0) : 0;
+  const yMax = allValues.length ? Math.max(...allValues, 1) : 1;
+  const numHeight = typeof height === 'number' ? height : 260;
+
+  return (
+    <AreaChartContext.Provider value={{ data, xDataKey, width, height: numHeight, hoveredIndex, setHoveredIndex, yMin, yMax }}>
+      <div 
+        ref={containerRef} 
+        className={cn("relative w-full overflow-visible", className)} 
+        style={{ height }}
+        onMouseLeave={() => setHoveredIndex(null)}
+        onMouseMove={(e) => {
+          if (!containerRef.current || data.length === 0) return;
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const step = width / Math.max(data.length - 1, 1);
+          let idx = Math.round(x / step);
+          if (idx < 0) idx = 0;
+          if (idx >= data.length) idx = data.length - 1;
+          setHoveredIndex(idx);
+        }}
+      >
+        <svg width="100%" height="100%" style={{ overflow: 'visible' }}>
+          {children}
+        </svg>
+      </div>
+    </AreaChartContext.Provider>
+  );
+}
+
+export interface AreaProps {
+  dataKey: string;
+  fill?: string;
+  fillOpacity?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  stackId?: string;
+}
+
+export function Area({ dataKey, fill, fillOpacity = 0.4, stroke, strokeWidth = 2, stackId }: AreaProps) {
+  const { data, width, height, yMin, yMax } = useAreaChart();
+  
+  if (data.length === 0) return null;
+
+  const points = data.map((d, i) => {
+    const x = (i / Math.max(data.length - 1, 1)) * width;
+    const val = typeof d[dataKey] === 'number' ? d[dataKey] : 0;
+    const y = height - ((val - yMin) / Math.max(yMax - yMin, 1)) * height;
+    return { x, y };
+  });
+
+  const pathD = `M ${points.map(p => `${p.x},${p.y}`).join(" L ")}`;
+  const areaD = `${pathD} L ${width},${height} L 0,${height} Z`;
+
+  return (
+    <g>
+      <motion.path
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        d={areaD}
+        fill={fill}
+        fillOpacity={fillOpacity}
+        stroke="none"
+      />
+      {stroke && stroke !== "transparent" && (
+         <motion.path
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7 }}
+            d={pathD}
+            fill="none"
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+         />
+      )}
+    </g>
+  );
+}
+
+export interface AreaGradientProps {
+  id: string;
+  color: string;
+  startOpacity?: number;
+  stopOpacity?: number;
+}
+
+export function AreaGradient({ id, color, startOpacity = 0.8, stopOpacity = 0.05 }: AreaGradientProps) {
+  return (
+    <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor={color} stopOpacity={startOpacity} />
+      <stop offset="95%" stopColor={color} stopOpacity={stopOpacity} />
+    </linearGradient>
+  );
+}
+
+export interface AreaXAxisProps {
+  dataKey?: string;
+  formatValue?: (v: any) => string;
+}
+
+export function AreaXAxis({ dataKey, formatValue }: AreaXAxisProps) {
+  const { data, width, height, xDataKey } = useAreaChart();
+  const key = dataKey || xDataKey;
+  if (data.length === 0) return null;
+
+  const ticks = [0, Math.floor((data.length - 1) / 2), data.length - 1].filter((v, i, a) => a.indexOf(v) === i);
+  
+  return (
+    <g className="text-[10px] fill-muted-foreground font-mono">
+      {ticks.map(i => {
+        if (!data[i]) return null;
+        const x = (i / Math.max(data.length - 1, 1)) * width;
+        const val = data[i][key];
+        const text = formatValue ? formatValue(val) : val;
+        let anchor: "start" | "middle" | "end" = "middle";
+        if (i === 0) anchor = "start";
+        if (i === data.length - 1) anchor = "end";
+        return (
+          <text key={i} x={x} y={height + 16} textAnchor={anchor}>
+            {text}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
+export interface AreaYAxisProps {
+  numTicks?: number;
+  formatValue?: (v: any) => string;
+}
+
+export function AreaYAxis({ numTicks = 5, formatValue }: AreaYAxisProps) {
+  const { height, yMin, yMax } = useAreaChart();
+  const ticks = Array.from({ length: numTicks }).map((_, i) => yMin + (yMax - yMin) * (i / (numTicks - 1)));
+  
+  return (
+    <g className="text-[10px] fill-muted-foreground font-mono">
+      {ticks.map((t, i) => {
+        const y = height - ((t - yMin) / Math.max(yMax - yMin, 1)) * height;
+        return (
+          <text key={i} x={0} y={y - 6} textAnchor="start">
+            {formatValue ? formatValue(t) : typeof t === 'number' ? t.toFixed(0) : t}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
+export interface AreaGridProps {
+  horizontal?: boolean;
+  vertical?: boolean;
+  strokeDasharray?: string;
+}
+
+export function AreaGrid({ horizontal = true, vertical = false, strokeDasharray = "4 4" }: AreaGridProps) {
+  const { width, height, yMin, yMax } = useAreaChart();
+  const numTicks = 5;
+  const ticks = Array.from({ length: numTicks }).map((_, i) => yMin + (yMax - yMin) * (i / (numTicks - 1)));
+
+  return (
+    <g>
+      {horizontal && ticks.map((t, i) => {
+        const y = height - ((t - yMin) / Math.max(yMax - yMin, 1)) * height;
+        return <line key={i} x1={0} y1={y} x2={width} y2={y} stroke="var(--border)" strokeOpacity={0.6} strokeDasharray={strokeDasharray} />;
+      })}
+    </g>
+  );
+}
+
+export function AreaTooltip() {
+  const { data, width, height, hoveredIndex, xDataKey } = useAreaChart();
+  if (hoveredIndex === null || !data[hoveredIndex]) return null;
+  
+  const x = (hoveredIndex / Math.max(data.length - 1, 1)) * width;
+  const datum = data[hoveredIndex];
+  const keys = Object.keys(datum).filter(k => k !== xDataKey && typeof datum[k] === 'number');
+
+  return (
+    <AnimatePresence>
+      <g>
+        <motion.line
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          x1={x} y1={0} x2={x} y2={height}
+          stroke="var(--foreground)"
+          strokeOpacity={0.3}
+          strokeDasharray="4 4"
+        />
+        <foreignObject x={x > width / 2 ? x - 150 : x + 10} y={0} width={140} height={200} className="overflow-visible pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="bg-card border border-border p-3 rounded-lg shadow-xl text-xs font-sans min-w-[130px]"
+          >
+            <p className="font-bold text-foreground mb-1.5 border-b border-border pb-1">{datum[xDataKey]}</p>
+            {keys.map(k => (
+              <div key={k} className="flex justify-between items-center gap-3 mt-1">
+                <span className="text-muted-foreground capitalize text-[10px] font-bold tracking-wider">{k}</span>
+                <span className="font-mono text-foreground font-black">{Number(datum[k]).toFixed(2)}</span>
+              </div>
+            ))}
+          </motion.div>
+        </foreignObject>
+      </g>
+    </AnimatePresence>
+  );
+}
