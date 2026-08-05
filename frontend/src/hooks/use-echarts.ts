@@ -23,16 +23,16 @@ export function useECharts(options: echarts.EChartsOption) {
       renderer: 'canvas',
     });
 
-    const textColor = isDark ? '#fcfcfc' : '#043f2e';
-    const axisLabelColor = isDark ? '#d2ddd2' : '#242423';
-    const splitLineColor = isDark ? 'rgba(200, 241, 105, 0.1)' : 'rgba(0, 0, 0, 0.08)';
-    const axisLineColor = isDark ? 'rgba(200, 241, 105, 0.2)' : 'rgba(0, 0, 0, 0.2)';
-    const tooltipBg = isDark ? '#0a4f3b' : '#fcfcfc';
-    const tooltipBorder = isDark ? '#c8f169' : '#000000';
-    const tooltipText = isDark ? '#fcfcfc' : '#043f2e';
+    const textColor = isDark ? '#fffbf4' : '#11120d';
+    const axisLabelColor = isDark ? '#cfcbc0' : '#8c8a7e';
+    const splitLineColor = isDark ? 'rgba(86, 84, 73, 0.2)' : 'rgba(86, 84, 73, 0.1)';
+    const axisLineColor = isDark ? 'rgba(86, 84, 73, 0.3)' : 'rgba(86, 84, 73, 0.2)';
+    const tooltipBg = isDark ? 'rgba(28, 29, 24, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipBorder = isDark ? 'rgba(86, 84, 73, 0.4)' : 'rgba(86, 84, 73, 0.2)';
+    const tooltipText = isDark ? '#fffbf4' : '#11120d';
 
     const defaultOptions: echarts.EChartsOption = {
-      color: ['#043f2e', '#2a6f2b', '#78c51c', '#c8f169', '#bed4fb', '#31e992'],
+      color: ['#d8cfbc', '#565449', '#8c8a7e', '#bc3e3e', '#1c1d18'],
       backgroundColor: 'transparent',
       textStyle: {
         color: textColor,
