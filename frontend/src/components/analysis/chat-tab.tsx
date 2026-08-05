@@ -75,47 +75,20 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
     ]);
   };
 
-  // Dynamic message formatter for markdown bullet lists and bold text
-  const formatMessage = (content: string) => {
-    const lines = content.split('\n');
-    return lines.map((line, idx) => {
-      let cleanLine = line.trim();
-      if (!cleanLine) return <div key={idx} className="h-2" />;
-      
-      // Detect bullet points
-      const isBullet = cleanLine.startsWith('•') || cleanLine.startsWith('-') || cleanLine.startsWith('*');
-      if (isBullet) {
-        cleanLine = cleanLine.substring(1).trim();
+  const formatMessage = (text: string) => {
+    // Split by **...** for bold, handle code blocks with backticks
+    const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\n)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>;
       }
-
-      // Bold parser helper: **text** -> strong
-      const parts = [];
-      let remaining = cleanLine;
-      while (remaining.includes('**')) {
-        const startIndex = remaining.indexOf('**');
-        const endIndex = remaining.indexOf('**', startIndex + 2);
-        if (endIndex === -1) break;
-        
-        parts.push(remaining.substring(0, startIndex));
-        parts.push(<strong key={startIndex} className="font-extrabold text-foreground">{remaining.substring(startIndex + 2, endIndex)}</strong>);
-        remaining = remaining.substring(endIndex + 2);
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={i} className="px-1 py-0.5 rounded bg-muted text-xs font-mono">{part.slice(1, -1)}</code>;
       }
-      parts.push(remaining);
-
-      if (isBullet) {
-        return (
-          <div key={idx} className="flex items-start gap-2 text-left pl-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
-            <span className="text-foreground/90 text-xs">{parts}</span>
-          </div>
-        );
+      if (part === '\n') {
+        return <br key={i} />;
       }
-
-      return (
-        <p key={idx} className="text-foreground/90 text-xs leading-relaxed text-left py-0.5 font-medium">
-          {parts}
-        </p>
-      );
+      return <span key={i}>{part}</span>;
     });
   };
 

@@ -140,10 +140,6 @@ export const datasetsApi = {
     return data;
   },
 
-  deleteById: async (id: string | number): Promise<void> => {
-    await api.delete(`/datasets/${id}`);
-  },
-
   delete: async (id: string | number): Promise<void> => {
     await api.delete(`/datasets/${id}`);
   },
@@ -280,24 +276,10 @@ export const reportsApi = {
 
 // ========== History API ==========
 export const historyApi = {
-  getHistory: async (page = 1, perPage = 20): Promise<PaginatedResponse<HistoryItem>> => {
-    const { data } = await api.get('/history', {
-      params: { page, per_page: perPage },
-    });
-    return data;
-  },
-
   list: async (skip = 0, limit = 10): Promise<any> => {
     const page = Math.floor(skip / limit) + 1;
     const { data } = await api.get('/history', {
       params: { page, per_page: limit },
-    });
-    return data;
-  },
-
-  searchHistory: async (query: string): Promise<HistoryItem[]> => {
-    const { data } = await api.get('/history/search', {
-      params: { q: query },
     });
     return data;
   },

@@ -23,13 +23,7 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
   });
 
   const handleTest = (testName: string) => {
-    setTestingIds((prev) => ({ ...prev, [testName]: true }));
-    
-    // Simulate testing calculation duration
-    setTimeout(() => {
-      setTestingIds((prev) => ({ ...prev, [testName]: false }));
-      setTestedIds((prev) => ({ ...prev, [testName]: true }));
-    }, 1200);
+    setTestedIds((prev) => ({ ...prev, [testName]: true }));
   };
 
   if (isLoading) {
@@ -202,24 +196,19 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
 
                   <button
                     onClick={() => handleTest(test.test_name)}
-                    disabled={isTesting || isTested}
+                    disabled={isTested}
                     className={`w-full h-10 text-xs rounded-xl flex items-center justify-center gap-1.5 font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                       isTested
                         ? "bg-muted/50 border border-border text-muted-foreground cursor-default"
                         : "bg-primary/10 border border-primary/20 hover:bg-primary/20 text-foreground"
                     }`}
                   >
-                    {isTesting ? (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-primary animate-spin" />
-                        Executing Test...
-                      </>
-                    ) : isTested ? (
+                    {isTested ? (
                       "Evaluated"
                     ) : (
                       <>
                         <Play className="w-3 h-3 text-primary fill-primary/10" />
-                        Execute Test
+                        Reveal Analysis
                       </>
                     )}
                   </button>

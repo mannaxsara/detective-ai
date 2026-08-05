@@ -21,18 +21,26 @@ app = FastAPI(
 )
 
 # CORS configuration
-origins = settings.CORS_ORIGINS
-if isinstance(origins, str):
+_raw_origins = settings.CORS_ORIGINS
+origins: list[str] = []
+if isinstance(_raw_origins, str):
     import json
     try:
-        origins = json.loads(origins)
-    except Exception:
-        if "," in origins:
-            origins = [o.strip() for o in origins.split(",")]
+        parsed = json.loads(_raw_origins)
+        if isinstance(parsed, list):
+            origins = [str(o).strip() for o in parsed]
         else:
-            origins = [origins]
-if not origins:
-    origins = ["http://localhost:3000", "https://projectdetective.vercel.app"]
+            origins = [str(parsed).strip()]
+    except (json.JSONDecodeError, ValueError):
+        origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+elif isinstance(_raw_origins, list):
+    origins = [str(o).strip() for o in _raw_origins]
+
+# Always ensure these are included
+default_origins = ["http://localhost:3000", "https://projectdetective.vercel.app"]
+for o in default_origins:
+    if o not in origins:
+        origins.append(o)
 
 app.add_middleware(
     CORSMiddleware,

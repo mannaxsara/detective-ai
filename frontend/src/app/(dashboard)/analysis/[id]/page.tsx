@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Database, AlertTriangle, Loader2, Download } from "lucide-react";
 import { motion } from "framer-motion";
@@ -47,8 +47,23 @@ const TABS_CONFIG = [
 export default function AnalysisDetailPage() {
   const { id } = useParams() as { id: string };
   const datasetId = id;
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { setDataset, setAnalysis, activeTab, setActiveTab } = useAnalysisStore();
   const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && TABS_CONFIG.find((t) => t.value === tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams, setActiveTab]);
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    router.replace(`/analysis/${datasetId}?tab=${newTab}`, { scroll: false });
+  };
+
 
   const handleDownload = async () => {
     if (!dataset) return;
@@ -207,7 +222,7 @@ export default function AnalysisDetailPage() {
           return (
             <button
               key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
+              onClick={() => handleTabChange(tab.value)}
               className={`pb-3 text-xs font-bold transition-all duration-150 border-b-2 cursor-pointer relative shrink-0 ${
                 isActive
                   ? "text-foreground border-primary"
@@ -222,7 +237,7 @@ export default function AnalysisDetailPage() {
 
       {/* Sub-tabs Panel + Child Views */}
       <div className="pt-2">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <div className="w-full min-w-0">
             <TabsContent value="profile" className="mt-0 outline-none">
               <ProfileTab datasetId={datasetId} />

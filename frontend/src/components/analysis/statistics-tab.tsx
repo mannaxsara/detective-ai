@@ -89,7 +89,7 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Descriptive Column Statistics</h3>
           <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-none">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full text-left border-collapse text-xs min-w-[700px]">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border text-muted-foreground font-bold uppercase tracking-wider text-[10px]">
                     <th className="p-4">Column</th>

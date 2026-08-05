@@ -118,7 +118,26 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Dynamic Data-First Metrics Grid */}
+      {isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="p-5 rounded-cards border border-border bg-card min-h-[120px] animate-pulse">
+              <div className="h-3 w-24 bg-muted rounded mb-4" />
+              <div className="h-8 w-16 bg-muted rounded" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isError && (
+        <div className="p-4 rounded-cards border border-destructive/30 bg-destructive/5 text-destructive text-sm">
+          Failed to load dashboard data. Please try refreshing.
+        </div>
+      )}
+
+      {!isLoading && !isError && (
+        <>
+          {/* Dynamic Data-First Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         
         {/* Dataset Health Gauge */}
@@ -189,7 +208,7 @@ export default function DashboardPage() {
         {datasetsList.length > 0 ? (
           <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-border/40 bg-muted/30">
                     <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Case ID</th>
@@ -311,6 +330,8 @@ export default function DashboardPage() {
           </Link>
         )}
       </div>
+      </>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

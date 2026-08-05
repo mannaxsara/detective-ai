@@ -195,7 +195,12 @@ async def forgot_password(email: str, db: AsyncSession) -> dict[str, str]:
     user = await repo.get_by_email(email)
     if user is not None:
         _token = create_password_reset_token(user.id)
-        # TODO: integrate email provider to deliver the token
+        # In production, integrate email provider (SendGrid, Resend, etc.)
+        # For now, log the reset URL for development/testing
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Password reset token for {email}: {_token}")
+        logger.info(f"Reset URL: http://localhost:3000/reset-password?token={_token}")
     return {"message": "If an account exists with that email, a reset link has been sent."}
 
 

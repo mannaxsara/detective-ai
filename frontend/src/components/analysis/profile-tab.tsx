@@ -68,7 +68,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
           <CardTitle className="text-sm font-bold text-foreground">Column Schema & Profiling</CardTitle>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
-          <Table>
+          <Table className="min-w-[700px]">
             <TableHeader className="bg-muted/50 border-b border-border">
               <TableRow className="border-b border-border hover:bg-transparent">
                 <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Column Name</TableHead>

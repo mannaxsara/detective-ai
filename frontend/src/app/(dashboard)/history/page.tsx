@@ -95,7 +95,7 @@ export default function HistoryPage() {
       ) : historyData?.analyses && historyData.analyses.length > 0 ? (
         <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-border/40 bg-muted/30">
                   <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Case ID</th>
