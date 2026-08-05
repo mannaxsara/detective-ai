@@ -21,6 +21,8 @@ if not is_sqlite:
         "max_overflow": 5,
         "pool_pre_ping": True,
     })
+    if "asyncpg" in settings.DATABASE_URL or "supabase" in settings.DATABASE_URL:
+        engine_kwargs["connect_args"] = {"prepared_statement_cache_size": 0}
 
 engine = create_async_engine(
     settings.DATABASE_URL,
