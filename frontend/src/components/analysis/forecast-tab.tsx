@@ -11,6 +11,17 @@ import { Button } from "@/components/ui/button";
 import { analysisAPI, datasetsAPI } from "@/lib/api";
 import { useECharts } from "@/hooks/use-echarts";
 
+import { Grid } from "@/components/ui/chart-grid";
+import {
+  Legend,
+  LegendItemComponent,
+  LegendMarker,
+  LegendLabel,
+  LegendValue,
+  LegendProgress,
+  type LegendItemData,
+} from "@/components/ui/chart-legend";
+
 interface ForecastTabProps {
   datasetId: number | string;
 }
@@ -20,6 +31,18 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
   const values = forecast.values || [];
   const lower = forecast.lower_bound || [];
   const upper = forecast.upper_bound || [];
+
+  const meanExpected = values.length ? Math.round(values.reduce((a: number, b: number) => a + b, 0) / values.length) : 0;
+  const meanLower = lower.length ? Math.round(lower.reduce((a: number, b: number) => a + b, 0) / lower.length) : 0;
+  const meanUpper = upper.length ? Math.round(upper.reduce((a: number, b: number) => a + b, 0) / upper.length) : 0;
+
+  const maxVal = Math.max(...upper, 1);
+
+  const forecastLegendItems: LegendItemData[] = [
+    { label: "Expected Value Projections", value: meanExpected, maxValue: maxVal, color: "#d8cfbc" },
+    { label: "Lower Confidence Bound", value: meanLower, maxValue: maxVal, color: "#bc3e3e" },
+    { label: "Upper Confidence Bound", value: meanUpper, maxValue: maxVal, color: "#78c51c" },
+  ];
 
   const option = {
     legend: {
@@ -48,10 +71,10 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
         showSymbol: false,
         lineStyle: {
           width: 2.5,
-          color: "#3b82f6",
+          color: "#d8cfbc",
         },
         itemStyle: {
-          color: "#3b82f6",
+          color: "#d8cfbc",
         },
       },
       {
@@ -69,7 +92,7 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
         showSymbol: false,
         stack: "confidence-stack",
         areaStyle: {
-          color: "rgba(59, 130, 246, 0.1)",
+          color: "rgba(216, 207, 188, 0.15)",
         },
       },
     ],
@@ -78,18 +101,26 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
   const { chartRef } = useECharts(option as any);
 
   return (
-    <div className="space-y-4 font-sans">
-      <div ref={chartRef} className="w-full h-80 bg-card border border-border rounded-xl" />
-      <div className="flex flex-wrap gap-6 justify-center text-xs text-muted-foreground font-mono pt-2">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-1.5 rounded bg-primary" />
-          <span>Expected Projection (yhat)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded bg-primary/10 border border-primary/20" />
-          <span>80% Confidence Interval</span>
-        </div>
+    <div className="space-y-6 font-sans">
+      {/* Chart Canvas with Grid Overlay */}
+      <div className="relative w-full h-80 rounded-xl bg-background/50 border border-border p-2 overflow-hidden">
+        <Grid horizontal vertical numTicksRows={6} numTicksColumns={8} fadeHorizontal strokeDasharray="4,4" />
+        <div ref={chartRef} className="w-full h-full relative z-10" />
       </div>
+
+      {/* Composed Chart Legend */}
+      <Card className="border border-border bg-card p-4 shadow-none">
+        <Legend items={forecastLegendItems} title="Projection Statistics (80% Confidence Interval)">
+          <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2 rounded-md hover:bg-muted/40 transition-all">
+            <LegendMarker />
+            <LegendLabel />
+            <LegendValue />
+            <div className="col-span-full">
+              <LegendProgress />
+            </div>
+          </LegendItemComponent>
+        </Legend>
+      </Card>
     </div>
   );
 }
