@@ -52,6 +52,8 @@ class ReportService:
         statistics: list[dict[str, Any]],
         summary: str,
         recommendations: list[str],
+        dataset_info: dict[str, Any] | None = None,
+        anomalies: list[dict[str, Any]] | None = None,
     ) -> str:
         """Generate PDF report using ReportLab and return the absolute file path."""
         file_name = f"report_{analysis_id}_{int(datetime.now().timestamp())}.pdf"
@@ -152,11 +154,68 @@ class ReportService:
             meta_style
         ))
         
+        # Dataset Overview & Health
+        story.append(Paragraph("Dataset Metadata & Health", h1_style))
+        if dataset_info:
+            ds_data = [
+                [
+                    Paragraph("Attribute", table_header_style),
+                    Paragraph("Value", table_header_style),
+                ],
+                [Paragraph("File Format", table_cell_style), Paragraph(str(dataset_info.get("file_type", "")).upper(), table_cell_style)],
+                [Paragraph("Total Rows Logged", table_cell_style), Paragraph(f"{dataset_info.get('row_count') or 0:,}", table_cell_style)],
+                [Paragraph("Columns Profiled", table_cell_style), Paragraph(str(dataset_info.get("column_count") or 0), table_cell_style)],
+                [Paragraph("Schema Health Score", table_cell_style), Paragraph(f"{round(dataset_info.get('health_score') or 0)}%", table_cell_style)],
+            ]
+            ds_table = Table(ds_data, colWidths=[240, 280])
+            ds_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), brand_charcoal),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('TOPPADDING', (0, 0), (-1, 0), 6),
+                ('GRID', (0, 0), (-1, -1), 0.5, light_border),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, gray_bg]),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+            ]))
+            story.append(ds_table)
+            story.append(Spacer(1, 10))
+
         # Executive Summary
         story.append(Paragraph("Executive Summary", h1_style))
         formatted_summary = _md_to_html(summary) if summary else "No executive summary compiled for this case."
         story.append(Paragraph(formatted_summary, body_style))
         story.append(Spacer(1, 10))
+
+        # Anomaly Audit Log
+        if anomalies:
+            story.append(Paragraph("Detected Anomalies & Outliers", h1_style))
+            anom_data = [[
+                Paragraph("Severity", table_header_style),
+                Paragraph("Description", table_header_style),
+                Paragraph("Method", table_header_style),
+            ]]
+            for a in anomalies[:10]:  # Top 10 anomalies
+                anom_data.append([
+                    Paragraph(str(a.get("severity", "")).upper(), table_cell_style),
+                    Paragraph(str(a.get("description", "")), table_cell_style),
+                    Paragraph(str(a.get("detection_method", "")), table_cell_style),
+                ])
+            anom_table = Table(anom_data, colWidths=[100, 300, 120])
+            anom_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), brand_charcoal),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('TOPPADDING', (0, 0), (-1, 0), 6),
+                ('GRID', (0, 0), (-1, -1), 0.5, light_border),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, gray_bg]),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+            ]))
+            story.append(anom_table)
+            story.append(Spacer(1, 10))
 
         # KPIs Section
         story.append(Paragraph("Key Performance Indicators", h1_style))
@@ -258,6 +317,8 @@ class ReportService:
         statistics: list[dict[str, Any]],
         summary: str,
         recommendations: list[str],
+        dataset_info: dict[str, Any] | None = None,
+        anomalies: list[dict[str, Any]] | None = None,
     ) -> str:
         """Generate DOCX report using python-docx and return the absolute file path."""
         doc = Document()
@@ -277,9 +338,45 @@ class ReportService:
         run.font.size = Pt(10)
         run.font.italic = True
         
+        # Dataset Overview
+        if dataset_info:
+            doc.add_heading("Dataset Metadata & Health", level=1)
+            ds_table = doc.add_table(rows=1, cols=2)
+            ds_table.style = "Light Shading Accent 1"
+            hdr = ds_table.rows[0].cells
+            hdr[0].text = "Attribute"
+            hdr[1].text = "Value"
+            
+            rows = [
+                ("File Format", str(dataset_info.get("file_type", "")).upper()),
+                ("Total Rows Logged", f"{dataset_info.get('row_count') or 0:,}"),
+                ("Columns Profiled", str(dataset_info.get("column_count") or 0)),
+                ("Schema Health Score", f"{round(dataset_info.get('health_score') or 0)}%"),
+            ]
+            for attr, val in rows:
+                r_cells = ds_table.add_row().cells
+                r_cells[0].text = attr
+                r_cells[1].text = val
+
         # Summary Box
         doc.add_heading("Executive Summary", level=1)
         doc.add_paragraph(summary or "No executive summary compiled for this case.")
+        
+        # Anomalies
+        if anomalies:
+            doc.add_heading("Detected Anomalies & Outliers", level=1)
+            anom_table = doc.add_table(rows=1, cols=3)
+            anom_table.style = "Light Shading Accent 1"
+            a_hdr = anom_table.rows[0].cells
+            a_hdr[0].text = "Severity"
+            a_hdr[1].text = "Description"
+            a_hdr[2].text = "Detection Method"
+            
+            for a in anomalies[:10]:
+                ar_cells = anom_table.add_row().cells
+                ar_cells[0].text = str(a.get("severity", "")).upper()
+                ar_cells[1].text = str(a.get("description", ""))
+                ar_cells[2].text = str(a.get("detection_method", ""))
         
         # KPIs Section
         doc.add_heading("Key Performance Indicators (KPIs)", level=1)

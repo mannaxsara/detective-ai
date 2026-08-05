@@ -59,6 +59,14 @@ async def generate_report(
     # 4. Generate document
     report_service = ReportService()
     try:
+        dataset_info = {
+            "row_count": dataset.row_count,
+            "column_count": dataset.column_count,
+            "health_score": dataset.health_score,
+            "file_type": dataset.file_type,
+        }
+        anomalies = analysis.anomalies or []
+
         if file_format == "pdf":
             file_path = report_service.generate_pdf(
                 analysis_id=analysis.id,
@@ -68,6 +76,8 @@ async def generate_report(
                 statistics=analysis.statistics or [],
                 summary=summary,
                 recommendations=recs,
+                dataset_info=dataset_info,
+                anomalies=anomalies,
             )
         else:
             file_path = report_service.generate_docx(
@@ -78,6 +88,8 @@ async def generate_report(
                 statistics=analysis.statistics or [],
                 summary=summary,
                 recommendations=recs,
+                dataset_info=dataset_info,
+                anomalies=anomalies,
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Document generation failed: {str(e)}")
