@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
 import { authAPI } from "@/lib/api";
 
-function LogoMark({ size = 26 }: { size?: number }) {
+function LogoMark({ size = 24 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="13" cy="13" r="9.5" stroke="currentColor" strokeWidth="2" />
@@ -112,17 +112,17 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen w-full items-center justify-center bg-background px-4 py-12 text-foreground font-sans overflow-hidden">
       {/* Background Grid Accent */}
       <div className="absolute inset-0 pointer-events-none select-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(216,207,188,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(216,207,188,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(216,207,188,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(216,207,188,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full bg-primary/5 blur-[120px]" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[420px]"
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full max-w-[400px]"
       >
-        <div className="rounded-2xl border border-border/80 bg-card/90 backdrop-blur-xl p-7 sm:p-9 shadow-2xl shadow-black/40 space-y-6">
+        <div className="rounded-2xl border border-border/80 bg-card/90 backdrop-blur-xl p-7 sm:p-8 shadow-2xl shadow-black/50 space-y-6">
           {/* Header Wordmark & Logo */}
           <div className="text-center space-y-3">
             <Link href="/" className="inline-flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
@@ -132,7 +132,7 @@ export default function LoginPage() {
               </span>
             </Link>
             <div>
-              <h2 className="text-2xl font-bold text-foreground tracking-tight">Sign In</h2>
+              <h2 className="text-2xl font-bold font-sans text-foreground tracking-tight">Sign In</h2>
               <p className="text-xs text-muted-foreground mt-1">
                 Enter your credentials to access your workspace
               </p>
@@ -142,19 +142,19 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div className="space-y-1.5">
-              <label className="text-[10.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
-                <span>Email Address</span>
+              <label className="text-[10.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider block">
+                Email Address
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+              <div className="relative flex items-center">
+                <Mail className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 pointer-events-none z-10" />
                 <input
                   type="email"
-                  autocomplete="email"
+                  autoComplete="email"
                   placeholder="agent@detective.ai"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={anyLoading}
-                  className="h-11 w-full rounded-xl border border-border/80 bg-background/50 pl-10 pr-3.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                  className="h-11 w-full rounded-xl border border-border/80 bg-background/50 !pl-11 !pr-4 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
                 />
               </div>
             </div>
@@ -171,21 +171,21 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3.5 w-4 h-4 text-muted-foreground/60 pointer-events-none z-10" />
                 <input
                   type={showPassword ? "text" : "password"}
-                  autocomplete="current-password"
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={anyLoading}
-                  className="h-11 w-full rounded-xl border border-border/80 bg-background/50 pl-10 pr-10 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                  className="h-11 w-full rounded-xl border border-border/80 bg-background/50 !pl-11 !pr-10 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground cursor-pointer"
+                  className="absolute right-3.5 text-muted-foreground/50 hover:text-foreground cursor-pointer z-10"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -195,7 +195,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={anyLoading}
-              className="h-11 w-full rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:brightness-110 text-primary-foreground font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-primary/15 mt-2"
+              className="h-11 w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-primary/10 mt-3"
             >
               {loading ? (
                 <>
@@ -211,7 +211,7 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex items-center justify-center py-1">
             <div className="w-full border-t border-border/60" />
             <span className="absolute bg-card px-3 font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
               or
@@ -250,7 +250,7 @@ export default function LoginPage() {
         </div>
 
         {/* Security Trust Badge */}
-        <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-muted-foreground/60 mt-6 select-none">
+        <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-muted-foreground/60 mt-5 select-none">
           <ShieldCheck className="w-3.5 h-3.5 text-primary/70" />
           <span>256-bit Encrypted Session · DetectiveAI Security</span>
         </div>
