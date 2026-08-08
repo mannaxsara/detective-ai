@@ -1,8 +1,6 @@
 """
-EDA service – automatic chart generation producing ECharts-compatible configs.
-
-Analyses column types to pick appropriate visualizations and returns complete
-``echarts.setOption()``-ready configuration dictionaries.
+Exploratory Data Analysis (EDA) Service.
+Generates automatic ECharts configurations from a Polars DataFrame for UI charts.
 """
 
 from __future__ import annotations
@@ -11,32 +9,18 @@ import math
 from typing import Any
 
 import polars as pl
-
-from app.schemas.analysis import ChartConfig
-from app.services.profiling_service import _load_dataframe
+from pydantic import BaseModel
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _numeric_cols(df: pl.DataFrame) -> list[str]:
-    return [c for c in df.columns if df[c].dtype.is_numeric()]
-
-
-def _categorical_cols(df: pl.DataFrame, max_unique: int = 200) -> list[str]:
-    return [
-        c
-        for c in df.columns
-        if (df[c].dtype == pl.Utf8 or df[c].dtype == pl.Categorical)
-        and df[c].n_unique() <= max_unique
-    ]
-
-
-def _datetime_cols(df: pl.DataFrame) -> list[str]:
-    return [c for c in df.columns if df[c].dtype.is_temporal()]
+class ChartConfig(BaseModel):
+    chart_type: str
+    title: str
+    description: str
+    config: dict[str, Any]
 
 
 def _safe(val: Any) -> Any:
-    """Make a value JSON-safe."""
+    """Convert non-serializable values (NaN, Inf, etc.) to JSON-compatible types."""
     if val is None:
         return None
     if isinstance(val, float):
@@ -45,136 +29,118 @@ def _safe(val: Any) -> Any:
     return val
 
 
-# ── Chart generators ──────────────────────────────────────────────────────────
+def _load_dataframe(file_path: str, file_type: str) -> pl.DataFrame:
+    ext = file_type.lower().strip(".")
+    if ext == "csv":
+        return pl.read_csv(file_path, infer_schema_length=10000, ignore_errors=True)
+    if ext in ("xlsx", "xls"):
+        return pl.read_excel(file_path)
+    if ext == "parquet":
+        return pl.read_parquet(file_path)
+    if ext == "json":
+        return pl.read_json(file_path)
+    return pl.read_csv(file_path, infer_schema_length=10000, ignore_errors=True)
 
 
-def _correlation_heatmap(df: pl.DataFrame, num_cols: list[str]) -> ChartConfig | None:
-    """Pearson correlation matrix as an ECharts heatmap."""
-    if len(num_cols) < 2:
+def _numeric_cols(df: pl.DataFrame) -> list[str]:
+    return [
+        col for col, dtype in zip(df.columns, df.dtypes)
+        if dtype in (pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64, pl.Float32, pl.Float64)
+    ]
+
+
+def _categorical_cols(df: pl.DataFrame) -> list[str]:
+    return [
+        col for col, dtype in zip(df.columns, df.dtypes)
+        if dtype in (pl.Utf8, pl.Categorical)
+    ]
+
+
+def _date_cols(df: pl.DataFrame) -> list[str]:
+    return [
+        col for col, dtype in zip(df.columns, df.dtypes)
+        if dtype in (pl.Date, pl.Datetime)
+    ]
+
+
+# ── Chart Generator Builders ──────────────────────────────────────────────────
+
+
+def _histogram(df: pl.DataFrame, col: str, bins: int = 15) -> ChartConfig | None:
+    """Generate a histogram config for a numeric column."""
+    series = df[col].drop_nulls()
+    if series.len() < 5:
         return None
-    sub = df.select(num_cols).drop_nulls()
-    if sub.height < 5:
-        return None
 
-    corr_data: list[list[Any]] = []
-    for i, c1 in enumerate(num_cols):
-        for j, c2 in enumerate(num_cols):
-            r = sub.select(pl.corr(c1, c2)).item()
-            corr_data.append([i, j, round(_safe(r) or 0, 3)])
-
-    config: dict[str, Any] = {
-        "tooltip": {"position": "top"},
-        "grid": {"top": "12%", "bottom": "25%", "left": "15%", "right": "5%", "containLabel": True},
-        "xAxis": {"type": "category", "data": num_cols, "splitArea": {"show": True},
-                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80}},
-        "yAxis": {"type": "category", "data": num_cols, "splitArea": {"show": True}},
-        "visualMap": {"min": -1, "max": 1, "calculable": True, "orient": "horizontal",
-                      "left": "center", "bottom": "0%",
-                      "inRange": {"color": ["#313695", "#4575b4", "#74add1",
-                                             "#abd9e9", "#fee090", "#fdae61",
-                                             "#f46d43", "#d73027", "#a50026"]}},
-        "series": [{"name": "Correlation", "type": "heatmap", "data": corr_data,
-                    "label": {"show": True, "fontSize": 10},
-                    "emphasis": {"itemStyle": {"shadowBlur": 10, "shadowColor": "rgba(0,0,0,0.5)"}}}],
-    }
-    return ChartConfig(
-        chart_type="heatmap",
-        title="Correlation Matrix",
-        description="Pearson correlation coefficients between numeric columns",
-        config=config,
-    )
-
-
-def _histogram(df: pl.DataFrame, col: str, bins: int = 30) -> ChartConfig:
-    """Histogram for a numeric column."""
-    series = df[col].drop_nulls().cast(pl.Float64)
     min_val = float(series.min())  # type: ignore[arg-type]
     max_val = float(series.max())  # type: ignore[arg-type]
     if min_val == max_val:
-        bin_edges = [min_val, min_val + 1]
-        counts = [int(series.len())]
-    else:
-        step = (max_val - min_val) / bins
-        bin_edges = [round(min_val + i * step, 4) for i in range(bins + 1)]
-        counts = []
-        for i in range(bins):
-            lo, hi = bin_edges[i], bin_edges[i + 1]
-            if i == bins - 1:
-                c = int(series.filter((series >= lo) & (series <= hi)).len())
-            else:
-                c = int(series.filter((series >= lo) & (series < hi)).len())
-            counts.append(c)
+        return None
 
-    labels = [f"{bin_edges[i]:.1f}" for i in range(len(counts))]
+    bin_width = (max_val - min_val) / bins
+    counts = [0] * bins
+    bin_labels = []
+
+    for i in range(bins):
+        low = min_val + i * bin_width
+        high = low + bin_width
+        bin_labels.append(f"{low:.1f}-{high:.1f}")
+
+    vals = series.to_list()
+    for v in vals:
+        if v is None or math.isnan(v):
+            continue
+        idx = int((v - min_val) / bin_width)
+        if idx >= bins:
+            idx = bins - 1
+        counts[idx] += 1
 
     config: dict[str, Any] = {
         "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
-        "grid": {"bottom": "22%", "top": "12%", "left": "10%", "right": "10%", "containLabel": True},
-        "xAxis": {"type": "category", "data": labels, "name": col, "nameLocation": "middle", "nameGap": 35,
-                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80}},
-        "yAxis": {"type": "value", "name": "Frequency"},
-        "series": [{"name": col, "type": "bar", "data": counts,
-                    "itemStyle": {"color": "#5470c6"}}],
+        "grid": {"bottom": "20%", "top": "12%", "left": "12%", "right": "8%", "containLabel": True},
+        "xAxis": {
+            "type": "category",
+            "data": bin_labels,
+            "name": col,
+            "axisLabel": {"rotate": 35, "interval": "auto", "fontFamily": "monospace"},
+        },
+        "yAxis": {"type": "value", "name": "Frequency", "axisLabel": {"fontFamily": "monospace"}},
+        "series": [{
+            "name": col,
+            "type": "bar",
+            "data": counts,
+            "itemStyle": {"color": "#edfe5e", "borderRadius": [4, 4, 0, 0]},
+        }],
     }
     return ChartConfig(
         chart_type="histogram",
         title=f"Distribution of {col}",
-        description=f"Histogram showing the frequency distribution of {col}",
+        description=f"Frequency histogram for numerical column {col}",
         config=config,
     )
 
 
-def _boxplot(df: pl.DataFrame, num_cols: list[str]) -> ChartConfig | None:
-    """Box plots for numeric columns."""
-    if not num_cols:
-        return None
-    box_data: list[list[float | None]] = []
-    valid_cols: list[str] = []
-    for col in num_cols[:10]:  # limit to 10
-        s = df[col].drop_nulls().cast(pl.Float64)
-        if s.len() < 5:
-            continue
-        mn = _safe(float(s.min()))  # type: ignore[arg-type]
-        q1 = _safe(float(s.quantile(0.25)))  # type: ignore[arg-type]
-        md = _safe(float(s.median()))  # type: ignore[arg-type]
-        q3 = _safe(float(s.quantile(0.75)))  # type: ignore[arg-type]
-        mx = _safe(float(s.max()))  # type: ignore[arg-type]
-        box_data.append([mn, q1, md, q3, mx])
-        valid_cols.append(col)
-
-    if not valid_cols:
-        return None
-
-    config: dict[str, Any] = {
-        "tooltip": {"trigger": "item", "axisPointer": {"type": "shadow"}},
-        "grid": {"bottom": "22%", "top": "12%", "left": "10%", "right": "10%", "containLabel": True},
-        "xAxis": {"type": "category", "data": valid_cols,
-                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80}},
-        "yAxis": {"type": "value"},
-        "series": [{"name": "Boxplot", "type": "boxplot", "data": box_data}],
-    }
-    return ChartConfig(
-        chart_type="boxplot",
-        title="Numeric Column Box Plots",
-        description="Box-and-whisker plots for numeric columns",
-        config=config,
-    )
-
-
-def _scatter_top_correlated(df: pl.DataFrame, num_cols: list[str]) -> list[ChartConfig]:
-    """Scatter plots for the top 3 most correlated pairs."""
+def _scatter(df: pl.DataFrame, num_cols: list[str]) -> list[ChartConfig]:
+    """Generate scatter plots for pair-wise correlated numeric columns."""
     if len(num_cols) < 2:
         return []
-    sub = df.select(num_cols).drop_nulls()
+
+    sub = df.select(num_cols[:6]).drop_nulls()
     if sub.height < 5:
         return []
 
     pairs: list[tuple[str, str, float]] = []
-    for i in range(len(num_cols)):
-        for j in range(i + 1, len(num_cols)):
-            r = sub.select(pl.corr(num_cols[i], num_cols[j])).item()
-            if r is not None and math.isfinite(r):
-                pairs.append((num_cols[i], num_cols[j], abs(r)))
+    cols = sub.columns
+    for i in range(len(cols)):
+        for j in range(i + 1, len(cols)):
+            c1, c2 = cols[i], cols[j]
+            try:
+                r = float(sub.select(pl.corr(c1, c2)).item())
+                if not math.isnan(r):
+                    pairs.append((c1, c2, abs(r)))
+            except Exception:
+                pass
+
     pairs.sort(key=lambda x: x[2], reverse=True)
 
     charts: list[ChartConfig] = []
@@ -183,21 +149,21 @@ def _scatter_top_correlated(df: pl.DataFrame, num_cols: list[str]) -> list[Chart
         data = [[_safe(row[0]), _safe(row[1])] for row in sample.iter_rows()]
         config: dict[str, Any] = {
             "tooltip": {"trigger": "item"},
-            "grid": {"bottom": "18%", "top": "12%", "left": "12%", "right": "12%", "containLabel": True},
-            "xAxis": {"type": "value", "name": c1, "scale": True, "nameLocation": "middle", "nameGap": 25},
-            "yAxis": {"type": "value", "name": c2, "scale": True, "nameLocation": "middle", "nameGap": 35},
+            "grid": {"bottom": "18%", "top": "12%", "left": "15%", "right": "10%", "containLabel": True},
+            "xAxis": {"type": "value", "name": c1, "scale": True, "nameLocation": "middle", "nameGap": 28, "axisLabel": {"fontFamily": "monospace"}},
+            "yAxis": {"type": "value", "name": c2, "scale": True, "nameLocation": "end", "nameGap": 12, "axisLabel": {"fontFamily": "monospace"}},
             "series": [{
                 "name": f"{c1} vs {c2}",
                 "type": "scatter",
                 "data": data,
                 "symbolSize": 6,
-                "itemStyle": {"opacity": 0.6},
+                "itemStyle": {"color": "#31e992", "opacity": 0.75},
             }],
         }
         charts.append(ChartConfig(
             chart_type="scatter",
             title=f"{c1} vs {c2} (r={r:.3f})",
-            description=f"Scatter plot of the two columns with Pearson r = {r:.3f}",
+            description=f"Scatter plot of two columns with Pearson r = {r:.3f}",
             config=config,
         ))
     return charts
@@ -211,12 +177,12 @@ def _bar_categorical(df: pl.DataFrame, col: str, top_n: int = 20) -> ChartConfig
 
     config: dict[str, Any] = {
         "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
-        "grid": {"bottom": "22%", "top": "12%", "left": "10%", "right": "10%", "containLabel": True},
+        "grid": {"bottom": "22%", "top": "12%", "left": "12%", "right": "8%", "containLabel": True},
         "xAxis": {"type": "category", "data": labels,
-                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80}},
-        "yAxis": {"type": "value", "name": "Count"},
+                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80, "fontFamily": "monospace"}},
+        "yAxis": {"type": "value", "name": "Count", "axisLabel": {"fontFamily": "monospace"}},
         "series": [{"name": col, "type": "bar", "data": values,
-                    "itemStyle": {"color": "#91cc75"}}],
+                    "itemStyle": {"color": "#edfe5e", "borderRadius": [4, 4, 0, 0]}}],
     }
     return ChartConfig(
         chart_type="bar",
@@ -233,21 +199,21 @@ def _pie_categorical(df: pl.DataFrame, col: str) -> ChartConfig:
 
     config: dict[str, Any] = {
         "tooltip": {"trigger": "item", "formatter": "{b}: {c} ({d}%)"},
-        "legend": {"orient": "vertical", "left": "left"},
+        "legend": {"orient": "vertical", "left": "left", "textStyle": {"fontFamily": "monospace"}},
         "series": [{
             "name": col,
             "type": "pie",
             "radius": ["40%", "70%"],
             "avoidLabelOverlap": True,
-            "itemStyle": {"borderRadius": 4, "borderColor": "#fff", "borderWidth": 2},
-            "label": {"show": True, "formatter": "{b}: {d}%"},
+            "itemStyle": {"borderRadius": 4, "borderColor": "#181914", "borderWidth": 2},
+            "label": {"show": True, "formatter": "{b}: {d}%", "fontFamily": "monospace"},
             "data": data,
         }],
     }
     return ChartConfig(
         chart_type="pie",
         title=f"Distribution of {col}",
-        description=f"Proportional breakdown of categories in {col}",
+        description=f"Proportional breakdown of distinct values in {col}",
         config=config,
     )
 
@@ -263,7 +229,7 @@ def _treemap_categorical(df: pl.DataFrame, col: str) -> ChartConfig:
             "name": col,
             "type": "treemap",
             "data": data,
-            "label": {"show": True, "formatter": "{b}"},
+            "label": {"show": True, "formatter": "{b}", "fontFamily": "monospace"},
             "breadcrumb": {"show": False},
         }],
     }
@@ -289,20 +255,22 @@ def _time_trend(df: pl.DataFrame, date_col: str, num_cols: list[str]) -> list[Ch
 
     date_strs = [str(d) for d in dates.to_list()]
 
-    for col in num_cols[:5]:  # limit
-        values = [_safe(v) for v in sorted_df[col].to_list()[:len(date_strs)]]
+    for col in num_cols[:3]:
+        raw_vals = sorted_df[col].to_list()
+        values = [_safe(v) for v in raw_vals]
+
         config: dict[str, Any] = {
             "tooltip": {"trigger": "axis"},
-            "grid": {"bottom": "22%", "top": "12%", "left": "10%", "right": "10%", "containLabel": True},
+            "grid": {"bottom": "20%", "top": "12%", "left": "12%", "right": "8%", "containLabel": True},
             "xAxis": {"type": "category", "data": date_strs,
-                       "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80}},
-            "yAxis": {"type": "value", "name": col},
+                       "axisLabel": {"rotate": 35, "interval": "auto", "fontFamily": "monospace"}},
+            "yAxis": {"type": "value", "name": col, "axisLabel": {"fontFamily": "monospace"}},
             "dataZoom": [{"type": "inside"}, {"type": "slider"}],
             "series": [{
                 "name": col, "type": "line", "data": values,
                 "smooth": True,
-                "lineStyle": {"width": 2},
-                "areaStyle": {"opacity": 0.15},
+                "lineStyle": {"width": 2, "color": "#edfe5e"},
+                "areaStyle": {"opacity": 0.15, "color": "#edfe5e"},
             }],
         }
         charts.append(ChartConfig(
@@ -319,7 +287,6 @@ def _heatmap_crosstab(df: pl.DataFrame, cat_cols: list[str]) -> ChartConfig | No
     if len(cat_cols) < 2:
         return None
     c1, c2 = cat_cols[0], cat_cols[1]
-    # Only use low-cardinality columns
     if df[c1].n_unique() > 15 or df[c2].n_unique() > 15:
         return None
 
@@ -342,8 +309,8 @@ def _heatmap_crosstab(df: pl.DataFrame, cat_cols: list[str]) -> ChartConfig | No
         "tooltip": {"position": "top"},
         "grid": {"bottom": "22%", "top": "12%", "left": "15%", "right": "5%", "containLabel": True},
         "xAxis": {"type": "category", "data": x_vals, "splitArea": {"show": True},
-                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80}},
-        "yAxis": {"type": "category", "data": y_vals, "splitArea": {"show": True}},
+                   "axisLabel": {"rotate": 35, "interval": "auto", "overflow": "truncate", "width": 80, "fontFamily": "monospace"}},
+        "yAxis": {"type": "category", "data": y_vals, "splitArea": {"show": True}, "axisLabel": {"fontFamily": "monospace"}},
         "visualMap": {"min": 0, "max": max(d[2] for d in data) if data else 1,
                       "calculable": True, "orient": "horizontal",
                       "left": "center", "bottom": "0%"},
@@ -353,7 +320,7 @@ def _heatmap_crosstab(df: pl.DataFrame, cat_cols: list[str]) -> ChartConfig | No
     return ChartConfig(
         chart_type="heatmap",
         title=f"{c1} × {c2} Cross-tabulation",
-        description=f"Heatmap showing the count at each combination of {c1} and {c2}",
+        description=f"Heatmap showing count at each combination of {c1} and {c2}",
         config=config,
     )
 
@@ -368,53 +335,37 @@ def generate_charts(file_path: str, file_type: str) -> list[ChartConfig]:
 
     num = _numeric_cols(df)
     cat = _categorical_cols(df)
-    dt = _datetime_cols(df)
+    dates = _date_cols(df)
 
-    # Correlation heatmap
-    corr = _correlation_heatmap(df, num)
-    if corr:
-        charts.append(corr)
+    # 1. Histograms for up to 3 numeric columns
+    for col in num[:3]:
+        h = _histogram(df, col)
+        if h:
+            charts.append(h)
 
-    # Histograms (limit to 6)
-    for col in num[:6]:
-        charts.append(_histogram(df, col))
-
-    # Boxplots
-    bp = _boxplot(df, num)
-    if bp:
-        charts.append(bp)
-
-    # Scatter – top correlated pairs
-    charts.extend(_scatter_top_correlated(df, num))
-
-    # Bar charts for categorical
-    for col in cat[:5]:
-        charts.append(_bar_categorical(df, col))
-
-    # Pie charts for low-cardinality
-    for col in cat:
-        if df[col].n_unique() <= 10:
+    # 2. Categorical distribution pie & bar charts
+    for col in cat[:3]:
+        n_unique = df[col].n_unique()
+        if n_unique <= 10:
             charts.append(_pie_categorical(df, col))
-            if len(charts) > 25:
-                break
-
-    # Treemap for first high-cardinality categorical
-    for col in cat:
-        if 10 < df[col].n_unique() <= 50:
+        elif n_unique <= 30:
+            charts.append(_bar_categorical(df, col))
+        else:
             charts.append(_treemap_categorical(df, col))
-            break
 
-    # Cross-tabulation heatmap
-    ct = _heatmap_crosstab(df, cat)
-    if ct:
-        charts.append(ct)
+    # 3. Scatter plots for correlated numeric pairs
+    scatters = _scatter(df, num)
+    charts.extend(scatters)
 
-    # Time trends
-    for dc in dt:
-        charts.extend(_time_trend(df, dc, num))
+    # 4. Time series trends if date column exists
+    if dates and num:
+        trends = _time_trend(df, dates[0], num)
+        charts.extend(trends)
+
+    # 5. Cross-tabulation heatmap for low-cardinality categorical pairs
+    if len(cat) >= 2:
+        hm = _heatmap_crosstab(df, cat)
+        if hm:
+            charts.append(hm)
 
     return charts
-
-
-run_eda = generate_charts
-

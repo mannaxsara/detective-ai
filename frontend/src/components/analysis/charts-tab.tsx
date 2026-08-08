@@ -25,33 +25,40 @@ function ChartItem({ chart }: { chart: any }) {
   const { chartRef } = useECharts(chart.config);
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
 
-  // Extract legend item data if available from config series/data
+  // Extract legend item data ONLY if available from pie/bar series data (not scatter plots)
   const legendItems: LegendItemData[] = React.useMemo(() => {
+    if (chart.chart_type === "scatter" || chart.chart_type === "line" || chart.chart_type === "heatmap") {
+      return [];
+    }
     if (!chart.config?.series?.[0]?.data) return [];
     const seriesData = chart.config.series[0].data;
     const xAxisData = chart.config?.xAxis?.data || [];
     const colors = ["#edfe5e", "#31e992", "#bed4fb", "#f59e0b", "#a855f7", "#bc3e3e"];
 
     if (Array.isArray(seriesData)) {
-      return seriesData.slice(0, 5).map((item: any, idx: number) => {
-        const val = typeof item === "number" ? item : item.value || 0;
-        const label = typeof item === "object" && item.name ? item.name : xAxisData[idx] || `Item ${idx + 1}`;
-        return {
-          label: String(label),
-          value: Number(val),
-          color: colors[idx % colors.length],
-        };
-      });
+      const items = seriesData
+        .map((item: any, idx: number) => {
+          const val = typeof item === "number" ? item : (item.value || 0);
+          const label = typeof item === "object" && item.name ? item.name : (xAxisData[idx] || "");
+          return {
+            label: String(label),
+            value: Number(val),
+            color: colors[idx % colors.length],
+          };
+        })
+        .filter((item) => item.label.trim() !== "" && item.value > 0);
+
+      return items.slice(0, 6);
     }
     return [];
   }, [chart]);
 
   return (
-    <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 shadow-[4px_4px_0px_#000000] space-y-4 min-w-0 overflow-hidden">
-      <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
-        <div>
-          <h3 className="text-base font-serif font-bold text-black dark:text-white">{chart.title}</h3>
-          <p className="text-black/70 dark:text-white/70 text-xs font-sans mt-0.5">{chart.description}</p>
+    <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 shadow-[4px_4px_0px_#000000] space-y-4 min-w-0 overflow-hidden text-left">
+      <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3 gap-3">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-serif font-bold text-black dark:text-white truncate">{chart.title}</h3>
+          <p className="text-black/75 dark:text-white/75 text-xs font-sans mt-0.5 truncate">{chart.description}</p>
         </div>
         <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-2.5 py-0.5 rounded shadow-[1px_1px_0px_#000000] shrink-0">
           {chart.chart_type}
@@ -63,7 +70,7 @@ function ChartItem({ chart }: { chart: any }) {
         <div ref={chartRef} className="w-full h-full min-w-0" />
       </div>
 
-      {/* Legend Component */}
+      {/* Legend Component (Rendered only when valid non-zero items exist) */}
       {legendItems.length > 0 && (
         <div className="pt-3 border-t border-black/10 dark:border-white/10">
           <Legend
@@ -106,15 +113,15 @@ export default function ChartsTab({ datasetId }: ChartsTabProps) {
   const chartList = charts || [];
 
   return (
-    <div className="space-y-6 font-sans text-black dark:text-white">
-      <div className="flex items-center justify-between border-b border-black dark:border-[#3b3a33] pb-4">
+    <div className="space-y-6 font-sans text-black dark:text-white text-left">
+      <div className="flex items-center justify-between border-b border-black dark:border-[#3b3a33] pb-4 gap-3 flex-wrap">
         <div>
           <h2 className="text-base font-serif font-bold tracking-tight">Exploratory Data Visualizations</h2>
           <p className="text-xs font-sans text-black/75 dark:text-white/75 mt-0.5">
             Automatically generated charts showing variable correlation, distribution, and top classes.
           </p>
         </div>
-        <span className="text-xs font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-3 py-1 rounded-[6px] shadow-[2px_2px_0px_#000000]">
+        <span className="text-xs font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-3 py-1 rounded-[6px] shadow-[2px_2px_0px_#000000] shrink-0">
           {chartList.length} Charts Active
         </span>
       </div>
