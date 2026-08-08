@@ -1,24 +1,50 @@
 "use client";
 
-import React, { useState } from "react";
-import { Shield, User as UserIcon, Layout, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Shield, User as UserIcon, Layout, Trash2, CheckCircle2, Key } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { isDark, toggleTheme } = useThemeToggle({
     variant: "circle",
     start: "center",
     blur: true
   });
+
+  const [fullName, setFullName] = useState("");
   const [analytics, setAnalytics] = useState(true);
   const [activeTab, setActiveTab] = useState<"profile" | "ui" | "security">("profile");
 
+  useEffect(() => {
+    if (user?.full_name) {
+      setFullName(user.full_name);
+    }
+  }, [user]);
+
   const handleSave = () => {
-    toast.success("Agent preferences successfully updated.");
+    if (!fullName.trim()) {
+      toast.error("Full name cannot be empty.");
+      return;
+    }
+
+    if (user) {
+      setUser({ ...user, full_name: fullName.trim() });
+    } else {
+      setUser({
+        id: "1",
+        email: "chaitanyapatil700@gmail.com",
+        full_name: fullName.trim(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+      });
+    }
+
+    toast.success("Agent profile successfully updated.");
   };
 
   const handleDeleteAccount = () => {
@@ -28,54 +54,54 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 font-sans text-muted-foreground">
+    <div className="max-w-4xl mx-auto space-y-6 font-sans text-black dark:text-white bg-[#f9f9f7] dark:bg-[#11120d]">
       
       {/* Title */}
       <div className="space-y-1 text-left">
-        <h1 className="text-2xl font-black text-foreground tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight">
           Terminal Settings
         </h1>
-        <p className="text-muted-foreground/60 text-xs font-bold uppercase tracking-wider">
-          Configure agent credentials, terminal preferences, and secure keys
+        <p className="text-xs font-sans text-black/70 dark:text-white/70">
+          Configure agent credentials, terminal preferences, and secure keys.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Side: Category selector */}
-        <div className="space-y-1.5 flex flex-col items-stretch">
+        <div className="space-y-2 flex flex-col items-stretch">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`w-full text-left flex items-center h-10 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-cards transition-all border cursor-pointer ${
+            className={`w-full text-left flex items-center h-11 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
               activeTab === "profile"
-                ? "text-primary bg-primary/10 border-primary/20 shadow-sm"
-                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-muted/30"
+                ? "bg-[#edfe5e] text-black border-black/30 shadow-xs"
+                : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white bg-white dark:bg-[#181914] border-black/15 dark:border-white/15 hover:bg-black/5"
             }`}
           >
-            <UserIcon className="w-4 h-4 mr-2.5 shrink-0" />
+            <UserIcon className="w-4 h-4 mr-2.5 shrink-0 text-black dark:text-white" />
             Agent Profile
           </button>
           
           <button
             onClick={() => setActiveTab("ui")}
-            className={`w-full text-left flex items-center h-10 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-cards transition-all border cursor-pointer ${
+            className={`w-full text-left flex items-center h-11 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
               activeTab === "ui"
-                ? "text-primary bg-primary/10 border-primary/20 shadow-sm"
-                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-muted/30"
+                ? "bg-[#edfe5e] text-black border-black/30 shadow-xs"
+                : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white bg-white dark:bg-[#181914] border-black/15 dark:border-white/15 hover:bg-black/5"
             }`}
           >
-            <Layout className="w-4 h-4 mr-2.5 shrink-0" />
+            <Layout className="w-4 h-4 mr-2.5 shrink-0 text-black dark:text-white" />
             UI Preferences
           </button>
           
           <button
             onClick={() => setActiveTab("security")}
-            className={`w-full text-left flex items-center h-10 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-cards transition-all border cursor-pointer ${
+            className={`w-full text-left flex items-center h-11 px-4 text-xs font-mono font-bold uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
               activeTab === "security"
-                ? "text-primary bg-primary/10 border-primary/20 shadow-sm"
-                : "text-muted-foreground hover:text-foreground bg-transparent border-transparent hover:bg-muted/30"
+                ? "bg-[#edfe5e] text-black border-black/30 shadow-xs"
+                : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white bg-white dark:bg-[#181914] border-black/15 dark:border-white/15 hover:bg-black/5"
             }`}
           >
-            <Shield className="w-4 h-4 mr-2.5 shrink-0" />
+            <Shield className="w-4 h-4 mr-2.5 shrink-0 text-black dark:text-white" />
             Security & Keys
           </button>
         </div>
@@ -83,30 +109,36 @@ export default function SettingsPage() {
         {/* Right Side: Settings panels */}
         <div className="md:col-span-2 space-y-6">
           {activeTab === "profile" && (
-            <div className="rounded-cards border border-border bg-card p-6 flex flex-col gap-5 text-left shadow-sm">
+            <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
               <div>
-                <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Agent Information</h4>
-                <p className="text-muted-foreground text-xs mt-1">Update account credentials and authentication targets.</p>
+                <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Agent Information</h2>
+                <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Update account credentials and authentication targets.</p>
               </div>
               
-              <div className="border-t border-border/40 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-muted-foreground text-xs font-bold">Full Name</label>
+              <div className="border-t border-black/10 dark:border-white/10 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-2 text-left">
+                  <label htmlFor="name" className="block text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">
+                    Full Name
+                  </label>
                   <input
                     id="name"
                     type="text"
-                    defaultValue={user?.full_name || "User"}
-                    className="h-10 w-full rounded-cards border border-border bg-background px-3.5 text-xs text-foreground placeholder:text-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Chaitanya Patil"
+                    className="h-11 w-full rounded-xl border border-black/20 dark:border-white/20 bg-[#f9f9f7] dark:bg-[#262720] px-4 text-xs font-mono font-bold text-black dark:text-white leading-normal focus:outline-none focus:ring-2 focus:ring-[#edfe5e] transition-all shadow-xs"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="email" className="text-muted-foreground text-xs font-bold">Email Address</label>
+                <div className="space-y-2 text-left">
+                  <label htmlFor="email" className="block text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">
+                    Email Address
+                  </label>
                   <input
                     id="email"
                     type="email"
-                    defaultValue={user?.email || "user@company.com"}
+                    value={user?.email || "chaitanyapatil700@gmail.com"}
                     disabled
-                    className="h-10 w-full rounded-cards border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground cursor-not-allowed"
+                    className="h-11 w-full rounded-xl border border-black/20 dark:border-white/20 bg-[#edf0e9] dark:bg-[#1f201a] px-4 text-xs font-mono font-bold text-black/70 dark:text-white/70 cursor-not-allowed opacity-90 leading-normal"
                   />
                 </div>
               </div>
@@ -114,7 +146,7 @@ export default function SettingsPage() {
               <div className="pt-2">
                 <button
                   onClick={handleSave}
-                  className="bg-primary hover:opacity-90 text-primary-foreground font-mono text-[10px] font-bold uppercase tracking-wider h-9 px-5 rounded-cards shadow-sm active:scale-[0.98] transition-all cursor-pointer"
+                  className="btn-ink-accent text-xs py-2.5 px-6 font-mono uppercase font-bold shadow-[2px_2px_0px_#000000] cursor-pointer"
                 >
                   Save Profile
                 </button>
@@ -123,66 +155,68 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "ui" && (
-            <div className="rounded-cards border border-border bg-card p-6 flex flex-col gap-5 text-left shadow-sm">
+            <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
               <div>
-                <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Application Settings</h4>
-                <p className="text-muted-foreground text-xs mt-1">Toggle interface styling and engine behaviors.</p>
+                <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Application Settings</h2>
+                <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Toggle interface styling and engine behaviors.</p>
               </div>
               
-              <div className="border-t border-border/40 pt-4 space-y-4">
+              <div className="border-t border-black/10 dark:border-white/10 pt-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-foreground">Dark Theme Interface</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">Toggle interface styling mode between dark and light.</p>
+                    <h3 className="text-xs font-serif font-bold text-black dark:text-white">Dark Theme Interface</h3>
+                    <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-0.5">Toggle interface styling mode between dark and light.</p>
                   </div>
-                  <Switch checked={isDark} onCheckedChange={toggleTheme} className="data-[state=checked]:bg-primary" />
+                  <Switch checked={isDark} onCheckedChange={toggleTheme} className="data-[state=checked]:bg-[#edfe5e]" />
                 </div>
                 
-                <div className="flex items-center justify-between border-t border-border/40 pt-4">
+                <div className="flex items-center justify-between border-t border-black/10 dark:border-white/10 pt-4">
                   <div>
-                    <h4 className="text-xs font-bold text-foreground">Strict Investigation Checks</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">Always execute detailed anomaly checks during upload.</p>
+                    <h3 className="text-xs font-serif font-bold text-black dark:text-white">Strict Investigation Checks</h3>
+                    <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-0.5">Always execute detailed 3-sigma anomaly checks during file upload.</p>
                   </div>
-                  <Switch checked={analytics} onCheckedChange={setAnalytics} className="data-[state=checked]:bg-primary" />
+                  <Switch checked={analytics} onCheckedChange={setAnalytics} className="data-[state=checked]:bg-[#edfe5e]" />
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === "security" && (
-            <div className="rounded-cards border border-border bg-card p-6 flex flex-col gap-5 text-left shadow-sm">
+            <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
               <div>
-                <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">Security Controls</h4>
-                <p className="text-muted-foreground text-xs mt-1">Manage session credentials and active API keys.</p>
+                <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Security Controls</h2>
+                <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Manage session credentials and active API keys.</p>
               </div>
               
-              <div className="border-t border-border/40 pt-4 space-y-4">
-                <div className="p-3.5 rounded-cards bg-background border border-border flex items-center justify-between text-xs font-mono text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    <span>SESSION SECURE: JWT bearer active</span>
+              <div className="border-t border-black/10 dark:border-white/10 pt-4 space-y-4">
+                <div className="p-4 rounded-xl bg-[#f9f9f7] dark:bg-[#262720] border border-black/15 dark:border-white/15 flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center gap-2 font-bold text-black dark:text-white">
+                    <Shield className="w-4 h-4 text-[#31e992]" />
+                    <span>SESSION SECURE: JWT Bearer Token</span>
                   </div>
-                  <span className="text-primary font-bold">ACTIVE</span>
+                  <span className="bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
+                    ACTIVE
+                  </span>
                 </div>
               </div>
             </div>
           )}
 
           {/* Danger Zone */}
-          <div className="rounded-cards border border-destructive/30 bg-destructive/5 p-6 flex flex-col gap-5 text-left shadow-sm">
+          <div className="border border-[#bc3e3e]/30 rounded-xl bg-[#bc3e3e]/5 p-6 space-y-4 shadow-sm">
             <div>
-              <h4 className="text-xs font-mono font-bold text-destructive uppercase tracking-wider">Danger Zone</h4>
-              <p className="text-destructive/80 text-xs mt-1 font-medium">Permanently delete your profile and all active case logs.</p>
+              <h2 className="text-xs font-mono font-bold text-[#bc3e3e] uppercase tracking-wider">Danger Zone</h2>
+              <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1 font-medium">Permanently delete your agent profile and all active case logs.</p>
             </div>
             
-            <div className="border-t border-destructive/20 pt-4 flex items-center justify-between">
+            <div className="border-t border-black/10 dark:border-white/10 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h4 className="text-xs font-bold text-foreground">Delete Agent Profile</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">This action cannot be undone. All database records will be erased.</p>
+                <h3 className="text-xs font-serif font-bold text-black dark:text-white">Delete Agent Profile</h3>
+                <p className="text-[11px] font-sans text-black/60 dark:text-white/60 mt-0.5">This action cannot be undone. All database records will be erased.</p>
               </div>
               <button
                 onClick={handleDeleteAccount}
-                className="bg-destructive hover:opacity-90 text-destructive-foreground font-mono text-[10px] font-bold uppercase tracking-wider h-9 rounded-cards flex items-center gap-1.5 px-4 cursor-pointer transition-all"
+                className="bg-[#bc3e3e] text-white border border-[#bc3e3e]/40 font-mono font-bold text-xs uppercase py-2.5 px-5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer hover:brightness-110 shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete Profile

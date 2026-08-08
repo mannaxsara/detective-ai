@@ -251,13 +251,13 @@ export function AreaTooltip() {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            className="bg-card border border-border p-3 rounded-lg shadow-xl text-xs font-sans min-w-[130px]"
+            className="bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl text-xs font-sans min-w-[130px] backdrop-blur-md"
           >
-            <p className="font-bold text-foreground mb-1.5 border-b border-border pb-1">{datum[xDataKey]}</p>
+            <p className="font-bold text-black dark:text-white mb-1.5 border-b border-black/10 dark:border-white/10 pb-1 font-mono">{datum[xDataKey]}</p>
             {keys.map(k => (
               <div key={k} className="flex justify-between items-center gap-3 mt-1">
-                <span className="text-muted-foreground capitalize text-[10px] font-bold tracking-wider">{k}</span>
-                <span className="font-mono text-foreground font-black">{Number(datum[k]).toFixed(2)}</span>
+                <span className="text-black/60 dark:text-white/60 capitalize text-[10px] font-mono font-bold tracking-wider">{k}</span>
+                <span className="font-mono text-black dark:text-white font-bold">{Number(datum[k]).toFixed(2)}</span>
               </div>
             ))}
           </motion.div>

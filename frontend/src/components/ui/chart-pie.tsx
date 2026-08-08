@@ -39,7 +39,7 @@ export interface PieChartProps {
   children: ReactNode;
 }
 
-const DEFAULT_COLORS = ['#d8cfbc', '#78c51c', '#bed4fb', '#f59e0b', '#a855f7', '#bc3e3e'];
+const DEFAULT_COLORS = ['#edfe5e', '#31e992', '#bed4fb', '#f59e0b', '#a855f7', '#bc3e3e'];
 
 export function PieChart({
   data,
@@ -71,14 +71,13 @@ export function PieChart({
         height,
       }}
     >
-      <div className={cn("relative w-full flex flex-col items-center justify-center", className)} style={{ height }}>
+      <div className={cn("relative w-full flex flex-col items-center justify-center text-black dark:text-white", className)} style={{ height }}>
         {children}
       </div>
     </PieChartContext.Provider>
   );
 }
 
-// Math utils for Pie
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
   const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
   return {
@@ -117,7 +116,7 @@ export function PieSlices({ dataKey = 'value', nameKey = 'name' }: { dataKey?: s
   const { data, innerRadius, outerRadius, paddingAngle, hoveredIndex, setHoveredIndex, total } = usePieChart();
 
   let currentAngle = 0;
-  const viewBoxSize = outerRadius * 2 + 40; // padding for hover scale
+  const viewBoxSize = outerRadius * 2 + 40;
   const center = viewBoxSize / 2;
 
   return (
@@ -143,6 +142,8 @@ export function PieSlices({ dataKey = 'value', nameKey = 'name' }: { dataKey?: s
               key={`${item.name}-${index}`}
               d={d}
               fill={item.fill}
+              stroke="#000000"
+              strokeWidth={1}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
               className={cn("cursor-pointer transition-all duration-200", isDimmed && "opacity-40")}
@@ -175,19 +176,19 @@ export function PieTooltip() {
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2 bg-card text-card-foreground border border-border p-3 rounded-lg shadow-xl flex flex-col gap-1 text-xs font-sans pointer-events-none min-w-[140px]"
+          className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl backdrop-blur-md flex flex-col gap-1 text-xs font-sans pointer-events-none min-w-[140px]"
         >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data[hoveredIndex].fill }} />
-            <span className="font-bold text-foreground truncate">{data[hoveredIndex].name}</span>
+          <div className="flex items-center gap-2 mb-1 border-b border-black/10 dark:border-white/10 pb-1">
+            <span className="w-2.5 h-2.5 rounded-full border border-black/20" style={{ backgroundColor: data[hoveredIndex].fill }} />
+            <span className="font-bold text-black dark:text-white truncate">{data[hoveredIndex].name}</span>
           </div>
-          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-mono">
+          <div className="flex justify-between items-center text-[10px] text-black/60 dark:text-white/60 font-mono">
             <span>Value:</span>
-            <span className="font-bold text-foreground">{data[hoveredIndex].value}</span>
+            <span className="font-bold text-black dark:text-white">{data[hoveredIndex].value}</span>
           </div>
-          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-mono">
+          <div className="flex justify-between items-center text-[10px] text-black/60 dark:text-white/60 font-mono">
             <span>Share:</span>
-            <span className="font-bold text-foreground">{((data[hoveredIndex].value / total) * 100).toFixed(1)}%</span>
+            <span className="font-bold text-black dark:text-white">{((data[hoveredIndex].value / total) * 100).toFixed(1)}%</span>
           </div>
         </motion.div>
       )}
@@ -199,10 +200,10 @@ export function PieLegend() {
   const { data } = usePieChart();
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4 text-[10px] font-mono text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4 text-[10px] font-mono text-black/70 dark:text-white/70">
       {data.map((item, idx) => (
         <div key={idx} className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.fill }} />
+          <span className="w-2.5 h-2.5 rounded-sm border border-black/20" style={{ backgroundColor: item.fill }} />
           <span>{item.name}</span>
         </div>
       ))}

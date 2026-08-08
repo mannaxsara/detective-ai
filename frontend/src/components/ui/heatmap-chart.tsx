@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export interface HeatmapCellData {
   x: string | number;
   y: string | number;
-  value: number; // e.g. correlation coefficient or count (-1 to 1, or 0 to 100)
+  value: number;
   label?: string;
 }
 
@@ -49,24 +49,12 @@ export function HeatmapChart({
 }: HeatmapChartProps) {
   const [hoveredCell, setHoveredCell] = useState<HeatmapCellData | null>(null);
 
-  // Default color scale for correlation: from -1 (red/blue) to 0 (dark neutral) to 1 (ember gold/green)
   const defaultColorScale = (val: number) => {
-    // Normalise from [-1, 1] to [0, 1]
-    const norm = (val + 1) / 2;
-    if (val > 0) {
-      // Transition from neutral card color (#1c1d18) to primary gold (#d8cfbc)
-      const r = Math.round(28 + (216 - 28) * val);
-      const g = Math.round(29 + (207 - 29) * val);
-      const b = Math.round(24 + (188 - 24) * val);
-      return `rgb(${r}, ${g}, ${b})`;
-    } else {
-      // Transition from neutral card color (#1c1d18) to warning crimson (#bc3e3e)
-      const absVal = Math.abs(val);
-      const r = Math.round(28 + (188 - 28) * absVal);
-      const g = Math.round(29 + (62 - 29) * absVal);
-      const b = Math.round(24 + (62 - 24) * absVal);
-      return `rgb(${r}, ${g}, ${b})`;
-    }
+    if (val >= 0.8) return "#edfe5e";
+    if (val >= 0.4) return "#31e992";
+    if (val >= 0.05) return "#262720";
+    if (val <= -0.4) return "#bc3e3e";
+    return "#1c1d18";
   };
 
   const finalColorScale = colorScale || defaultColorScale;
@@ -82,7 +70,7 @@ export function HeatmapChart({
         colorScale: finalColorScale,
       }}
     >
-      <div className={cn("relative w-full overflow-hidden flex flex-col gap-4", className)}>
+      <div className={cn("relative w-full overflow-hidden flex flex-col gap-4 text-black dark:text-white max-w-lg mx-auto", className)}>
         {children}
       </div>
     </HeatmapContext.Provider>
@@ -94,18 +82,17 @@ interface HeatmapCellsProps {
   className?: string;
 }
 
-export function HeatmapCells({ cornerRadius = "rounded-[4px]", className = "" }: HeatmapCellsProps) {
+export function HeatmapCells({ cornerRadius = "rounded-xl", className = "" }: HeatmapCellsProps) {
   const { data, xKeys, yKeys, colorScale, hoveredCell, setHoveredCell } = useHeatmap();
 
   return (
     <div
       className={cn(
-        "grid gap-1.5 w-full relative",
+        "grid gap-2 w-full relative max-w-md mx-auto",
         className
       )}
       style={{
         gridTemplateColumns: `repeat(${xKeys.length}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${yKeys.length}, minmax(0, 1fr))`,
       }}
     >
       {yKeys.map((yVal) =>
@@ -118,6 +105,8 @@ export function HeatmapCells({ cornerRadius = "rounded-[4px]", className = "" }:
 
           const isHovered = hoveredCell && hoveredCell.x === xVal && hoveredCell.y === yVal;
           const isFaded = hoveredCell && !isHovered;
+          const bg = colorScale(cell.value);
+          const isBright = bg === "#edfe5e" || bg === "#31e992";
 
           return (
             <motion.div
@@ -125,19 +114,24 @@ export function HeatmapCells({ cornerRadius = "rounded-[4px]", className = "" }:
               onMouseEnter={() => setHoveredCell(cell)}
               onMouseLeave={() => setHoveredCell(null)}
               className={cn(
-                "aspect-square flex items-center justify-center cursor-pointer border border-border/20 transition-all duration-200",
+                "h-24 sm:h-28 flex flex-col items-center justify-center p-2 cursor-pointer border border-black/20 dark:border-white/20 transition-all duration-200 shadow-sm",
                 cornerRadius,
                 isFaded ? "opacity-30 scale-95" : "opacity-100 scale-100",
-                isHovered && "border-foreground/50 ring-1 ring-foreground/20"
+                isHovered && "border-black dark:border-white ring-2 ring-[#edfe5e]"
               )}
               style={{
-                backgroundColor: colorScale(cell.value),
+                backgroundColor: bg,
               }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.03 }}
             >
-              {/* Show value on hover or if space permits */}
-              <span className="text-[10px] font-mono font-black text-background mix-blend-difference selection:bg-transparent">
-                {cell.value.toFixed(2)}
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider opacity-75 truncate max-w-full text-black">
+                {String(xVal).slice(0, 10)}
+              </span>
+              <span className={cn(
+                "text-sm font-mono font-extrabold mt-1",
+                isBright ? "text-black" : "text-white"
+              )}>
+                {cell.value >= 0 ? `+${cell.value.toFixed(2)}` : cell.value.toFixed(2)}
               </span>
             </motion.div>
           );
@@ -151,11 +145,11 @@ export function HeatmapXAxis({ className = "" }: { className?: string }) {
   const { xKeys } = useHeatmap();
   return (
     <div
-      className={cn("grid gap-1.5 w-full text-center border-t border-border pt-2", className)}
+      className={cn("grid gap-2 w-full text-center border-t border-black/10 dark:border-white/10 pt-2 max-w-md mx-auto", className)}
       style={{ gridTemplateColumns: `repeat(${xKeys.length}, minmax(0, 1fr))` }}
     >
       {xKeys.map((key) => (
-        <span key={key} className="text-[9px] font-mono font-bold uppercase tracking-wider text-muted-foreground truncate px-1">
+        <span key={key} className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/70 dark:text-white/70 truncate px-1">
           {String(key)}
         </span>
       ))}
@@ -166,9 +160,9 @@ export function HeatmapXAxis({ className = "" }: { className?: string }) {
 export function HeatmapYAxis({ className = "" }: { className?: string }) {
   const { yKeys } = useHeatmap();
   return (
-    <div className={cn("flex flex-col gap-1.5 justify-between pr-3 border-r border-border text-right", className)}>
+    <div className={cn("flex flex-col gap-2 justify-between pr-3 border-r border-black/10 dark:border-white/10 text-right", className)}>
       {yKeys.map((key) => (
-        <span key={key} className="text-[9px] font-mono font-bold uppercase tracking-wider text-muted-foreground truncate h-8 flex items-center justify-end">
+        <span key={key} className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/70 dark:text-white/70 truncate h-8 flex items-center justify-end">
           {String(key)}
         </span>
       ))}
@@ -178,18 +172,22 @@ export function HeatmapYAxis({ className = "" }: { className?: string }) {
 
 export function HeatmapLegend({ className = "" }: { className?: string }) {
   return (
-    <div className={cn("flex items-center justify-between text-[10px] font-mono text-muted-foreground border-t border-border/60 pt-3", className)}>
-      <div className="flex items-center gap-2">
-        <span className="w-3 h-3 rounded bg-[#bc3e3e]" />
-        <span>Negative Correlation (-1.0)</span>
+    <div className={cn("flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-black/70 dark:text-white/70 border-t border-black/10 dark:border-white/10 pt-3 max-w-md mx-auto", className)}>
+      <div className="flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded bg-[#bc3e3e] border border-black/20" />
+        <span>Negative (-1.0)</span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="w-3 h-3 rounded bg-[#1c1d18] border border-border" />
-        <span>No Correlation (0.0)</span>
+      <div className="flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded bg-[#262720] border border-black/20" />
+        <span>Neutral (0.0)</span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="w-3 h-3 rounded bg-[#d8cfbc]" />
-        <span>Positive Correlation (+1.0)</span>
+      <div className="flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded bg-[#31e992] border border-black/20" />
+        <span>Positive (+0.5)</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded bg-[#edfe5e] border border-black/20" />
+        <span>High (+1.0)</span>
       </div>
     </div>
   );
@@ -205,16 +203,16 @@ export function HeatmapTooltip() {
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute z-50 bottom-14 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border border-border p-3.5 rounded-lg shadow-xl flex flex-col gap-1 text-xs font-sans min-w-[200px]"
+          className="absolute z-50 bottom-14 left-1/2 -translate-x-1/2 bg-white dark:bg-[#181914] text-black dark:text-white border border-black/20 dark:border-white/20 p-3.5 rounded-xl shadow-2xl backdrop-blur-md flex flex-col gap-1 text-xs font-sans min-w-[220px]"
         >
-          <div className="flex items-center justify-between gap-4 border-b border-border pb-1.5 mb-1">
-            <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Relation Pair</span>
-            <span className="font-mono font-bold text-[10px] bg-muted px-1.5 py-0.5 rounded text-foreground">
+          <div className="flex items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-1.5 mb-1">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-black/60 dark:text-white/60">Correlation Pair</span>
+            <span className="font-mono font-bold text-[10px] bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black/20">
               r = {hoveredCell.value.toFixed(4)}
             </span>
           </div>
-          <p className="font-bold text-foreground truncate">{hoveredCell.x} & {hoveredCell.y}</p>
-          <p className="text-muted-foreground text-[10px] leading-relaxed mt-0.5">
+          <p className="font-bold text-black dark:text-white truncate">{hoveredCell.x} & {hoveredCell.y}</p>
+          <p className="text-black/70 dark:text-white/70 text-[10px] leading-relaxed mt-0.5 font-medium">
             {hoveredCell.value > 0.7
               ? "Strong positive linear relationship."
               : hoveredCell.value > 0.3

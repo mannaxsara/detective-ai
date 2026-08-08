@@ -13,13 +13,11 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { isAuthenticated, initialize } = useAuthStore();
-
   const [loading, setLoading] = React.useState(true);
 
   useEffect(() => {
     initialize();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialize]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -34,18 +32,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background text-muted-foreground font-mono text-[12px]">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#f9f9f7] dark:bg-[#11120d] text-black dark:text-white font-mono text-[12px]">
         Checking credentials...
       </div>
     );
   }
 
   return (
-    <div className="flex w-full h-screen overflow-hidden bg-background text-foreground font-sans">
+    <div className="flex w-full h-screen overflow-hidden bg-[#f9f9f7] dark:bg-[#11120d] text-black dark:text-white font-sans selection:bg-[#edfe5e]">
       <Sidebar />
       <div className="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-background p-6">
+        <main className="flex-1 overflow-y-auto bg-[#f9f9f7] dark:bg-[#11120d] p-6 sm:p-8 min-w-0">
           {children}
         </main>
       </div>

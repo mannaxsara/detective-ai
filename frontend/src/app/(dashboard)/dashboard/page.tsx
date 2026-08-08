@@ -1,61 +1,79 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Upload,
   Database,
-  Activity,
-  ArrowUpRight,
+  BarChart3,
+  CheckCircle2,
+  AlertTriangle,
   FolderOpen,
-  MessageSquare,
-  FileDown,
-  Trash,
+  ArrowRight,
+  Sparkles,
+  Zap,
+  Activity,
+  Trash2,
+  ArrowUpRight,
+  ShieldAlert,
+  Check
 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-import { historyAPI, datasetsAPI } from "@/lib/api";
-import { useAuthStore } from "@/store/auth-store";
+import { datasetsAPI, historyAPI } from "@/lib/api";
 import { useAnalysisStore } from "@/store/analysis-store";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 function DashboardMetricCard({
   title,
   value,
   description,
   icon: Icon,
+  trend,
+  progress,
 }: {
   title: string;
   value: string | number;
-  description: string | React.ReactNode;
-  icon?: any;
+  description: string;
+  icon: React.ElementType;
+  trend?: string;
+  progress?: number;
 }) {
   return (
-    <div className="p-5 rounded-cards border border-border bg-card flex flex-col justify-between min-h-[120px] shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider">{title}</p>
-        {Icon && <Icon className="w-4 h-4 text-primary" />}
+    <div className="p-6 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] text-black dark:text-white flex flex-col justify-between shadow-sm min-h-[175px] transition-all hover:-translate-y-0.5 hover:border-black/30 dark:hover:border-white/30 hover:shadow-md">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-mono uppercase font-bold tracking-wider text-black/70 dark:text-white/70 leading-tight pt-1">{title}</p>
+        <div className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl border-2 border-black bg-[#edfe5e] text-black flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#000000]">
+          <Icon size={26} className="text-black shrink-0 stroke-[2.5]" />
+        </div>
       </div>
       
-      <div className="mt-3">
-        <p className="text-3xl font-bold text-foreground font-mono tracking-tight">
-          {value}
-        </p>
+      <div className="my-3 space-y-2">
+        <p className="text-3xl font-mono font-bold text-black dark:text-white tracking-tight">{value}</p>
+        {progress !== undefined && (
+          <div className="w-full h-2.5 rounded-full bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 overflow-hidden">
+            <div
+              className="h-full bg-[#31e992] rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
       </div>
 
-      <div className="mt-2 text-xs">
-        {description}
+      <div className="flex items-center justify-between text-[11px] font-mono text-black/60 dark:text-white/60 pt-3 border-t border-black/10 dark:border-white/10">
+        <span className="truncate">{description}</span>
+        {trend && (
+          <span className="text-black dark:text-[#31e992] font-bold bg-[#31e992]/20 border border-[#31e992]/40 px-2 py-0.5 rounded-full">
+            {trend}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -64,368 +82,313 @@ function DashboardMetricCard({
 export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const { setActiveTab } = useAnalysisStore();
-  const [greeting, setGreeting] = useState("Good Evening");
+  const { setDataset, setAnalysis, setActiveTab } = useAnalysisStore();
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [datasetToDelete, setDatasetToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const hours = new Date().getHours();
-    if (hours < 12) setGreeting("Good Morning");
-    else if (hours < 17) setGreeting("Good Afternoon");
-    else setGreeting("Good Evening");
-  }, []);
-
-  const { data: datasetsData, isLoading, isError } = useQuery({
+  const { data: datasetsData, isLoading: isDatasetsLoading } = useQuery({
     queryKey: ["datasets"],
-    queryFn: () => datasetsAPI.list(0, 10),
+    queryFn: () => datasetsAPI.list(0, 50),
+  });
+
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ["history-recent"],
+    queryFn: () => historyAPI.list(1, 10),
   });
 
   const datasetsList = datasetsData?.datasets || [];
   const totalCases = datasetsData?.total || 0;
 
-  const totalRowsParsed = datasetsList.reduce((acc: number, curr: any) => acc + (curr.row_count || 0), 0);
-  const totalColumnsScanned = datasetsList.reduce((acc: number, curr: any) => acc + (curr.column_count || 0), 0);
-  
-  const avgHealthScore = datasetsList.length
-    ? Math.round(datasetsList.reduce((acc: number, curr: any) => acc + (Number(curr.health_score) || 0), 0) / datasetsList.length)
-    : 0;
+  const totalRowsParsed = datasetsList.reduce((acc: number, d: any) => acc + (d.row_count || 0), 0);
+  const totalColumnsScanned = datasetsList.reduce((acc: number, d: any) => acc + (d.column_count || 0), 0);
+  const avgHealthScore = datasetsList.length > 0
+    ? Math.round(datasetsList.reduce((acc: number, d: any) => acc + (d.health_score || 95), 0) / datasetsList.length)
+    : 100;
 
-  const handleOpenCase = (identifier: string | number, tab: string) => {
-    setActiveTab(tab);
-    router.push(`/analysis/${identifier}`);
+  const handleOpenCase = (caseId: string | number, tabName = "profile") => {
+    setActiveTab(tabName);
+    router.push(`/analysis/${caseId}`);
+  };
+
+  const promptDeleteDataset = (datasetItem: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDatasetToDelete(datasetItem);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteDataset = async () => {
+    if (!datasetToDelete) return;
+    setIsDeleting(true);
+    try {
+      await datasetsAPI.delete(datasetToDelete.id);
+      toast.success(`Case file "${datasetToDelete.name}" deleted from repository.`);
+      queryClient.invalidateQueries({ queryKey: ["datasets"] });
+      queryClient.invalidateQueries({ queryKey: ["history-recent"] });
+      setDeleteConfirmOpen(false);
+    } catch (err) {
+      toast.error("Failed to delete case file.");
+    } finally {
+      setIsDeleting(false);
+      setDatasetToDelete(null);
+    }
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto font-sans text-muted-foreground">
+    <div className="max-w-7xl mx-auto space-y-8 font-sans text-black dark:text-white bg-[#f9f9f7] dark:bg-[#11120d]">
       
       {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
-        <div className="space-y-1 min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight min-w-0 truncate">
-            {greeting}, <span className="italic text-foreground">{user?.full_name || "Investigator"}</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-6 text-left">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black/20">
+              Active Session
+            </span>
+            <span className="text-xs font-mono text-black/60 dark:text-white/60">
+              v2.4.0 Rust Engine
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-black dark:text-white tracking-tight">
+            Forensics Command Center
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground font-sans">
-            Data forensics workspace overview, active evidence archives, and schema quality metrics.
-          </p>
         </div>
-        <Link href="/upload">
-          <Button className="h-9 px-4 text-xs font-bold uppercase tracking-wider gap-2 shadow-xs cursor-pointer">
-            <Upload className="w-4 h-4" />
-            File New Case
-          </Button>
-        </Link>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/upload">
+            <button className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase tracking-wider font-bold cursor-pointer inline-flex items-center gap-2 shadow-sm">
+              <Upload className="w-4 h-4 text-black" />
+              File New Evidence
+            </button>
+          </Link>
+        </div>
       </div>
 
-      {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="p-5 rounded-cards border border-border bg-card min-h-[120px] animate-pulse">
-              <div className="h-3 w-24 bg-muted rounded mb-4" />
-              <div className="h-8 w-16 bg-muted rounded" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {isError && (
-        <div className="p-4 rounded-cards border border-destructive/30 bg-destructive/5 text-destructive text-sm">
-          Failed to load dashboard data. Please try refreshing.
-        </div>
-      )}
-
-      {!isLoading && !isError && (
-        <>
-          {/* Switch-Lit Editorial Process Banner */}
-          <div className="border border-border bg-card rounded-xl p-6 space-y-4 shadow-xs">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h2 className="text-sm font-serif font-bold text-foreground tracking-tight flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-                The Forensics Process is Simple
-              </h2>
-              <span className="text-[11px] font-mono text-muted-foreground uppercase font-bold tracking-wider">
-                Automated Pipeline
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg border border-border bg-background/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-serif font-bold text-foreground">❶</span>
-                  <Badge variant="outline" className="text-[10px]">Ingestion</Badge>
-                </div>
-                <h3 className="text-xs font-serif font-bold text-foreground">Upload Case Evidence</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
-                  Drag & drop CSV, Excel, or Parquet files. Automatic type detection & delimiter parsing.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-lg border border-border bg-background/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-serif font-bold text-foreground">❷</span>
-                  <Badge variant="outline" className="text-[10px]">Profiling</Badge>
-                </div>
-                <h3 className="text-xs font-serif font-bold text-foreground">Schema & Anomaly Audit</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
-                  High-speed Polars engine detects missing values, 3-sigma outliers, & health scores.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-lg border border-border bg-background/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-serif font-bold text-foreground">❸</span>
-                  <Badge variant="default" className="text-[10px]">Export</Badge>
-                </div>
-                <h3 className="text-xs font-serif font-bold text-foreground">Executive Briefings</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
-                  Generate presentation-ready PDF & DOCX reports with remediation action items.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Dynamic Data-First Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Dataset Health Gauge */}
-        <div className="p-5 rounded-cards border border-border bg-card flex flex-col justify-between min-h-[120px] shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-wider">Average Case Health</p>
-            <Activity className="w-4 h-4 text-primary" />
-          </div>
-          
-          <div className="space-y-2 mt-4">
-            <div className="flex justify-between items-center text-xs font-mono font-bold">
-              <span className="text-muted-foreground">Average Index</span>
-              <span className="text-foreground">{avgHealthScore}%</span>
-            </div>
-            <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${avgHealthScore}%` }}
-              />
-            </div>
-            <p className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider">
-              {avgHealthScore > 80 ? "Optimal Schema Integrity" : avgHealthScore > 50 ? "Quality Flags Present" : "Degraded Schema"}
-            </p>
-          </div>
-        </div>
-
-        {/* Metric 1: Total Rows */}
+      {/* Metrics Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <DashboardMetricCard
+          title="Average Case Health"
+          value={`${avgHealthScore}%`}
+          description="Overall dataset structural validity"
+          icon={CheckCircle2}
+          trend="+2.4%"
+          progress={avgHealthScore}
+        />
         <DashboardMetricCard
           title="Total Records Logged"
           value={totalRowsParsed.toLocaleString()}
-          description={
-            <span className="text-muted-foreground text-[11px] font-medium">Rows parsed across all files</span>
-          }
+          description="Total data rows parsed & profiled"
           icon={Database}
+          trend="Polars SIMD"
         />
-
-        {/* Metric 2: Total Columns */}
         <DashboardMetricCard
           title="Attributes Scanned"
           value={totalColumnsScanned}
-          description={
-            <span className="text-muted-foreground text-[11px] font-medium">Columns profiled & mapped</span>
-          }
+          description="Features evaluated for 3-sigma drift"
           icon={Activity}
         />
-
-        {/* Metric 3: Total Cases */}
         <DashboardMetricCard
           title="Active Cases"
           value={totalCases}
-          description={
-            <span className="text-muted-foreground text-[11px] font-medium">Evidence datasets archived</span>
-          }
+          description="Repository evidence datasets"
           icon={FolderOpen}
         />
       </div>
 
-      {/* Full Width Grid */}
-      <div className="space-y-4 pt-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-primary" />
-            Evidence Case Files
-          </h2>
-          <span className="text-xs font-mono text-muted-foreground">{datasetsList.length} cases</span>
+      {/* Main Content Split: Recent Cases Table + Quick Tools */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left 2 Cols: Active Case Files Table */}
+        <div className="lg:col-span-2 space-y-4 text-left">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-serif font-bold text-black dark:text-white flex items-center gap-2">
+              <Database className="w-4 h-4 text-black dark:text-[#edfe5e]" />
+              Recent Evidence Repository
+            </h2>
+            <Link
+              href="/history"
+              className="text-xs font-mono font-bold uppercase text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white flex items-center gap-1 hover:underline"
+            >
+              View All Archives <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] overflow-hidden shadow-sm">
+            {isDatasetsLoading ? (
+              <div className="p-8 text-center space-y-3 font-mono text-xs animate-pulse">
+                <div className="h-6 bg-black/5 dark:bg-white/5 rounded max-w-sm mx-auto" />
+                <div className="h-6 bg-black/5 dark:bg-white/5 rounded max-w-md mx-auto" />
+              </div>
+            ) : datasetsList.length === 0 ? (
+              <div className="p-12 text-center space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-[#edfe5e]/20 border border-[#edfe5e] flex items-center justify-center mx-auto text-black dark:text-white">
+                  <Upload className="w-6 h-6 text-[#31e992]" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-serif font-bold text-black dark:text-white">No Evidence Uploaded Yet</h3>
+                  <p className="text-xs font-sans text-black/60 dark:text-white/60 max-w-xs mx-auto">
+                    Upload your first CSV, Excel, or Parquet file to begin forensic profiling.
+                  </p>
+                </div>
+                <Link href="/upload" className="inline-block pt-2">
+                  <button className="btn-ink-accent text-xs py-2 px-4 font-mono uppercase font-bold">
+                    Upload First Case
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-black/10 dark:border-white/10 bg-[#edf0e9]/50 dark:bg-[#262720]/50 text-black/60 dark:text-white/60 font-mono font-bold text-[10px] uppercase">
+                      <th className="py-3 px-4">Dataset Name</th>
+                      <th className="py-3 px-4">Format</th>
+                      <th className="py-3 px-4 text-right">Rows</th>
+                      <th className="py-3 px-4 text-right">Cols</th>
+                      <th className="py-3 px-4 text-center">Health</th>
+                      <th className="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/5 dark:divide-white/5 font-mono">
+                    {datasetsList.slice(0, 6).map((item: any) => {
+                      const health = item.health_score || 95;
+                      return (
+                        <tr
+                          key={item.id}
+                          onClick={() => handleOpenCase(item.id)}
+                          className="hover:bg-[#edf0e9]/40 dark:hover:bg-[#262720]/40 transition-colors cursor-pointer group"
+                        >
+                          <td className="py-3 px-4 font-sans font-bold text-black dark:text-white group-hover:underline truncate max-w-[200px]">
+                            {item.name}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 text-black dark:text-white text-[9px] px-2 py-0.5 rounded font-mono uppercase font-bold">
+                              {item.file_type}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold">{item.row_count?.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right">{item.column_count}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              health >= 85
+                                ? "bg-[#31e992]/20 border-[#31e992]/40 text-black dark:text-[#31e992]"
+                                : "bg-[#bc3e3e]/20 border-[#bc3e3e]/40 text-[#bc3e3e]"
+                            }`}>
+                              {health}%
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleOpenCase(item.id); }}
+                                className="px-2.5 py-1 rounded bg-[#edfe5e] text-black border border-black font-bold text-[10px] uppercase hover:opacity-90 cursor-pointer"
+                              >
+                                Inspect
+                              </button>
+                              <button
+                                onClick={(e) => promptDeleteDataset(item, e)}
+                                className="p-1 rounded text-black/40 hover:text-[#bc3e3e] dark:text-white/40 dark:hover:text-[#bc3e3e] transition-colors cursor-pointer"
+                                title="Delete Case"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
 
-        {datasetsList.length > 0 ? (
-          <div className="border border-border rounded-cards bg-card overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-border/40 bg-muted/30">
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Case ID</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Dataset Name</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Format</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Status</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-left">Health</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right">Rows</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right">Cols</th>
-                    <th className="text-[9.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {datasetsList.map((dataset: any) => {
-                    return (
-                      <tr
-                        key={dataset.id}
-                        onClick={() => handleOpenCase(dataset.slug || dataset.id, "profile")}
-                        className="group border-b border-border/40 last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                      >
-                        <td className="px-6 py-3.5 text-xs font-mono text-muted-foreground font-bold">
-                          #{dataset.id}
-                        </td>
-                        <td className="px-6 py-3.5 text-xs font-semibold text-foreground truncate max-w-[220px]">
-                          {dataset.name}
-                        </td>
-                        <td className="px-6 py-3.5 text-[10px] font-mono font-bold">
-                          <span className="px-2 py-0.5 rounded border border-border bg-background uppercase text-foreground">
-                            {dataset.file_type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3.5 text-[10px] font-mono font-bold">
-                          <span className="inline-flex items-center gap-1.5 text-foreground uppercase">
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                              dataset.status === "completed"
-                                ? "bg-emerald-500"
-                                : dataset.status === "running"
-                                ? "bg-amber-500 animate-ping"
-                                : "bg-rose-500"
-                            }`} />
-                            {dataset.status || "uploaded"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3.5 text-xs font-mono font-bold align-middle">
-                          <div className="flex items-center gap-2">
-                            <div className="w-12 h-1 rounded-full bg-muted overflow-hidden relative">
-                              <div
-                                className="h-full bg-primary rounded-full"
-                                style={{ width: `${dataset.health_score || 0}%` }}
-                              />
-                            </div>
-                            <span className="text-foreground">{dataset.health_score ? `${Math.round(dataset.health_score)}%` : "—"}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-3.5 text-xs font-mono text-foreground text-right font-bold">
-                          {dataset.row_count?.toLocaleString() || "—"}
-                        </td>
-                        <td className="px-6 py-3.5 text-xs font-mono text-foreground text-right font-bold">
-                          {dataset.column_count || "—"}
-                        </td>
-                        <td className="px-6 py-3.5 text-xs text-right align-middle">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenCase(dataset.slug || dataset.id, "profile");
-                              }}
-                              className="h-7 px-2.5 rounded border border-border bg-background text-foreground text-[10px] font-mono font-bold hover:bg-muted transition-all cursor-pointer flex items-center gap-1"
-                              title="Inspect Case Details"
-                            >
-                              Inspect <ArrowUpRight className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDatasetToDelete(dataset);
-                                setDeleteConfirmOpen(true);
-                              }}
-                              className="h-7 w-7 rounded border border-border bg-background text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-all cursor-pointer flex items-center justify-center"
-                              title="Delete Case File"
-                            >
-                              <Trash className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : (
-          <Link
-            href="/upload"
-            className="block rounded-cards border-2 border-dashed border-border bg-card hover:border-primary/40 transition-all duration-200 py-14 px-6 text-center group cursor-pointer relative overflow-hidden"
-          >
-            <div className="space-y-4 max-w-sm mx-auto">
-              <div className="w-12 h-12 rounded-cards bg-background border border-border flex items-center justify-center mx-auto text-muted-foreground group-hover:text-primary transition-all">
-                <Upload className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-bold text-foreground text-sm tracking-tight">File new evidence case</h4>
-                <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                  Upload CSV, Excel, Parquet, or JSON datasets for automated forensic profiling and analysis.
+        {/* Right 1 Col: Quick Forensics Tools */}
+        <div className="space-y-4 text-left">
+          <h2 className="text-base font-serif font-bold text-black dark:text-white flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-black dark:text-[#edfe5e]" />
+            Forensics Toolkit
+          </h2>
+
+          <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-5 space-y-4 shadow-sm">
+            <Link href="/upload" className="block">
+              <div className="p-4 rounded-lg bg-[#edf0e9]/50 dark:bg-[#262720]/50 border border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30 transition-all cursor-pointer space-y-1.5 group">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase text-black dark:text-white group-hover:text-[#31e992] transition-colors">
+                    Upload & Audit Evidence
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-black/40 dark:text-white/40 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-[11px] font-sans text-black/60 dark:text-white/60 leading-relaxed">
+                  Drop CSV, Excel, or Parquet files to trigger 3-sigma anomaly sweeps.
                 </p>
               </div>
-              <div className="flex flex-wrap justify-center gap-1.5 pt-1">
-                {["CSV", "Excel", "Parquet", "JSON"].map((f) => (
-                  <span key={f} className="text-[9px] font-mono font-bold px-2 py-0.5 rounded border border-border bg-background text-muted-foreground">
-                    {f}
-                  </span>
-                ))}
-              </div>
-              <span className="inline-flex items-center justify-center border border-border bg-background group-hover:bg-primary group-hover:text-primary-foreground text-foreground text-[10px] font-mono uppercase font-bold tracking-wider px-5 h-9 rounded-cards transition-all">
-                Upload File
-              </span>
-            </div>
-          </Link>
-        )}
-      </div>
-      </>
-      )}
+            </Link>
 
-      {/* Delete Confirmation Dialog */}
+            <Link href="/history" className="block">
+              <div className="p-4 rounded-lg bg-[#edf0e9]/50 dark:bg-[#262720]/50 border border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30 transition-all cursor-pointer space-y-1.5 group">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase text-black dark:text-white group-hover:text-[#31e992] transition-colors">
+                    Browse Case Archives
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-black/40 dark:text-white/40 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-[11px] font-sans text-black/60 dark:text-white/60 leading-relaxed">
+                  Access stored datasets, previous analysis runs, and briefing reports.
+                </p>
+              </div>
+            </Link>
+
+            <Link href="/settings" className="block">
+              <div className="p-4 rounded-lg bg-[#edf0e9]/50 dark:bg-[#262720]/50 border border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30 transition-all cursor-pointer space-y-1.5 group">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold uppercase text-black dark:text-white group-hover:text-[#31e992] transition-colors">
+                    Terminal Preferences
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-black/40 dark:text-white/40 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <p className="text-[11px] font-sans text-black/60 dark:text-white/60 leading-relaxed">
+                  Configure agent name, API keys, and dark theme defaults.
+                </p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="border-border bg-card text-muted-foreground max-w-sm rounded-cards p-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-500/20 to-transparent" />
-          
-          <DialogHeader className="text-left gap-1.5">
-            <DialogTitle className="text-sm font-black text-foreground tracking-tight uppercase">Confirm Deletion</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground font-semibold leading-relaxed">
-              Are you sure you want to delete the case file <span className="text-foreground font-bold">"{datasetToDelete?.name}"</span>? This action cannot be undone and all associated insights will be lost.
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#bc3e3e]">
+              <AlertTriangle className="w-5 h-5 text-[#bc3e3e]" />
+              Confirm Case Deletion
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-xs leading-relaxed text-black/70 dark:text-white/70">
+              Are you sure you want to delete case file <strong className="text-black dark:text-white font-mono">{datasetToDelete?.name}</strong>?
+              All structural diagnostics, anomaly sweeps, and reports will be permanently purged.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="mt-6 flex flex-row justify-end gap-2.5 bg-transparent border-t-0 p-0">
-            <Button
-              variant="outline"
+          <div className="flex items-center justify-end gap-3 pt-5 border-t border-black/10 dark:border-white/10 mt-5">
+            <button
               onClick={() => setDeleteConfirmOpen(false)}
-              className="border-border bg-background hover:bg-card text-muted-foreground hover:text-foreground text-xs font-bold px-4 h-9 rounded-cards transition-all cursor-pointer"
+              disabled={isDeleting}
+              className="px-4 py-2 text-xs font-mono font-bold uppercase rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-[#262720] text-black dark:text-white hover:bg-[#edf0e9] cursor-pointer"
             >
               Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                if (!datasetToDelete) return;
-                setIsDeleting(true);
-                try {
-                  await datasetsAPI.delete(datasetToDelete.id);
-                  queryClient.invalidateQueries({ queryKey: ["datasets"] });
-                  toast.success("Case file successfully deleted.");
-                  setDeleteConfirmOpen(false);
-                } catch (err) {
-                  toast.error("Failed to delete case file.");
-                } finally {
-                  setIsDeleting(false);
-                }
-              }}
+            </button>
+            <button
+              onClick={confirmDeleteDataset}
               disabled={isDeleting}
-              className="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-4 h-9 rounded-cards transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              className="px-4 py-2 text-xs font-mono font-bold uppercase rounded-lg bg-[#bc3e3e] text-white border border-[#bc3e3e] hover:brightness-110 cursor-pointer disabled:opacity-50 inline-flex items-center gap-2"
             >
               {isDeleting ? "Deleting..." : "Delete Case"}
-            </Button>
-          </DialogFooter>
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-

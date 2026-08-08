@@ -76,14 +76,13 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
   };
 
   const formatMessage = (text: string) => {
-    // Split by **...** for bold, handle code blocks with backticks
     const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\n)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>;
+        return <strong key={i} className="font-bold text-black dark:text-white bg-[#edfe5e] px-1 rounded">{part.slice(2, -2)}</strong>;
       }
       if (part.startsWith('`') && part.endsWith('`')) {
-        return <code key={i} className="px-1 py-0.5 rounded bg-muted text-xs font-mono">{part.slice(1, -1)}</code>;
+        return <code key={i} className="px-1.5 py-0.5 rounded border border-black bg-[#edf0e9] dark:bg-[#262720] text-xs font-mono font-bold text-black dark:text-white">{part.slice(1, -1)}</code>;
       }
       if (part === '\n') {
         return <br key={i} />;
@@ -93,27 +92,27 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 font-sans">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 font-sans text-black dark:text-white">
       {/* Sidebar Suggestions */}
       <div className="lg:col-span-1 space-y-4">
-        <div className="rounded-2xl border border-border bg-card p-5.5 text-left relative overflow-hidden shadow-none">
+        <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
           <div>
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-primary" />
+            <h4 className="text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 text-black dark:text-white">
+              <Sparkles className="w-4 h-4 text-black dark:text-white" />
               Quick Queries
             </h4>
-            <p className="text-[10px] text-muted-foreground font-semibold mt-1">
+            <p className="text-xs font-sans text-black/75 dark:text-white/75 mt-1 font-medium">
               Click any prompt below to query the case file.
             </p>
           </div>
           
-          <div className="space-y-2 mt-4.5">
+          <div className="space-y-2.5 pt-1">
             {QUICK_PROMPTS.map((prompt, i) => (
               <button
                 key={i}
                 onClick={() => handleSend(prompt)}
                 disabled={mutation.isPending}
-                className="w-full text-left p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 transition-colors duration-150 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 font-semibold cursor-pointer"
+                className="w-full text-left p-3 rounded-[10px] border border-black bg-[#edf0e9] dark:bg-[#262720] hover:bg-[#edfe5e] hover:text-black transition-all text-xs font-mono font-bold cursor-pointer shadow-[1.5px_1.5px_0px_#000000] disabled:opacity-50"
               >
                 {prompt}
               </button>
@@ -124,59 +123,57 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
       {/* Main Chat Box */}
       <div className="lg:col-span-3">
-        <div className="rounded-2xl border border-border bg-card flex flex-col h-[calc(100vh-280px)] min-h-[450px] md:h-[600px] overflow-hidden relative shadow-none">
+        <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex flex-col h-[calc(100vh-280px)] min-h-[480px] md:h-[600px] overflow-hidden shadow-[4px_4px_0px_#000000]">
           {/* Header */}
-          <div className="p-4 border-b border-border bg-muted/30 flex flex-row items-center justify-between z-10">
-            <div className="flex items-center gap-3 text-left">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+          <div className="p-4 border-b border-black dark:border-[#3b3a33] bg-[#edf0e9] dark:bg-[#262720] flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-[8px] bg-[#edfe5e] border border-black flex items-center justify-center text-black shadow-[1px_1px_0px_#000000]">
                 <MessageSquare className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-foreground">Investigation Log Panel</h4>
-                <p className="text-[10px] text-muted-foreground font-semibold">
-                  Query the evidence dataset metrics and health anomalies
+                <h4 className="text-sm font-serif font-bold text-black dark:text-white">Investigation Log Panel</h4>
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/75 dark:text-white/75">
+                  Query evidence dataset metrics & health anomalies
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={clearChat}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-150 rounded-lg w-8 h-8 flex items-center justify-center cursor-pointer border border-transparent"
-                title="Clear Chat Logs"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={clearChat}
+              className="p-1.5 rounded-[6px] border border-black bg-white dark:bg-[#1c1d18] text-black dark:text-white hover:bg-[#bc3e3e] hover:text-white transition-colors cursor-pointer"
+              title="Clear Chat Logs"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Messages view */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-background/50 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f9f9f7] dark:bg-[#11120d]">
             {messages.map((msg, index) => {
               const isBot = msg.role === "bot";
               return (
                 <div key={index} className={`flex gap-3 max-w-[85%] ${isBot ? "mr-auto" : "ml-auto flex-row-reverse"}`}>
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                    className={`w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0 border border-black ${
                       isBot
-                        ? "bg-primary/10 border-primary/20 text-primary"
-                        : "bg-muted/50 border-border text-foreground"
-                    }`}
+                        ? "bg-[#edfe5e] text-black"
+                        : "bg-white dark:bg-[#1c1d18] text-black dark:text-white"
+                    } shadow-[1px_1px_0px_#000000]`}
                   >
                     {isBot ? <Bot className="w-4.5 h-4.5" /> : <User className="w-4.5 h-4.5" />}
                   </div>
 
-                  <div className="space-y-1 text-left">
+                  <div className="space-y-1">
                     <div
-                      className={`p-4 rounded-2xl text-xs leading-relaxed border overflow-x-auto break-words ${
+                      className={`p-4 rounded-[14px] text-xs leading-relaxed border border-black ${
                         isBot
-                          ? "bg-muted/40 border-border text-foreground rounded-tl-none"
-                          : "bg-primary/10 border-primary/20 text-foreground rounded-tr-none"
+                          ? "bg-white dark:bg-[#1c1d18] text-black dark:text-white shadow-[2px_2px_0px_#000000]"
+                          : "bg-[#edfe5e] text-black font-bold shadow-[2px_2px_0px_#000000]"
                       }`}
                     >
-                      {isBot ? formatMessage(msg.content) : <p className="font-semibold text-foreground">{msg.content}</p>}
+                      {isBot ? formatMessage(msg.content) : <p className="font-mono text-xs">{msg.content}</p>}
                     </div>
-                    <span className="text-[9px] font-mono text-muted-foreground/70 px-1 block text-right">
+                    <span className="text-[9px] font-mono font-bold text-black/60 dark:text-white/60 px-1 block text-right">
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -186,16 +183,14 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
             {mutation.isPending && (
               <div className="flex gap-3 mr-auto max-w-[85%]">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border bg-primary/10 border-primary/20 text-primary">
+                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0 border border-black bg-[#edfe5e] text-black shadow-[1px_1px_0px_#000000]">
                   <Bot className="w-4.5 h-4.5 animate-pulse" />
                 </div>
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border text-muted-foreground text-xs rounded-tl-none flex items-center gap-2.5 font-semibold text-left">
-                  <span className="flex gap-1.5 shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "300ms" }} />
+                <div className="p-4 rounded-[14px] bg-white dark:bg-[#1c1d18] border border-black text-black dark:text-white text-xs font-mono font-bold flex items-center gap-2.5 shadow-[2px_2px_0px_#000000]">
+                  <span className="flex gap-1 shrink-0">
+                    <span className="w-2 h-2 rounded-full bg-black dark:bg-[#edfe5e] animate-ping" />
                   </span>
-                  Querying database findings...
+                  Querying evidence database...
                 </div>
               </div>
             )}
@@ -208,7 +203,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               e.preventDefault();
               handleSend(input);
             }}
-            className="p-4 border-t border-border bg-card flex gap-3"
+            className="p-4 border-t border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex gap-3 shrink-0"
           >
             <input
               type="text"
@@ -216,15 +211,15 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={mutation.isPending}
-              className="flex-1 bg-muted/30 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-xs h-11 rounded-xl px-4.5 placeholder:text-muted-foreground/60 text-foreground transition-all"
+              className="flex-1 bg-[#edf0e9] dark:bg-[#262720] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold h-11 rounded-[10px] px-4 placeholder:text-black/50 dark:placeholder:text-white/50 focus:outline-none"
             />
             <button
               type="submit"
               disabled={mutation.isPending || !input.trim()}
-              className="bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs uppercase tracking-wider shrink-0 h-11 px-6 rounded-xl flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+              className="btn-ink-accent text-xs py-2 px-5 font-mono uppercase font-bold inline-flex items-center gap-2 cursor-pointer shadow-[2px_2px_0px_#000000] disabled:opacity-50"
             >
               <Send className="w-3.5 h-3.5" />
-              Send
+              <span>Send</span>
             </button>
           </form>
         </div>

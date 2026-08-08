@@ -26,41 +26,36 @@ export function GaugeChart({
   const strokeDashoffset = arcLength - (arcLength * normalizedValue) / 100;
 
   // Determine stroke color based on health score %
-  let strokeColor = "#d8cfbc"; // primary gold/cream
-  if (normalizedValue >= 80) strokeColor = "#78c51c"; // emerald/green
-  else if (normalizedValue >= 50) strokeColor = "#f59e0b"; // amber
-  else strokeColor = "#bc3e3e"; // crimson
+  let strokeColor = "#31e992"; // spring green
+  if (normalizedValue >= 80) strokeColor = "#31e992";
+  else if (normalizedValue >= 50) strokeColor = "#edfe5e";
+  else strokeColor = "#bc3e3e";
 
   return (
-    <div className={cn("flex flex-col items-center justify-center relative", className)}>
-      <div className="relative" style={{ width: size, height: size / 2 + 10 }}>
+    <div className={cn("flex flex-col items-center justify-center relative select-none shrink-0", className)}>
+      <div className="relative flex flex-col items-center justify-center" style={{ width: size, height: size / 2 + 16 }}>
         <svg
           width={size}
-          height={size}
-          viewBox={`0 0 ${size} ${size}`}
-          className="transform -rotate-90"
+          height={size / 2 + strokeWidth}
+          viewBox={`0 0 ${size} ${size / 2 + strokeWidth}`}
+          className="overflow-visible"
         >
           {/* Background Track Arc */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+          <path
+            d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
-            stroke="var(--muted, rgba(86, 84, 73, 0.2))"
+            stroke="rgba(0, 0, 0, 0.15)"
             strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
             strokeLinecap="round"
           />
 
           {/* Indicator Value Arc */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+          <path
+            d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
             stroke={strokeColor}
             strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
+            strokeDasharray={arcLength}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             className="transition-all duration-700 ease-out"
@@ -68,12 +63,12 @@ export function GaugeChart({
         </svg>
 
         {/* Center Score Value */}
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-end text-center pb-1">
-          <span className="text-xl font-mono font-black text-foreground tracking-tight">
+        <div className="absolute bottom-0 flex flex-col items-center justify-end text-center">
+          <span className="text-lg font-mono font-extrabold text-black dark:text-white tracking-tight leading-none">
             {normalizedValue}%
           </span>
           {label && (
-            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[9.5px] font-mono font-bold uppercase tracking-wider text-black/75 dark:text-white/75 mt-0.5">
               {label}
             </span>
           )}

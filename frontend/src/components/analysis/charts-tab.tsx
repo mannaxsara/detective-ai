@@ -4,8 +4,6 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { analysisAPI } from "@/lib/api";
 import { useECharts } from "@/hooks/use-echarts";
 
@@ -18,8 +16,6 @@ import {
   LegendProgress,
   LegendItemData,
 } from "@/components/ui/chart-legend";
-import { Grid } from "@/components/ui/chart-grid";
-import { BarChart, Bar, BarXAxis, BarYAxis, BarGrid, BarTooltip } from "@/components/ui/chart-bar";
 
 interface ChartsTabProps {
   datasetId: number | string;
@@ -34,7 +30,7 @@ function ChartItem({ chart }: { chart: any }) {
     if (!chart.config?.series?.[0]?.data) return [];
     const seriesData = chart.config.series[0].data;
     const xAxisData = chart.config?.xAxis?.data || [];
-    const colors = ["#d8cfbc", "#565449", "#8c8a7e", "#bc3e3e", "#78c51c", "#bed4fb"];
+    const colors = ["#edfe5e", "#31e992", "#bed4fb", "#f59e0b", "#a855f7", "#bc3e3e"];
 
     if (Array.isArray(seriesData)) {
       return seriesData.slice(0, 5).map((item: any, idx: number) => {
@@ -51,59 +47,43 @@ function ChartItem({ chart }: { chart: any }) {
   }, [chart]);
 
   return (
-    <Card className="border border-border bg-card shadow-xs hover:border-foreground/40 transition-all duration-200">
-      <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border">
+    <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 shadow-[4px_4px_0px_#000000] space-y-4 min-w-0 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
         <div>
-          <CardTitle className="text-sm font-serif font-bold text-foreground">{chart.title}</CardTitle>
-          <p className="text-muted-foreground text-xs font-medium mt-0.5">{chart.description}</p>
+          <h3 className="text-base font-serif font-bold text-black dark:text-white">{chart.title}</h3>
+          <p className="text-black/70 dark:text-white/70 text-xs font-sans mt-0.5">{chart.description}</p>
         </div>
-        <Badge variant="outline" className="text-[9px] uppercase font-mono">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-2.5 py-0.5 rounded shadow-[1px_1px_0px_#000000] shrink-0">
           {chart.chart_type}
-        </Badge>
-      </CardHeader>
+        </span>
+      </div>
       
-      <CardContent className="p-4 space-y-4">
-        {/* Chart Canvas with Grid Overlay */}
-        <div className="relative w-full h-72 rounded-lg bg-background/50 border border-border p-2 overflow-hidden">
-          <Grid horizontal vertical numTicksRows={5} numTicksColumns={8} fadeHorizontal strokeDasharray="4,4" />
-          <div ref={chartRef} className="w-full h-full relative z-10" />
+      {/* Chart Canvas */}
+      <div className="relative w-full h-80 rounded-[12px] bg-[#f9f9f7] dark:bg-[#262720] border border-black dark:border-[#3b3a33] p-3 overflow-hidden">
+        <div ref={chartRef} className="w-full h-full min-w-0" />
+      </div>
+
+      {/* Legend Component */}
+      {legendItems.length > 0 && (
+        <div className="pt-3 border-t border-black/10 dark:border-white/10">
+          <Legend
+            items={legendItems}
+            title="Series Breakdown & Distribution"
+            hoveredIndex={hoveredIndex}
+            onHoverChange={setHoveredIndex}
+          >
+            <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2 rounded-[8px] hover:bg-[#edf0e9] dark:hover:bg-[#262720] transition-all">
+              <LegendMarker />
+              <LegendLabel />
+              <LegendValue showPercentage />
+              <div className="col-span-full">
+                <LegendProgress />
+              </div>
+            </LegendItemComponent>
+          </Legend>
         </div>
-
-        {/* Custom BarChart underneath */}
-        {(chart.chart_type === 'bar' || chart.chart_type === 'histogram') && legendItems.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border/40">
-            <BarChart data={legendItems} xDataKey="label" height={180}>
-              <BarGrid horizontal strokeDasharray="4 4" />
-              <BarXAxis dataKey="label" />
-              <BarYAxis numTicks={4} />
-              <Bar dataKey="value" fill="#d8cfbc" radius={[4, 4, 0, 0]} />
-              <BarTooltip />
-            </BarChart>
-          </div>
-        )}
-
-        {/* Legend Component */}
-        {legendItems.length > 0 && (
-          <div className="pt-2 border-t border-border/60">
-            <Legend
-              items={legendItems}
-              title="Series Breakdown & Distribution"
-              hoveredIndex={hoveredIndex}
-              onHoverChange={setHoveredIndex}
-            >
-              <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2 rounded-md hover:bg-muted/40 transition-all">
-                <LegendMarker />
-                <LegendLabel />
-                <LegendValue showPercentage />
-                <div className="col-span-full">
-                  <LegendProgress />
-                </div>
-              </LegendItemComponent>
-            </Legend>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
 
@@ -117,7 +97,7 @@ export default function ChartsTab({ datasetId }: ChartsTabProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse font-sans">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-96 rounded-xl bg-muted/20 border border-border/40" />
+          <div key={i} className="h-96 rounded-[18px] bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33]" />
         ))}
       </div>
     );
@@ -126,14 +106,17 @@ export default function ChartsTab({ datasetId }: ChartsTabProps) {
   const chartList = charts || [];
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 font-sans text-black dark:text-white">
+      <div className="flex items-center justify-between border-b border-black dark:border-[#3b3a33] pb-4">
         <div>
-          <h2 className="text-base font-bold text-foreground font-sans">Exploratory Data Visualizations</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Automatically generated charts showing variables correlation, distribution and top classes.
+          <h2 className="text-base font-serif font-bold tracking-tight">Exploratory Data Visualizations</h2>
+          <p className="text-xs font-sans text-black/75 dark:text-white/75 mt-0.5">
+            Automatically generated charts showing variable correlation, distribution, and top classes.
           </p>
         </div>
+        <span className="text-xs font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-3 py-1 rounded-[6px] shadow-[2px_2px_0px_#000000]">
+          {chartList.length} Charts Active
+        </span>
       </div>
 
       {chartList.length > 0 ? (
@@ -143,15 +126,13 @@ export default function ChartsTab({ datasetId }: ChartsTabProps) {
           ))}
         </div>
       ) : (
-        <Card className="border-border bg-card/50 border-dashed py-16 text-center shadow-none">
-          <CardContent className="space-y-4">
-            <BarChart3 className="w-12 h-12 text-muted-foreground/60 mx-auto" />
-            <div>
-              <h4 className="font-bold text-foreground">No visualizations created</h4>
-              <p className="text-muted-foreground text-xs mt-1">This dataset does not contain sufficient columns for plotting charts.</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-[18px] border-2 border-dashed border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] py-16 text-center shadow-[4px_4px_0px_#000000]">
+          <BarChart3 className="w-12 h-12 text-black/40 dark:text-white/40 mx-auto mb-3" />
+          <h4 className="font-serif font-bold text-black dark:text-white text-base">No Visualizations Created</h4>
+          <p className="text-black/75 dark:text-white/75 text-xs mt-1 font-sans max-w-xs mx-auto">
+            This dataset does not contain sufficient columns for plotting charts.
+          </p>
+        </div>
       )}
     </div>
   );

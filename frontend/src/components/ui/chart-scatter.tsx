@@ -41,7 +41,6 @@ export function ScatterChart({
 }: ScatterChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // Simplified layout calculations for SVG
   const width = 1000; 
   const svgHeight = typeof height === "number" ? height : 300;
   const padding = { top: 20, right: 20, bottom: 40, left: 60 };
@@ -80,7 +79,7 @@ export function ScatterChart({
     <ScatterContext.Provider
       value={{ data, xDataKey, xScale, yScale, hoveredIndex, setHoveredIndex, width, height: svgHeight, padding }}
     >
-      <div className={cn("relative w-full overflow-hidden", className)} style={{ height }}>
+      <div className={cn("relative w-full overflow-hidden text-black dark:text-white", className)} style={{ height }}>
         <svg viewBox={`0 0 ${width} ${svgHeight}`} className="w-full h-full overflow-visible">
           {children}
         </svg>
@@ -92,7 +91,7 @@ export function ScatterChart({
 export function ScatterGrid({ horizontal = true, vertical = false }: { horizontal?: boolean; vertical?: boolean }) {
   const { width, height, padding } = useScatter();
   return (
-    <g className="text-border/40">
+    <g className="text-black/10 dark:text-white/10">
       {horizontal && Array.from({ length: 5 }).map((_, i) => {
         const y = padding.top + (i / 4) * (height - padding.top - padding.bottom);
         return <line key={`h-${i}`} x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="currentColor" strokeWidth={1} strokeDasharray="4 4" />;
@@ -108,7 +107,7 @@ export function ScatterGrid({ horizontal = true, vertical = false }: { horizonta
 export function ScatterXAxis({ label }: { label?: string }) {
   const { width, height, padding } = useScatter();
   return (
-    <g className="text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
+    <g className="text-black/60 dark:text-white/60 text-[10px] font-mono font-bold uppercase tracking-wider">
       <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="currentColor" strokeWidth={1} />
       {label && (
         <text x={width / 2} y={height - 5} fill="currentColor" textAnchor="middle">{label}</text>
@@ -120,7 +119,7 @@ export function ScatterXAxis({ label }: { label?: string }) {
 export function ScatterYAxis({ label, numTicks = 5 }: { label?: string; numTicks?: number }) {
   const { height, padding } = useScatter();
   return (
-    <g className="text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
+    <g className="text-black/60 dark:text-white/60 text-[10px] font-mono font-bold uppercase tracking-wider">
       <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="currentColor" strokeWidth={1} />
       {label && (
         <text x={15} y={height / 2} fill="currentColor" textAnchor="middle" transform={`rotate(-90 15 ${height / 2})`}>{label}</text>
@@ -134,7 +133,7 @@ export function ScatterSeries({
   radius = 4,
   fadeOnHover = true,
   inactiveOpacity = 0.3,
-  fill = "#d8cfbc"
+  fill = "#edfe5e"
 }: {
   dataKey: string;
   radius?: number;
@@ -159,6 +158,8 @@ export function ScatterSeries({
             cy={cy}
             r={isHovered ? radius * 1.5 : radius}
             fill={fill}
+            stroke="#000000"
+            strokeWidth={1}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ 
               scale: 1, 
@@ -189,18 +190,18 @@ export function ScatterTooltip() {
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute z-50 bg-popover text-popover-foreground border border-border p-3 rounded-lg shadow-xl text-xs font-sans min-w-[120px] pointer-events-none"
+          className="absolute z-50 bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl backdrop-blur-md text-xs font-sans min-w-[140px] pointer-events-none"
           style={{
             left: xScale(data[hoveredIndex][xDataKey]) + 20,
             top: yScale(data[hoveredIndex].y || Object.values(data[hoveredIndex]).find(v => typeof v === 'number' && v !== data[hoveredIndex][xDataKey]) as number) - 40,
           }}
         >
-          <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Point Details</div>
+          <div className="font-mono text-[9px] uppercase tracking-wider text-black/60 dark:text-white/60 mb-1 font-bold">Point Details</div>
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {Object.entries(data[hoveredIndex]).map(([k, v]) => (
               <React.Fragment key={k}>
-                <span className="font-bold text-muted-foreground">{k}:</span>
-                <span className="font-mono font-bold text-foreground text-right">{typeof v === 'number' ? v.toFixed(2) : v}</span>
+                <span className="font-bold text-black/70 dark:text-white/70 font-mono text-[10px]">{k}:</span>
+                <span className="font-mono font-bold text-black dark:text-white text-right text-[10px]">{typeof v === 'number' ? v.toFixed(2) : v}</span>
               </React.Fragment>
             ))}
           </div>

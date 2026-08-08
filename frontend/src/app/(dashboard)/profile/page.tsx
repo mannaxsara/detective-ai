@@ -2,13 +2,8 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { User as UserIcon, Database, BarChart3, FileText, Sparkles } from "lucide-react";
+import { User as UserIcon, Database, BarChart3, FileText, Sparkles, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth-store";
 import { datasetsAPI, historyAPI } from "@/lib/api";
 
@@ -45,102 +40,98 @@ export default function ProfilePage() {
   };
 
   const statItems = [
-    { label: "Datasets", value: datasetsData?.total || 0, icon: Database, color: "text-primary" },
-    { label: "Analyses", value: historyData?.total || 0, icon: BarChart3, color: "text-primary" },
-    { label: "Reports Generated", value: 3, icon: FileText, color: "text-primary" },
+    { label: "Active Datasets", value: datasetsData?.total || 0, icon: Database },
+    { label: "Analyses Executed", value: historyData?.total || 0, icon: BarChart3 },
+    { label: "Executive Briefings", value: 3, icon: FileText },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 text-muted-foreground">
+    <div className="max-w-4xl mx-auto space-y-6 text-black dark:text-white font-sans bg-[#f9f9f7] dark:bg-[#11120d]">
       
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-2xl border border-border bg-card relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-[40px] pointer-events-none" />
+      <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] shadow-sm">
         
-        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-background border border-border text-foreground">
-          <UserIcon className="w-8 h-8 text-primary" />
+        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#edfe5e] border border-black/20 text-black shrink-0 font-bold">
+          <UserIcon className="w-8 h-8 text-black" />
         </div>
         
-        <div className="flex-1 text-center md:text-left space-y-1">
-          <h2 className="text-xl font-bold text-foreground flex items-center justify-center md:justify-start gap-2 font-sans">
-            {user?.full_name || "User"}
-            <span className="flex items-center gap-1 text-[9px] bg-primary/10 border border-primary/20 text-primary px-2.5 py-0.5 rounded-full uppercase font-bold font-mono">
-              <Sparkles className="w-2.5 h-2.5 text-primary" />
-              Pro Analyst
+        <div className="flex-1 text-center md:text-left space-y-1 min-w-0">
+          <div className="flex items-center justify-center md:justify-start gap-2.5 flex-wrap">
+            <h1 className="text-xl font-serif font-bold tracking-tight">{user?.full_name || "Investigator"}</h1>
+            <span className="flex items-center gap-1 text-[10px] bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full uppercase font-bold font-mono">
+              <Sparkles className="w-3 h-3 text-[#31e992]" />
+              Investigator Level 1
             </span>
-          </h2>
-          <p className="text-muted-foreground/60 text-sm font-semibold">{user?.email}</p>
-          <p className="text-muted-foreground/40 text-xs font-semibold">Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "2026"}</p>
+          </div>
+          <p className="text-xs font-mono font-bold text-black/70 dark:text-white/70">{user?.email || "agent@detective.ai"}</p>
+          <p className="text-[11px] font-mono text-black/50 dark:text-white/50">Member since {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "2026"}</p>
         </div>
       </div>
 
       {/* Account stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {statItems.map((item, idx) => {
           const Icon = item.icon;
           return (
-            <Card key={idx} className="border-border bg-card">
-              <CardContent className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/50">{item.label}</p>
-                  <p className="text-xl font-bold text-foreground mt-1.5 font-mono">{item.value}</p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-background border border-border text-primary">
-                  <Icon className="w-4.5 h-4.5" />
-                </div>
-              </CardContent>
-            </Card>
+            <div key={idx} className="p-5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] flex items-center justify-between shadow-sm">
+              <div>
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">{item.label}</p>
+                <p className="text-2xl font-mono font-bold text-black dark:text-white mt-1">{item.value}</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 text-black dark:text-white">
+                <Icon className="w-4.5 h-4.5" />
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Security Profile */}
-      <Card className="border-border bg-card">
-        <CardHeader className="border-b border-border bg-background/35 pb-4">
-          <CardTitle className="text-base font-bold text-foreground font-sans">Security Credentials</CardTitle>
-          <CardDescription className="text-muted-foreground/60 text-xs">Change your account password securely.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-            <div className="space-y-2">
-              <Label htmlFor="old-pass" className="text-muted-foreground">Old Password</Label>
-              <Input
-                id="old-pass"
-                type="password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                className="bg-background border-border focus-visible:ring-primary/30 text-foreground text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-pass" className="text-muted-foreground">New Password</Label>
-              <Input
-                id="new-pass"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="bg-background border-border focus-visible:ring-primary/30 text-foreground text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-pass" className="text-muted-foreground">Confirm Password</Label>
-              <Input
-                id="confirm-pass"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="bg-background border-border focus-visible:ring-primary/30 text-foreground text-sm"
-              />
-            </div>
-            <Button
-              type="submit"
-              className="bg-primary hover:opacity-90 text-primary-foreground font-bold text-xs h-9 px-5 rounded-full shadow-sm active:scale-[0.98] transition-all cursor-pointer"
-            >
-              Update Password
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
+        <div>
+          <h2 className="text-xs font-mono font-bold text-black dark:text-white uppercase tracking-wider">Security Credentials</h2>
+          <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Change your account password securely.</p>
+        </div>
+        
+        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md border-t border-black/10 dark:border-white/10 pt-4">
+          <div className="space-y-1.5">
+            <label htmlFor="old-pass" className="text-xs font-mono font-bold uppercase text-black dark:text-white">Old Password</label>
+            <input
+              id="old-pass"
+              type="password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              className="h-10 w-full rounded-lg border border-black/15 dark:border-white/15 bg-[#f9f9f7] dark:bg-[#262720] px-3.5 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#edfe5e]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="new-pass" className="text-xs font-mono font-bold uppercase text-black dark:text-white">New Password</label>
+            <input
+              id="new-pass"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="h-10 w-full rounded-lg border border-black/15 dark:border-white/15 bg-[#f9f9f7] dark:bg-[#262720] px-3.5 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#edfe5e]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="confirm-pass" className="text-xs font-mono font-bold uppercase text-black dark:text-white">Confirm Password</label>
+            <input
+              id="confirm-pass"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="h-10 w-full rounded-lg border border-black/15 dark:border-white/15 bg-[#f9f9f7] dark:bg-[#262720] px-3.5 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#edfe5e]"
+            />
+          </div>
+          <button
+            type="submit"
+            className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer"
+          >
+            Update Password
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

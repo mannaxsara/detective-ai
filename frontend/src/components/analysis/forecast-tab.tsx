@@ -4,16 +4,11 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LineChart, Calendar } from "lucide-react";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { analysisAPI, datasetsAPI } from "@/lib/api";
 import { useECharts } from "@/hooks/use-echarts";
 
 import { AreaChart, Area, AreaGradient, AreaXAxis, AreaYAxis, AreaGrid, AreaTooltip } from "@/components/ui/chart-area";
-
-import { Grid } from "@/components/ui/chart-grid";
 import {
   Legend,
   LegendItemComponent,
@@ -41,29 +36,16 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
   const maxVal = Math.max(...upper, 1);
 
   const forecastLegendItems: LegendItemData[] = [
-    { label: "Expected Value Projections", value: meanExpected, maxValue: maxVal, color: "#d8cfbc" },
+    { label: "Expected Value Projections", value: meanExpected, maxValue: maxVal, color: "#edfe5e" },
     { label: "Lower Confidence Bound", value: meanLower, maxValue: maxVal, color: "#bc3e3e" },
-    { label: "Upper Confidence Bound", value: meanUpper, maxValue: maxVal, color: "#78c51c" },
+    { label: "Upper Confidence Bound", value: meanUpper, maxValue: maxVal, color: "#31e992" },
   ];
 
   const option = {
-    legend: {
-      show: false,
-    },
-    grid: {
-      left: "4%",
-      right: "4%",
-      bottom: "6%",
-      top: "10%",
-      containLabel: true,
-    },
-    xAxis: {
-      type: "category",
-      data: dates,
-    },
-    yAxis: {
-      type: "value",
-    },
+    legend: { show: false },
+    grid: { left: "4%", right: "4%", bottom: "6%", top: "10%", containLabel: true },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value" },
     series: [
       {
         name: "Forecasted Value",
@@ -71,13 +53,8 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
         data: values,
         smooth: true,
         showSymbol: false,
-        lineStyle: {
-          width: 2.5,
-          color: "#d8cfbc",
-        },
-        itemStyle: {
-          color: "#d8cfbc",
-        },
+        lineStyle: { width: 2.5, color: "#edfe5e" },
+        itemStyle: { color: "#edfe5e" },
       },
       {
         name: "Confidence Bound (Upper)",
@@ -93,9 +70,7 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
         lineStyle: { opacity: 0 },
         showSymbol: false,
         stack: "confidence-stack",
-        areaStyle: {
-          color: "rgba(216, 207, 188, 0.15)",
-        },
+        areaStyle: { color: "rgba(237, 254, 94, 0.2)" },
       },
     ],
   };
@@ -104,16 +79,13 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
 
   return (
     <div className="space-y-6 font-sans">
-      {/* Chart Canvas with Grid Overlay */}
-      <div className="relative w-full h-80 rounded-xl bg-background/50 border border-border p-2 overflow-hidden">
-        <Grid horizontal vertical numTicksRows={6} numTicksColumns={8} fadeHorizontal strokeDasharray="4,4" />
-        <div ref={chartRef} className="w-full h-full relative z-10" />
+      <div className="relative w-full h-80 rounded-[12px] bg-[#f9f9f7] dark:bg-[#262720] border border-black dark:border-[#3b3a33] p-3 overflow-hidden">
+        <div ref={chartRef} className="w-full h-full min-w-0" />
       </div>
 
-      {/* Composed Chart Legend */}
-      <Card className="border border-border bg-card p-4 shadow-none">
+      <div className="border border-black dark:border-[#3b3a33] rounded-[14px] bg-[#edf0e9] dark:bg-[#262720] p-4 shadow-[2px_2px_0px_#000000]">
         <Legend items={forecastLegendItems} title="Projection Statistics (80% Confidence Interval)">
-          <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2 rounded-md hover:bg-muted/40 transition-all">
+          <LegendItemComponent className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 p-2 rounded-[8px] hover:bg-white dark:hover:bg-[#1c1d18] transition-all">
             <LegendMarker />
             <LegendLabel />
             <LegendValue />
@@ -122,7 +94,7 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
             </div>
           </LegendItemComponent>
         </Legend>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -131,7 +103,6 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
   const [periods, setPeriods] = useState<number>(30);
   const [targetCol, setTargetCol] = useState<string | null>(null);
 
-  // Fetch dataset profile to populate column dropdown
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["dataset-profile", datasetId],
     queryFn: () => datasetsAPI.getProfile(datasetId),
@@ -139,7 +110,6 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
 
   const numericColumns = profile?.columns?.filter((col: any) => col.classification === "numeric") || [];
 
-  // Set default column once profile is loaded
   React.useEffect(() => {
     if (numericColumns.length > 0 && !targetCol) {
       setTargetCol(numericColumns[0]?.name);
@@ -168,32 +138,32 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse font-sans">
-        <div className="h-16 rounded-xl bg-muted/20 border border-border/40" />
-        <div className="h-96 rounded-xl bg-muted/20 border border-border/40" />
+        <div className="h-16 rounded-[14px] bg-[#edf0e9] dark:bg-[#262720] border border-black" />
+        <div className="h-96 rounded-[18px] bg-white dark:bg-[#1c1d18] border border-black" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+    <div className="space-y-6 font-sans text-black dark:text-white">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black dark:border-[#3b3a33] pb-4">
         <div>
-          <h2 className="text-base font-bold text-foreground">Prophet Predictive Forecasting</h2>
-          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
+          <h2 className="text-base font-serif font-bold tracking-tight">Prophet Predictive Forecasting</h2>
+          <p className="text-xs font-sans text-black/75 dark:text-white/75 mt-0.5">
             Auto-detect temporal dates and run Facebook Prophet to predict 30-day or 90-day future trends.
           </p>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           {numericColumns.length > 0 && (
             <Select
               value={targetCol || ""}
               onValueChange={(val) => setTargetCol(val || null)}
             >
-              <SelectTrigger className="w-48 bg-muted/30 border-border text-foreground text-xs font-bold rounded-lg">
+              <SelectTrigger className="w-48 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
                 <SelectValue placeholder="Select Metric" />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-popover-foreground text-xs font-bold">
+              <SelectContent className="bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold">
                 {numericColumns.map((col: any) => (
                   <SelectItem key={col.name} value={col.name}>
                     {col.name.replace(/_/g, ' ')}
@@ -207,76 +177,69 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
             value={periods.toString()}
             onValueChange={(val) => setPeriods(parseInt(val || "30", 10))}
           >
-            <SelectTrigger className="w-32 bg-muted/30 border-border text-foreground text-xs font-bold rounded-lg">
+            <SelectTrigger className="w-32 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
               <SelectValue placeholder="Period" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-popover-foreground text-xs font-bold">
+            <SelectContent className="bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold">
               <SelectItem value="30">30 Days</SelectItem>
               <SelectItem value="90">90 Days</SelectItem>
             </SelectContent>
           </Select>
 
-          <Button
+          <button
             onClick={handleRunForecast}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:scale-[1.01] transition-all cursor-pointer shadow-sm"
+            className="btn-ink-accent text-xs py-2 px-4 font-mono uppercase font-bold shadow-[2px_2px_0px_#000000] cursor-pointer"
           >
             Generate Forecast
-          </Button>
+          </button>
         </div>
       </div>
 
       {forecast ? (
         <>
-        <Card className="border-border bg-card shadow-none">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-xs uppercase tracking-wider font-bold text-foreground">
-                Future Projection: <span className="text-primary">"{forecast.metric_name}"</span>
-              </CardTitle>
+          <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
+            <div className="flex flex-row items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+              <h3 className="text-xs uppercase font-mono font-bold text-black dark:text-white">
+                Future Projection: <span className="bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black">{forecast.metric_name}</span>
+              </h3>
+              <span className="text-[10px] uppercase font-mono font-bold bg-[#edf0e9] dark:bg-[#262720] text-black dark:text-white border border-black flex items-center gap-1.5 rounded py-1 px-2.5">
+                <Calendar className="w-3.5 h-3.5 text-black dark:text-white" />
+                {periods}-Day Horizon
+              </span>
             </div>
-            <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-bold bg-muted/50 text-muted-foreground border-border flex items-center gap-1.5 rounded-lg py-1 px-2.5">
-              <Calendar className="w-3.5 h-3.5 text-primary" />
-              {periods}-Day Horizon
-            </Badge>
-          </CardHeader>
-          <CardContent>
             <ForecastChartItem forecast={forecast} />
-          </CardContent>
-        </Card>
-        {forecast && areaData.length > 0 && (
-          <div className="border border-border rounded-xl p-5 bg-card space-y-3 shadow-none">
-            <div>
-              <h3 className="text-xs font-serif font-bold text-foreground">Confidence Interval Projection</h3>
-              <p className="text-muted-foreground text-[10px] mt-0.5">Predicted values with 80% confidence band</p>
-            </div>
-            <AreaChart data={areaData} xDataKey="date" height={260}>
-              <defs>
-                <AreaGradient id="predictedGrad" color="#d8cfbc" startOpacity={0.6} stopOpacity={0.05} />
-                <AreaGradient id="confidenceGrad" color="#565449" startOpacity={0.25} stopOpacity={0.02} />
-              </defs>
-              <AreaGrid horizontal strokeDasharray="4 4" />
-              <AreaXAxis dataKey="date" />
-              <AreaYAxis numTicks={5} />
-              <Area dataKey="upper" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
-              <Area dataKey="predicted" fill="url(#predictedGrad)" stroke="#d8cfbc" strokeWidth={2} />
-              <Area dataKey="lower" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
-              <AreaTooltip />
-            </AreaChart>
           </div>
-        )}
-      </>
-      ) : (
-        <Card className="border-border bg-card/50 border-dashed py-16 text-center shadow-none">
-          <CardContent className="space-y-4">
-            <LineChart className="w-12 h-12 text-muted-foreground/60 mx-auto" />
-            <div>
-              <h4 className="font-bold text-foreground text-sm uppercase tracking-wide">Forecasting unavailable</h4>
-              <p className="text-muted-foreground text-xs mt-1 font-semibold">
-                Your dataset must contain at least one temporal (date/datetime) column and one numeric column.
-              </p>
+
+          {areaData.length > 0 && (
+            <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
+              <div>
+                <h3 className="text-sm font-serif font-bold text-black dark:text-white">Confidence Interval Projection</h3>
+                <p className="text-black/70 dark:text-white/70 text-xs font-sans mt-0.5">Predicted values with 80% confidence band</p>
+              </div>
+              <AreaChart data={areaData} xDataKey="date" height={260}>
+                <defs>
+                  <AreaGradient id="predictedGrad" color="#edfe5e" startOpacity={0.6} stopOpacity={0.05} />
+                  <AreaGradient id="confidenceGrad" color="#31e992" startOpacity={0.25} stopOpacity={0.02} />
+                </defs>
+                <AreaGrid horizontal strokeDasharray="4 4" />
+                <AreaXAxis dataKey="date" />
+                <AreaYAxis numTicks={5} />
+                <Area dataKey="upper" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
+                <Area dataKey="predicted" fill="url(#predictedGrad)" stroke="#000000" strokeWidth={2} />
+                <Area dataKey="lower" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
+                <AreaTooltip />
+              </AreaChart>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </>
+      ) : (
+        <div className="rounded-[18px] border-2 border-dashed border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] py-16 text-center shadow-[4px_4px_0px_#000000]">
+          <LineChart className="w-12 h-12 text-black/40 dark:text-white/40 mx-auto mb-3" />
+          <h4 className="font-serif font-bold text-black dark:text-white text-base">Forecasting Unavailable</h4>
+          <p className="text-black/75 dark:text-white/75 text-xs mt-1 font-sans max-w-xs mx-auto">
+            Your dataset must contain at least one temporal (date/datetime) column and one numeric column.
+          </p>
+        </div>
       )}
     </div>
   );

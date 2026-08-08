@@ -9,9 +9,6 @@ import {
   Copy,
 } from "lucide-react";
 import { datasetsAPI } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { RadialProfile } from "@/components/ui/radial-profile";
 import { PieChart, PieSlices, PieCenter, PieTooltip, PieLegend, PieDataItem } from "@/components/ui/chart-pie";
 import { RadarChart, RadarGrid, RadarAxis, RadarLabels, RadarArea, RadarMetric, RadarData } from "@/components/ui/chart-radar";
@@ -28,9 +25,9 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
 
   if (isLoading || !profile) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 animate-pulse font-sans">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-20 rounded-xl bg-muted/20 border border-border/40" />
+          <div key={i} className="h-24 rounded-xl bg-white dark:bg-[#181914] border border-black/10 dark:border-white/10" />
         ))}
       </div>
     );
@@ -47,8 +44,8 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
   const uniqueness = profile.row_count > 0 ? Math.round(100 - (profile.duplicate_row_count / profile.row_count) * 100) : 100;
   
   const radialMetrics = [
-    { label: "Schema Health & Completeness", score: completeness, color: "#d8cfbc" },
-    { label: "Row Uniqueness Ratio", score: uniqueness, color: "#78c51c" },
+    { label: "Schema Health & Completeness", score: completeness, color: "#edfe5e" },
+    { label: "Row Uniqueness Ratio", score: uniqueness, color: "#31e992" },
     { label: "Column Type Integrity", score: 98, color: "#bed4fb" },
     { label: "Null Cell Safety", score: Math.max(70, completeness - 5), color: "#f59e0b" },
   ];
@@ -59,8 +56,8 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
     return acc;
   }, {} as Record<string,number>);
   const typeDistribution: PieDataItem[] = [
-    { name: 'Numeric', value: classifications.numeric || 0, fill: '#d8cfbc' },
-    { name: 'Categorical', value: classifications.categorical || 0, fill: '#78c51c' },
+    { name: 'Numeric', value: classifications.numeric || 0, fill: '#edfe5e' },
+    { name: 'Categorical', value: classifications.categorical || 0, fill: '#31e992' },
     { name: 'DateTime', value: classifications.datetime || 0, fill: '#bed4fb' },
     { name: 'Boolean', value: classifications.boolean || 0, fill: '#f59e0b' },
   ].filter(d => d.value > 0);
@@ -76,7 +73,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
   ];
   const qualityData: RadarData[] = [{
     label: 'Dataset Quality',
-    color: '#d8cfbc',
+    color: '#edfe5e',
     values: {
       completeness: Math.round(profile?.health_score || 95),
       uniqueness: Math.round(100 - ((profile?.duplicate_row_count || 0) / (profile?.row_count || 1)) * 100),
@@ -87,23 +84,21 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
   }];
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-sans text-black dark:text-white">
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <Card key={idx} className="border-border bg-card shadow-none">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{card.label}</p>
-                  <p className="text-lg font-mono font-extrabold text-foreground mt-1">{card.value}</p>
-                </div>
-                <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20">
-                  <Icon className="w-4 h-4" />
-                </div>
-              </CardContent>
-            </Card>
+            <div key={idx} className="p-5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">{card.label}</p>
+                <p className="text-xl font-mono font-bold text-black dark:text-white mt-1">{card.value}</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#edf0e9] dark:bg-[#262720] text-black dark:text-white border border-black/10 dark:border-white/10">
+                <Icon className="w-4.5 h-4.5" />
+              </div>
+            </div>
           );
         })}
       </div>
@@ -111,79 +106,79 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
       {/* Bklit UI Radial Profile Component */}
       <RadialProfile metrics={radialMetrics} title="Multi-Dimensional Schema Quality Radar" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {typeDistribution.length > 0 && (
-          <div className="border border-border rounded-xl p-5 bg-card space-y-3">
+          <div className="border border-black/15 dark:border-white/15 rounded-xl p-6 bg-white dark:bg-[#181914] space-y-4 shadow-sm">
             <div>
-              <h3 className="text-xs font-serif font-bold text-foreground">Column Type Distribution</h3>
-              <p className="text-muted-foreground text-[10px] mt-0.5">Classification breakdown across schema</p>
+              <h3 className="text-sm font-serif font-bold text-black dark:text-white">Column Type Distribution</h3>
+              <p className="text-black/60 dark:text-white/60 text-xs font-sans mt-0.5">Classification breakdown across dataset schema</p>
             </div>
-            <PieChart data={typeDistribution} innerRadius={50} outerRadius={85} paddingAngle={3} height={260}>
+            <PieChart data={typeDistribution} innerRadius={50} outerRadius={85} paddingAngle={3} height={300}>
               <PieSlices />
               <PieCenter>
-                <span className="text-xl font-mono font-black text-foreground">{profile.column_count}</span>
-                <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Columns</span>
+                <span className="text-xl font-mono font-bold text-black dark:text-white">{profile.column_count}</span>
+                <span className="text-[9px] font-mono text-black/60 dark:text-white/60 uppercase tracking-wider">Columns</span>
               </PieCenter>
               <PieTooltip />
+              <PieLegend />
             </PieChart>
-            <PieLegend />
           </div>
         )}
 
-        <div className="border border-border rounded-xl p-5 bg-card space-y-3">
+        <div className="border border-black/15 dark:border-white/15 rounded-xl p-6 bg-white dark:bg-[#181914] space-y-4 shadow-sm">
           <div>
-            <h3 className="text-xs font-serif font-bold text-foreground">Quality Radar Assessment</h3>
-            <p className="text-muted-foreground text-[10px] mt-0.5">Multi-dimensional dataset quality scoring</p>
+            <h3 className="text-sm font-serif font-bold text-black dark:text-white">Quality Radar Assessment</h3>
+            <p className="text-black/60 dark:text-white/60 text-xs font-sans mt-0.5">Multi-dimensional dataset quality scoring</p>
           </div>
           <RadarChart data={qualityData} metrics={qualityMetrics} size={280} levels={5}>
-            <RadarGrid showLabels stroke="var(--border)" />
-            <RadarAxis stroke="var(--border)" />
+            <RadarGrid showLabels stroke="#000000" />
+            <RadarAxis stroke="#000000" />
             <RadarLabels offset={24} fontSize={10} />
-            <RadarArea index={0} fill="#d8cfbc" stroke="#d8cfbc" strokeWidth={2} />
+            <RadarArea index={0} fill="#edfe5e" stroke="#000000" strokeWidth={2} />
           </RadarChart>
         </div>
       </div>
 
       {/* Columns Profile Table */}
-      <Card className="border-border bg-card shadow-none">
-        <CardHeader className="pb-3 border-b border-border">
-          <CardTitle className="text-sm font-bold text-foreground">Column Schema & Profiling</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <Table className="min-w-[700px]">
-            <TableHeader className="bg-muted/50 border-b border-border">
-              <TableRow className="border-b border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Column Name</TableHead>
-                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Data Type</TableHead>
-                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Classification</TableHead>
-                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider text-right">Unique Values</TableHead>
-                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider text-right">Missing Count</TableHead>
-                <TableHead className="text-muted-foreground text-xs font-bold uppercase tracking-wider text-right">Missing %</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720]">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Column Schema & Profiling</h3>
+        </div>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full border-collapse min-w-[700px] text-left">
+            <thead>
+              <tr className="border-b border-black/10 dark:border-white/10 bg-[#f9f9f7] dark:bg-[#262720] font-mono text-[10px] uppercase font-bold text-black/70 dark:text-white/70">
+                <th className="px-6 py-3.5">Column Name</th>
+                <th className="px-6 py-3.5">Data Type</th>
+                <th className="px-6 py-3.5">Classification</th>
+                <th className="px-6 py-3.5 text-right">Unique Values</th>
+                <th className="px-6 py-3.5 text-right">Missing Count</th>
+                <th className="px-6 py-3.5 text-right">Missing %</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/5 dark:divide-white/5">
               {profile.columns.map((col: any, idx: number) => {
                 return (
-                  <TableRow key={idx} className="border-b border-border/40 hover:bg-muted/40 transition-colors">
-                    <TableCell className="font-bold text-xs text-foreground">{col.name}</TableCell>
-                    <TableCell className="font-mono text-[10px] text-muted-foreground">{col.dtype}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[9px] px-2 py-0.5 rounded capitalize border-border text-muted-foreground font-semibold">
+                  <tr key={idx} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-3.5 font-bold font-serif text-xs text-black dark:text-white">{col.name}</td>
+                    <td className="px-6 py-3.5 font-mono text-[11px] text-black/60 dark:text-white/60">{col.dtype}</td>
+                    <td className="px-6 py-3.5">
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] uppercase text-black dark:text-white">
                         {col.classification}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-foreground/80 font-mono text-xs">{col.unique_count.toLocaleString()}</TableCell>
-                    <TableCell className="text-right text-foreground/80 font-mono text-xs">{col.null_count.toLocaleString()}</TableCell>
-                    <TableCell className={`text-right font-mono text-xs font-bold ${col.null_percentage > 20 ? "text-destructive" : col.null_percentage > 0 ? "text-amber-500" : "text-muted-foreground"}`}>
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5 text-right font-mono text-xs font-bold text-black dark:text-white">{col.unique_count.toLocaleString()}</td>
+                    <td className="px-6 py-3.5 text-right font-mono text-xs font-bold text-black dark:text-white">{col.null_count.toLocaleString()}</td>
+                    <td className={`px-6 py-3.5 text-right font-mono text-xs font-bold ${col.null_percentage > 20 ? "text-[#bc3e3e]" : col.null_percentage > 0 ? "text-amber-600" : "text-black/50 dark:text-white/50"}`}>
                       {col.null_percentage}%
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 );
               })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

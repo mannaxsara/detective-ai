@@ -142,11 +142,11 @@ export default function InsightsTab({ datasetId }: InsightsTabProps) {
             <h3 className="text-xs font-serif font-bold text-foreground">Insight Categories</h3>
             <p className="text-muted-foreground text-[10px] mt-0.5">Distribution of discovered insights</p>
           </div>
-          <PieChart data={categoryBreakdown} innerRadius={40} outerRadius={75} paddingAngle={2} height={200}>
+          <PieChart data={categoryBreakdown} innerRadius={40} outerRadius={75} paddingAngle={2} height={240}>
             <PieSlices />
             <PieTooltip />
+            <PieLegend />
           </PieChart>
-          <PieLegend />
         </div>
       )}
 

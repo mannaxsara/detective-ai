@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,164 +9,123 @@ import {
   Upload,
   History,
   Settings,
-  User as UserIcon,
+  LogOut,
   ChevronLeft,
   ChevronRight,
-  LogOut,
-  Sparkles,
+  Database,
+  Sparkles
 } from "lucide-react";
-import { useAuthStore } from "@/store/auth-store";
 import { useAnalysisStore } from "@/store/analysis-store";
-import { ThemeToggleButton } from "@/components/ui/ThemeToggle";
-
-const NAV_ITEMS = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "New Case", href: "/upload", icon: Upload },
-  { name: "Case Archives", href: "/history", icon: History },
-  { name: "Settings", href: "/settings", icon: Settings },
-];
-
-function LogoMark({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="13" cy="13" r="9.5" stroke="currentColor" strokeWidth="2" />
-      <circle cx="11" cy="12" r="1.2" fill="currentColor" />
-      <circle cx="15" cy="10" r="1.2" fill="currentColor" />
-      <circle cx="15" cy="15" r="1.2" fill="currentColor" />
-      <line x1="11" y1="12" x2="15" y2="10" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1="15" y1="10" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1="11" y1="12" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1="20" y1="20" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
+import { useAuthStore } from "@/store/auth-store";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { sidebarCollapsed, toggleSidebar } = useAnalysisStore();
   const { user, logout } = useAuthStore();
-  const { sidebarCollapsed, setSidebarCollapsed } = useAnalysisStore();
-  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const isItemActive = (item: typeof NAV_ITEMS[0]) => {
-    return pathname === item.href;
-  };
-
-  const sidebarWidth = isMobile
-    ? sidebarCollapsed ? 0 : 250
-    : sidebarCollapsed ? 72 : 250;
+  const navItems = [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "New Case", href: "/upload", icon: Upload },
+    { label: "Case Archives", href: "/history", icon: History },
+    { label: "Settings", href: "/settings", icon: Settings },
+  ];
 
   return (
-    <>
-      {/* Mobile dim background overlay */}
-      {isMobile && !sidebarCollapsed && (
-        <div
-          onClick={() => setSidebarCollapsed(true)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300 md:hidden"
-        />
-      )}
-
-      <motion.aside
-        animate={{ 
-          width: sidebarWidth,
-          x: isMobile && sidebarCollapsed ? -250 : 0
-        }}
-        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        className={`flex flex-col h-screen border-r border-border/80 bg-card/90 backdrop-blur-xl shrink-0 z-40 font-sans overflow-hidden ${
-          isMobile ? "fixed left-0 top-0 bottom-0 shadow-2xl" : "relative"
-        } ${isMobile && sidebarCollapsed ? "pointer-events-none border-none" : "pointer-events-auto"}`}
-      >
+    <motion.aside
+      initial={false}
+      animate={{ width: sidebarCollapsed ? 72 : 240 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
+      className="h-screen bg-[#f9f9f7] dark:bg-[#11120d] border-r border-black/15 dark:border-white/15 flex flex-col justify-between select-none relative z-30 shrink-0 font-sans overflow-hidden"
+    >
+      <div className="flex flex-col flex-1 min-h-0">
+        
         {/* Brand Header */}
-        <div className="flex items-center justify-between h-14 px-4 border-b border-border/80 shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden group select-none">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg border border-primary/20 bg-primary/10 text-primary shrink-0 transition-transform group-hover:scale-105">
-              <LogoMark size={18} />
+        <div className="flex items-center justify-between h-14 px-4 border-b border-black/15 dark:border-white/15 shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
+            {/* Vibrant Lime Favicon Monogram Icon Badge */}
+            <div className="w-8 h-8 min-w-[32px] min-h-[32px] max-w-[32px] max-h-[32px] rounded-lg bg-[#edfe5e] border border-black flex items-center justify-center text-black shrink-0 shadow-xs">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="13" cy="13" r="9" stroke="#000000" strokeWidth="3" />
+                <circle cx="13" cy="13" r="4.5" stroke="#000000" strokeWidth="2" strokeDasharray="2 2" />
+                <circle cx="11" cy="11" r="1.5" fill="#000000" />
+                <circle cx="15" cy="14" r="1.5" fill="#000000" />
+                <line x1="19.5" y1="19.5" x2="27.5" y2="27.5" stroke="#000000" strokeWidth="4" strokeLinecap="round" />
+              </svg>
             </div>
-            {(!sidebarCollapsed || isMobile) && (
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-foreground truncate">
-                Detective<span className="text-primary">AI</span>
+            {!sidebarCollapsed && (
+              <span className="font-serif font-extrabold text-base tracking-tight truncate text-black dark:text-white">
+                DETECTIVE<span className="text-[#31e992] ml-0.5">AI</span>
               </span>
             )}
           </Link>
+
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1 rounded-lg border border-border/80 bg-background/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            onClick={toggleSidebar}
+            className="hidden md:flex items-center justify-center p-1.5 rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] hover:bg-[#edf0e9] dark:hover:bg-[#262720] text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors cursor-pointer shrink-0"
             title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
           </button>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto scrollbar-thin">
-          {NAV_ITEMS.map((item) => {
-            const active = isItemActive(item);
+        {/* Navigation Items */}
+        <nav className="p-3 space-y-1.5 flex-1 overflow-y-auto">
+          {navItems.map((item) => {
             const Icon = item.icon;
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
-                onClick={() => {
-                  if (isMobile) setSidebarCollapsed(true);
-                }}
-                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-150 border select-none group ${
-                  active
-                    ? "bg-primary/10 text-primary border-primary/30 font-bold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border-transparent"
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? "bg-[#edfe5e] text-black border border-black/30 shadow-xs"
+                    : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-[#edf0e9] dark:hover:bg-[#262720] border border-transparent"
                 }`}
+                title={sidebarCollapsed ? item.label : undefined}
               >
-                <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${active ? "text-primary" : "text-muted-foreground/70"}`} />
-                {(!sidebarCollapsed || isMobile) && <span className="truncate">{item.name}</span>}
-                {active && (
-                  <motion.div
-                    layoutId="activeSidePill"
-                    className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-primary"
-                  />
-                )}
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-black" : "text-black/70 dark:text-white/70"}`} />
+                {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
+      </div>
 
-        {/* User Footer */}
-        <div className="p-3 border-t border-border/80 bg-card/80 shrink-0">
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-background border border-border text-foreground shrink-0 overflow-hidden">
-              {user?.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-            {(!sidebarCollapsed || isMobile) && (
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-bold text-foreground truncate">{user?.full_name || "Agent"}</p>
-                <p className="text-[10px] text-muted-foreground/70 truncate">{user?.email || "agent@detective.ai"}</p>
-              </div>
-            )}
-            {(!sidebarCollapsed || isMobile) && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={logout}
-                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors cursor-pointer border border-transparent"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+      {/* User Profile Footer */}
+      <div className="p-3 border-t border-black/15 dark:border-white/15 bg-[#f9f9f7] dark:bg-[#11120d] shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 min-w-[32px] min-h-[32px] max-w-[32px] max-h-[32px] rounded-full bg-[#edfe5e] border border-black flex items-center justify-center text-black font-mono font-bold text-xs shrink-0 select-none shadow-xs">
+            {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "C"}
           </div>
+          {!sidebarCollapsed && (
+            <div className="flex-1 min-w-0 text-left overflow-hidden">
+              <p className="text-xs font-mono font-bold text-black dark:text-white truncate">{user?.full_name || "Chaitanya Patil"}</p>
+              <p className="text-[10px] font-mono text-black/60 dark:text-white/60 truncate">{user?.email || "chaitanyapatil700@gmail.com"}</p>
+            </div>
+          )}
+          {!sidebarCollapsed && (
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] hover:bg-[#bc3e3e] hover:text-white text-black dark:text-white transition-colors cursor-pointer shrink-0"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
-      </motion.aside>
-    </>
+      </div>
+    </motion.aside>
   );
 }

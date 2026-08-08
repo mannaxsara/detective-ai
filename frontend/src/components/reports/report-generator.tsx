@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { FileText, Download, Check, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { reportsAPI } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 interface ReportGeneratorProps {
   analysisId: number | string;
@@ -14,7 +12,6 @@ interface ReportGeneratorProps {
 export default function ReportGenerator({ analysisId }: ReportGeneratorProps) {
   const [format, setFormat] = useState<"pdf" | "docx">("pdf");
   const [status, setStatus] = useState<"idle" | "generating" | "downloading" | "success" | "error">("idle");
-  const [downloadBlob, setDownloadBlob] = useState<Blob | null>(null);
   const [reportId, setReportId] = useState<number | null>(null);
 
   const handleGenerate = async () => {
@@ -52,107 +49,105 @@ export default function ReportGenerator({ analysisId }: ReportGeneratorProps) {
   };
 
   return (
-    <div className="space-y-6 font-sans text-foreground text-left max-w-2xl mx-auto">
-      <Card className="border-border bg-card shadow-sm rounded-cards">
-        <CardHeader className="pb-3 border-b border-border/40">
-          <CardTitle className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">
-            Executive Briefing compiler
-          </CardTitle>
-          <CardDescription className="text-muted-foreground/80 text-xs mt-1.5 leading-relaxed">
+    <div className="space-y-8 font-sans text-black dark:text-white text-left max-w-2xl mx-auto">
+      <div className="p-7 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[4px_4px_0px_#000000] space-y-6">
+        <div className="pb-4 border-b border-black/20 dark:border-[#3b3a33]">
+          <h3 className="text-xs font-mono font-bold text-black dark:text-white uppercase tracking-wider">
+            Executive Briefing Compiler
+          </h3>
+          <p className="text-black/75 dark:text-white/75 text-xs mt-1.5 leading-relaxed font-medium">
             Generate dynamic PDF or Word briefings summarizing anomalies, data profiling metrics, and active data cleansing actions.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
         
-        <CardContent className="pt-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            {/* Format choice */}
-            <div className="space-y-2 text-left">
-              <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest font-bold block">Briefing format</label>
-              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-                {[
-                  { id: "pdf", label: "PDF" },
-                  { id: "docx", label: "DOCX" }
-                ].map((type) => {
-                  const active = format === type.id;
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      onClick={() => setFormat(type.id as any)}
-                      className={`h-9 px-4 text-[10px] font-mono font-bold uppercase tracking-wider rounded-cards border transition-all cursor-pointer ${
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-transparent text-muted-foreground hover:border-border/40"
-                      }`}
-                    >
-                      {type.id.toUpperCase()}
-                    </button>
-                  );
-                })}
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          {/* Format choice */}
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] font-mono text-black/70 dark:text-white/70 uppercase tracking-wider font-bold block">
+              Briefing format
+            </label>
+            <div className="flex flex-row gap-3">
+              {[
+                { id: "pdf", label: "PDF" },
+                { id: "docx", label: "DOCX" }
+              ].map((type) => {
+                const active = format === type.id;
+                return (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setFormat(type.id as any)}
+                    className={`h-10 px-5 text-xs font-mono font-bold uppercase rounded-[10px] border border-black transition-all cursor-pointer shadow-[2px_2px_0px_#000000] ${
+                      active
+                        ? "bg-[#edfe5e] text-black"
+                        : "bg-[#edf0e9] dark:bg-[#262720] text-black dark:text-white hover:bg-[#edfe5e] hover:text-black"
+                    }`}
+                  >
+                    {type.id.toUpperCase()}
+                  </button>
+                );
+              })}
             </div>
-            
-            {/* CTA action */}
-            {status === "idle" && (
-              <Button
-                onClick={handleGenerate}
-                className="h-10 font-mono text-[9px] font-bold uppercase tracking-wider px-5 rounded-cards bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all self-end sm:self-center"
-              >
-                Compile Briefing
-              </Button>
-            )}
-
-            {status === "generating" && (
-              <Button
-                disabled
-                className="h-10 font-mono text-[9px] font-bold uppercase tracking-wider px-5 rounded-cards bg-primary text-primary-foreground opacity-70 self-end sm:self-center"
-              >
-                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                Compiling...
-              </Button>
-            )}
-
-            {status === "success" && (
-              <div className="flex gap-2 self-end sm:self-center">
-                <Button
-                  onClick={handleDownload}
-                  className="h-10 font-mono text-[9px] font-bold uppercase tracking-wider px-5 rounded-cards bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all"
-                >
-                  <Download className="w-3.5 h-3.5 mr-1.5" strokeWidth={2} />
-                  Download File
-                </Button>
-                <Button
-                  onClick={() => setStatus("idle")}
-                  variant="outline"
-                  className="h-10 font-mono text-[9px] font-bold uppercase tracking-wider px-5 rounded-cards border border-border bg-transparent text-muted-foreground hover:border-border/40"
-                >
-                  Compile New
-                </Button>
-              </div>
-            )}
-
-            {status === "downloading" && (
-              <Button
-                disabled
-                className="h-10 font-mono text-[9px] font-bold uppercase tracking-wider px-5 rounded-cards bg-primary text-primary-foreground opacity-70 self-end sm:self-center"
-              >
-                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                Downloading...
-              </Button>
-            )}
-
-            {status === "error" && (
-              <Button
-                onClick={() => setStatus("idle")}
-                variant="outline"
-                className="h-10 font-mono text-[9px] font-bold uppercase tracking-wider px-5 rounded-cards border border-destructive bg-transparent text-destructive hover:bg-destructive/5 self-end sm:self-center"
-              >
-                Retry Compiler
-              </Button>
-            )}
           </div>
-        </CardContent>
-      </Card>
+          
+          {/* CTA action */}
+          {status === "idle" && (
+            <button
+              onClick={handleGenerate}
+              className="btn-ink-accent text-xs py-3 px-6 font-mono uppercase font-bold cursor-pointer shadow-[2px_2px_0px_#000000] self-end sm:self-center"
+            >
+              Compile Briefing
+            </button>
+          )}
+
+          {status === "generating" && (
+            <button
+              disabled
+              className="h-11 px-6 text-xs font-mono font-bold uppercase rounded-[10px] border border-black bg-[#edf0e9] dark:bg-[#262720] text-black/50 dark:text-white/50 opacity-70 flex items-center gap-2 self-end sm:self-center"
+            >
+              <Loader2 className="w-4 h-4 animate-spin text-black dark:text-white" />
+              <span>Compiling...</span>
+            </button>
+          )}
+
+          {status === "success" && (
+            <div className="flex gap-3 self-end sm:self-center">
+              <button
+                onClick={handleDownload}
+                className="btn-ink-accent text-xs py-3 px-5 font-mono uppercase font-bold flex items-center gap-2 cursor-pointer shadow-[2px_2px_0px_#000000]"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download File</span>
+              </button>
+              <button
+                onClick={() => setStatus("idle")}
+                className="h-11 px-4 text-xs font-mono font-bold uppercase rounded-[10px] border border-black bg-[#edf0e9] dark:bg-[#262720] text-black dark:text-white cursor-pointer shadow-[2px_2px_0px_#000000]"
+              >
+                New
+              </button>
+            </div>
+          )}
+
+          {status === "downloading" && (
+            <button
+              disabled
+              className="h-11 px-6 text-xs font-mono font-bold uppercase rounded-[10px] border border-black bg-[#edf0e9] dark:bg-[#262720] text-black/50 dark:text-white/50 opacity-70 flex items-center gap-2 self-end sm:self-center"
+            >
+              <Loader2 className="w-4 h-4 animate-spin text-black dark:text-white" />
+              <span>Downloading...</span>
+            </button>
+          )}
+
+          {status === "error" && (
+            <button
+              onClick={() => setStatus("idle")}
+              className="h-11 px-5 text-xs font-mono font-bold uppercase rounded-[10px] border border-black bg-[#bc3e3e] text-white cursor-pointer shadow-[2px_2px_0px_#000000] self-end sm:self-center"
+            >
+              Retry Compiler
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

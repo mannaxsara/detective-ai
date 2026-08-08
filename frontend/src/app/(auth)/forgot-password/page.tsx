@@ -1,24 +1,29 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, ArrowLeft, CheckCircle2, Send, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { authAPI } from "@/lib/api";
 
-function LogoMark({ size = 26 }: { size?: number }) {
+function DetectiveBadgeLogo() {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="13" cy="13" r="9.5" stroke="currentColor" strokeWidth="2" />
-      <circle cx="11" cy="12" r="1.2" fill="currentColor" />
-      <circle cx="15" cy="10" r="1.2" fill="currentColor" />
-      <circle cx="15" cy="15" r="1.2" fill="currentColor" />
-      <line x1="11" y1="12" x2="15" y2="10" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1="15" y1="10" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1="11" y1="12" x2="15" y2="15" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" />
-      <line x1="20" y1="20" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
+    <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-[#edfe5e] border border-black flex items-center justify-center text-black font-bold shadow-[2px_2px_0px_#000000] shrink-0 select-none">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="13" cy="13" r="9" stroke="#000000" strokeWidth="3" />
+        <circle cx="13" cy="13" r="4.5" stroke="#000000" strokeWidth="2" strokeDasharray="2 2" />
+        <circle cx="11" cy="11" r="1.5" fill="#000000" />
+        <circle cx="15" cy="14" r="1.5" fill="#000000" />
+        <line x1="19.5" y1="19.5" x2="27.5" y2="27.5" stroke="#000000" strokeWidth="4" strokeLinecap="round" />
+      </svg>
+    </div>
   );
 }
 
@@ -47,45 +52,47 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-background px-4 py-12 text-foreground font-sans overflow-hidden">
-      {/* Background Grid Accent */}
-      <div className="absolute inset-0 pointer-events-none select-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(216,207,188,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(216,207,188,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
-      </div>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f9f9f7] dark:bg-[#11120d] text-black dark:text-white px-4 py-12 font-sans relative selection:bg-[#edfe5e]">
+      
+      {/* Top Floating Back Link */}
+      <Link href="/login" className="absolute top-6 left-6 inline-flex items-center gap-2 font-mono text-xs font-bold uppercase text-black dark:text-white hover:underline">
+        <ArrowLeft className="w-4 h-4 text-black dark:text-white" /> Back to Sign In
+      </Link>
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[420px]"
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-[420px] space-y-6"
       >
-        <div className="rounded-2xl border border-border/80 bg-card/90 backdrop-blur-xl p-7 sm:p-9 shadow-2xl shadow-black/40 space-y-6">
+        {/* Card Container */}
+        <div className="border border-black dark:border-white/20 rounded-2xl bg-white dark:bg-[#181914] p-7 sm:p-8 shadow-[4px_4px_0px_#000000] space-y-6">
+          
           {/* Header Wordmark & Logo */}
           <div className="text-center space-y-3">
-            <Link href="/" className="inline-flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
-              <LogoMark size={24} />
-              <span className="font-mono text-xs font-bold tracking-[0.2em] text-foreground uppercase">
-                DetectiveAI
+            <Link href="/" className="inline-flex items-center gap-3 group select-none cursor-pointer">
+              <DetectiveBadgeLogo />
+              <span className="font-serif font-extrabold text-2xl tracking-tight text-black dark:text-white">
+                DETECTIVE<span className="text-[#31e992] ml-0.5">AI</span>
               </span>
             </Link>
 
             {submitted ? (
               <div className="space-y-2 pt-2">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <CheckCircle2 className="h-6 w-6" />
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#31e992] border border-black text-black shadow-[2px_2px_0px_#000000]">
+                  <CheckCircle2 className="h-6 w-6 text-black" />
                 </div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">Check Your Email</h2>
-                <p className="text-xs text-muted-foreground">
-                  We&apos;ve sent a password reset link to{" "}
-                  <span className="font-bold text-foreground">{email}</span>
+                <h1 className="text-xl font-serif font-bold text-black dark:text-white tracking-tight">Check Your Email</h1>
+                <p className="text-xs font-sans text-black/70 dark:text-white/70">
+                  We&apos;ve sent a password recovery link to{" "}
+                  <strong className="font-mono font-bold text-black dark:text-white">{email}</strong>
                 </p>
               </div>
             ) : (
               <div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">Reset Password</h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter your email address and we&apos;ll send you a recovery link
+                <h1 className="text-xl font-serif font-bold text-black dark:text-white tracking-tight">Reset Password</h1>
+                <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">
+                  Enter your email address to receive a recovery link
                 </p>
               </div>
             )}
@@ -93,12 +100,12 @@ export default function ForgotPasswordPage() {
 
           {submitted ? (
             <div className="space-y-4 pt-2">
-              <p className="text-center text-xs text-muted-foreground">
+              <p className="text-center text-xs font-sans text-black/70 dark:text-white/70">
                 Didn&apos;t receive an email? Check your spam folder or try another address.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="h-11 w-full rounded-xl border border-border/80 bg-muted/40 hover:bg-muted text-foreground font-semibold text-xs transition-all cursor-pointer"
+                className="btn-ink-outlined h-11 w-full font-mono font-bold text-xs uppercase cursor-pointer"
               >
                 Try another email
               </button>
@@ -106,11 +113,11 @@ export default function ForgotPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[10.5px] font-mono font-bold text-muted-foreground uppercase tracking-wider">
+                <label className="text-[11px] font-mono font-bold text-black dark:text-white uppercase tracking-wider block">
                   Email Address
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                <div className="relative flex items-center w-full">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-black/60 dark:text-white/60 pointer-events-none z-10 shrink-0" />
                   <input
                     type="email"
                     autoComplete="email"
@@ -118,7 +125,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
-                    className="h-11 w-full rounded-xl border border-border/80 bg-background/50 pl-10 pr-3.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+                    className="h-11 w-full rounded-xl border border-black/20 dark:border-white/20 bg-[#f9f9f7] dark:bg-[#11120d] pl-11 pr-4 text-xs font-mono font-bold text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-black dark:focus:border-[#edfe5e] focus:ring-2 focus:ring-[#edfe5e] transition-all"
                   />
                 </div>
               </div>
@@ -126,11 +133,11 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="h-11 w-full rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:brightness-110 text-primary-foreground font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-primary/15 mt-2"
+                className="btn-ink-accent h-11 w-full font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[2.5px_2.5px_0px_#000000] cursor-pointer disabled:opacity-50 transition-transform active:scale-[0.98] mt-2"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-black" />
                     Sending Reset Link...
                   </>
                 ) : (
@@ -143,20 +150,20 @@ export default function ForgotPasswordPage() {
           )}
 
           {/* Footer Back Link */}
-          <div className="text-center pt-2 border-t border-border/60">
+          <div className="text-center pt-2 border-t border-black/15 dark:border-white/15">
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-black dark:text-white hover:underline"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Back to sign in
+              Back to Sign In
             </Link>
           </div>
         </div>
 
         {/* Security Trust Badge */}
-        <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-muted-foreground/60 mt-6 select-none">
-          <ShieldCheck className="w-3.5 h-3.5 text-primary/70" />
+        <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono font-bold text-black/60 dark:text-white/60 select-none">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#31e992]" />
           <span>256-bit Encrypted Session · DetectiveAI Security</span>
         </div>
       </motion.div>

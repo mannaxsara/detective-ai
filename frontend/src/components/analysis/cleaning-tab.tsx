@@ -4,10 +4,6 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { toast } from "sonner";
-
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cleaningAPI, datasetsAPI } from "@/lib/api";
 import { LoaderOne } from "@/components/ui/loader";
 import { FunnelChart, type FunnelStage } from "@/components/ui/chart-funnel";
@@ -34,7 +30,6 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
     mutationFn: (fixId: string) => cleaningAPI.applyFixes(datasetId, [fixId]),
     onSuccess: (data) => {
       toast.success(data.message || "Fix successfully applied!");
-      // Invalidate ALL cached queries for this dataset so every tab refetches
       queryClient.invalidateQueries({ queryKey: ["dataset", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["dataset-profile", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["analysis", datasetId] });
@@ -63,18 +58,18 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 animate-pulse">
+      <div className="space-y-4 animate-pulse font-sans">
         {[1, 2].map((i) => (
-          <div key={i} className="h-28 rounded-xl bg-muted/20 border border-border/40" />
+          <div key={i} className="h-28 rounded-xl bg-white dark:bg-[#181914] border border-black/10 dark:border-white/10" />
         ))}
       </div>
     );
   }
 
   const suggestions = cleanData?.suggestions || [];
-
   const totalIssues = cleanData?.total_issues || 0;
   const appliedCount = suggestions.filter((s: any) => s.applied).length || 0;
+  
   const cleaningPipeline: FunnelStage[] = [
     { label: 'Raw Records', value: profile?.row_count || 0, displayValue: (profile?.row_count || 0).toLocaleString() },
     { label: 'Issues Found', value: totalIssues, displayValue: String(totalIssues) },
@@ -83,95 +78,94 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
   ];
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex items-center justify-between border-b border-border pb-4">
+    <div className="space-y-6 font-sans text-black dark:text-white text-left">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-black/15 dark:border-white/15 pb-4">
         <div>
-          <h2 className="text-base font-bold text-foreground">Data Cleaning Suggestions</h2>
-          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
-            Identify formatting inconsistencies, missing values, duplicates, or negative quantities.
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black/20">
+              Data Cleaning
+            </span>
+            <span className="text-xs font-mono text-black/60 dark:text-white/60">
+              {totalIssues} Issues Tracked
+            </span>
+          </div>
+          <h2 className="text-lg font-serif font-bold text-black dark:text-white mt-1">
+            Data Quality & Sanitization Directives
+          </h2>
         </div>
-        <Badge className="text-xs bg-primary/10 border border-primary/20 text-primary font-bold px-3 py-1 rounded-lg">
-          {cleanData?.total_issues || 0} Quality Flags
-        </Badge>
       </div>
 
-      <Card className="border-border bg-card shadow-sm">
-        <CardContent className="p-5">
-          <h3 className="text-xs font-serif font-bold text-foreground mb-4">Cleaning Pipeline</h3>
+      {/* Render Pipeline Funnel ONLY if total issues exist */}
+      {totalIssues > 0 && (
+        <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 space-y-3 shadow-sm">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Cleaning Pipeline</h3>
           <FunnelChart data={cleaningPipeline} height={120} />
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
+      {/* Issues Listing */}
       {suggestions.length > 0 ? (
         <div className="space-y-4">
           {suggestions.map((issue: any) => {
-            let badgeColor = "bg-primary/10 border-primary/20 text-primary";
-            let Icon = Info;
-            if (issue.severity === "critical") {
-              badgeColor = "bg-destructive/10 border-destructive/20 text-destructive";
-              Icon = AlertCircle;
-            } else if (issue.severity === "warning") {
-              badgeColor = "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400";
-              Icon = AlertTriangle;
-            }
+            let isCritical = issue.severity === "critical";
+            let Icon = isCritical ? AlertCircle : AlertTriangle;
 
             return (
-              <Card key={issue.fix_id} className="border-border bg-card shadow-sm hover:border-border/80 transition-all duration-200">
-                <CardContent className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg border ${badgeColor} shrink-0 mt-0.5`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-                          {(issue.issue_type || "quality_issue").replace(/_/g, " ").toUpperCase()}
-                        </span>
-                        {issue.column && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/50 border-border text-muted-foreground font-mono">
-                            {issue.column}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-foreground/90 text-xs sm:text-sm mt-1.5 font-semibold">{issue.description || "Data anomaly identified."}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1 font-semibold">
-                        Suggested Action: <span className="text-primary font-bold">{issue.suggested_fix || "Automated data cleanup"}</span>
-                      </p>
-                    </div>
+              <div key={issue.fix_id} className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className={`p-2.5 rounded-lg border shrink-0 mt-0.5 ${
+                    isCritical ? "bg-[#bc3e3e]/10 border-[#bc3e3e]/30 text-[#bc3e3e]" : "bg-[#edfe5e]/20 border-black/20 text-black dark:text-white"
+                  }`}>
+                    <Icon className="w-5 h-5" />
                   </div>
-
-                  <Button
-                    onClick={() => handleApplyFix(issue.fix_id)}
-                    disabled={applying === issue.fix_id}
-                    className="relative bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-lg hover:scale-[1.01] transition-all cursor-pointer shadow-sm disabled:opacity-50 shrink-0 w-full sm:w-auto mt-3 sm:mt-0"
-                  >
-                    {applying === issue.fix_id ? (
-                      <span className="flex items-center gap-1.5 font-bold">
-                        <LoaderOne />
-                        Fixing...
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-black dark:text-white">
+                        {(issue.issue_type || "quality_issue").replace(/_/g, " ").toUpperCase()}
                       </span>
-                    ) : (
-                      "Apply Fix"
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
+                      {issue.column && (
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] text-black dark:text-white uppercase">
+                          {issue.column}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-black/85 dark:text-white/85 text-xs sm:text-sm font-serif font-bold">{issue.description || "Data anomaly identified."}</p>
+                    <p className="text-[11px] font-sans text-black/70 dark:text-white/70">
+                      Suggested Action: <span className="text-black font-mono font-bold bg-[#edfe5e] px-1.5 py-0.5 rounded border border-black/20">{issue.suggested_fix || "Automated cleanup"}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleApplyFix(issue.fix_id)}
+                  disabled={applying === issue.fix_id}
+                  className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer shrink-0 w-full sm:w-auto mt-3 sm:mt-0"
+                >
+                  {applying === issue.fix_id ? (
+                    <span className="flex items-center gap-1.5 font-bold">
+                      <LoaderOne />
+                      Fixing...
+                    </span>
+                  ) : (
+                    "Apply Fix"
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
       ) : (
-        <Card className="border-border bg-card/50 border-dashed py-16 text-center shadow-none">
-          <CardContent className="space-y-4">
-            <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto" />
-            <div>
-              <h4 className="font-bold text-foreground text-sm uppercase tracking-wide">Your dataset is perfectly clean!</h4>
-              <p className="text-muted-foreground text-xs mt-1 font-semibold">
-                We couldn't detect any formatting, duplicates, missing values, or outlier issues.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-dashed border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] py-16 text-center shadow-sm">
+          <div className="w-12 h-12 rounded-lg bg-[#31e992]/20 border border-[#31e992]/40 flex items-center justify-center mx-auto mb-3 text-[#31e992] font-bold">
+            <CheckCircle className="w-6 h-6" />
+          </div>
+          <h4 className="font-serif font-bold text-black dark:text-white text-base">Your dataset is perfectly clean!</h4>
+          <p className="text-black/70 dark:text-white/70 text-xs mt-1 font-sans max-w-xs mx-auto font-medium">
+            We couldn&apos;t detect any formatting, duplicates, missing values, or outlier issues.
+          </p>
+        </div>
       )}
     </div>
   );
