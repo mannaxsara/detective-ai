@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LineChart, Calendar } from "lucide-react";
+import { LineChart, Calendar, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { LoaderOne } from "@/components/ui/loader";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { analysisAPI, datasetsAPI } from "@/lib/api";
@@ -102,6 +104,7 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
 export default function ForecastTab({ datasetId }: ForecastTabProps) {
   const [periods, setPeriods] = useState<number>(30);
   const [targetCol, setTargetCol] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["dataset-profile", datasetId],
@@ -122,8 +125,20 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     enabled: !!targetCol || numericColumns.length === 0,
   });
 
-  const handleRunForecast = () => {
-    refetch();
+  const handleRunForecast = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await refetch();
+      if (res.data) {
+        toast.success(`Generated ${periods}-day forecast projection for "${targetCol || 'selected metric'}".`);
+      } else {
+        toast.error("Failed to generate forecast for this column.");
+      }
+    } catch (err) {
+      toast.error("Forecast generation failed.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const isLoading = profileLoading || forecastLoading;
@@ -136,7 +151,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     band: Math.max(0, (forecast.upper_bound[i] ?? 0) - (forecast.lower_bound[i] ?? 0)),
   })) : [];
 
-  if (isLoading) {
+  if (isLoading && !forecast) {
     return (
       <div className="space-y-6 animate-pulse font-sans">
         <div className="h-16 rounded-[14px] bg-[#edf0e9] dark:bg-[#262720] border border-black" />
@@ -189,9 +204,20 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
 
           <button
             onClick={handleRunForecast}
-            className="btn-ink-accent text-xs py-2 px-4 font-mono uppercase font-bold shadow-[2px_2px_0px_#000000] cursor-pointer"
+            disabled={isGenerating || forecastLoading}
+            className="btn-ink-accent text-xs py-2 px-5 font-mono uppercase font-bold shadow-[2px_2px_0px_#000000] cursor-pointer inline-flex items-center gap-2 disabled:opacity-50"
           >
-            Generate Forecast
+            {isGenerating || forecastLoading ? (
+              <>
+                <LoaderOne />
+                <span>Predicting...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Generate Forecast</span>
+              </>
+            )}
           </button>
         </div>
       </div>
