@@ -9,9 +9,9 @@ The following Mermaid diagram shows the relationship between the client browser,
 
 ```mermaid
 graph TD
-    Client[Client Browser - Next.js] <--> |HTTPS / Auth| API[FastAPI Application Server]
-    API <--> |JSON Profiles / Results| DB[(Supabase PostgreSQL Database)]
-    API <--> |Stream File Read/Write| Disk[(Container Local Disk - Ephemeral)]
+    Client["Client Browser - Next.js"] <-->|"HTTPS / Auth"| API["FastAPI Application Server"]
+    API <-->|"JSON Profiles / Results"| DB[("Supabase PostgreSQL Database")]
+    API <-->|"Stream File Read/Write"| Disk[("Container Local Disk - Ephemeral")]
 ```
 
 ---
@@ -28,11 +28,11 @@ sequenceDiagram
     participant DB as Postgres Database
     
     User->>API: POST /api/datasets/upload (File Stream)
-    API->>API: Validate file extensions & size (MAX_UPLOAD_SIZE: 15 MB free-tier default)
-    API->>API: Write file to uploads/ directory
+    API->>API: Validate file extensions & size
+    API->>API: Write file to uploads directory
     API->>Polars: Load dataset dataframe
     Polars-->>API: Extract rows count, column types, & schema
-    API->>API: Compute baseline Health Score (Quality profile)
+    API->>API: Compute baseline Health Score
     API->>DB: Save dataset metadata (status="uploaded")
     API-->>User: Return dataset ID & properties
 ```
@@ -44,17 +44,17 @@ Cleansing suggestion detection and correction execution loop:
 
 ```mermaid
 graph TD
-    A[Start: Uploaded Dataset] --> B[GET /datasets/{id}/cleaning]
-    B --> C[Polars scans for missing values, duplicates, mixed case, outliers]
-    C --> D[Generate Suggestions with deterministic md5 fix_ids]
-    D --> E[Render suggestion lists on Cleaning Tab]
-    E -->|User clicks Apply Fix| F[POST /datasets/{id}/cleaning/apply]
-    F --> G[Load raw dataframe from disk]
-    G --> H[Run specific correction scripts in Polars]
-    H --> I[Overwrite file on disk with clean data]
-    I --> J[Recalculate profile health score & save to DB]
-    J --> K[Invalidate React Query cache keys on client]
-    K --> L[Refresh details page view]
+    A["Start: Uploaded Dataset"] --> B["GET /datasets/{id}/cleaning"]
+    B --> C["Polars scans for missing values, duplicates, mixed case, outliers"]
+    C --> D["Generate Suggestions with deterministic md5 fix_ids"]
+    D --> E["Render suggestion lists on Cleaning Tab"]
+    E -->|"User clicks Apply Fix"| F["POST /datasets/{id}/cleaning/apply"]
+    F --> G["Load raw dataframe from disk"]
+    G --> H["Run specific correction scripts in Polars"]
+    H --> I["Overwrite file on disk with clean data"]
+    I --> J["Recalculate profile health score & save to DB"]
+    J --> K["Invalidate React Query cache keys on client"]
+    K --> L["Refresh details page view"]
 ```
 
 ---
@@ -64,21 +64,21 @@ When a user opens the Case Details dashboard, background analytical engines are 
 
 ```mermaid
 graph LR
-    Dataset[Dataset Clean File] --> Profile[Profiling Service]
-    Dataset --> Forecast[ARIMA Forecast Service]
-    Dataset --> Stats[SciPy Statistics Engine]
-    Dataset --> Insights[Insight Engine]
+    Dataset["Dataset Clean File"] --> Profile["Profiling Service"]
+    Dataset --> Forecast["ARIMA Forecast Service"]
+    Dataset --> Stats["SciPy Statistics Engine"]
+    Dataset --> Insights["Insight Engine"]
     
-    Profile --> |Health / Metadata| DB[(Postgres Metadata DB)]
-    Forecast --> |90-period predictions JSON| DB
-    Stats --> |Z-Scores / Hypothesis tests JSON| DB
-    Insights --> |Concentration / Correlations JSON| DB
+    Profile -->|"Health / Metadata"| DB[("Postgres Metadata DB")]
+    Forecast -->|"90-period predictions JSON"| DB
+    Stats -->|"Z-Scores / Hypothesis tests JSON"| DB
+    Insights -->|"Concentration / Correlations JSON"| DB
 ```
 
 ---
 
 ## 5. Briefing Compilation Pipeline
-compilation stages of dynamic business reports:
+Compilation stages of dynamic business reports:
 
 ```mermaid
 sequenceDiagram
@@ -93,7 +93,7 @@ sequenceDiagram
     DB-->>API: Return JSON datasets
     API->>API: Parse summaries using _md_to_html formatter
     API->>Service: Send parsed HTML snippets & metrics
-    Service->>Service: Build PDF via ReportLab Canvas (Ink palette: paper/ink/charcoal tones)
+    Service->>Service: Build PDF via ReportLab Canvas
     Service->>Service: Write PDF report to disk
     API->>DB: Save report file details
     API-->>Client: Return report ID
