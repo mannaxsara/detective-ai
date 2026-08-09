@@ -547,7 +547,7 @@ curl -X POST "https://detective-ai-guio.onrender.com/api/datasets/upload" \\
               <pre className="overflow-x-auto text-[11px] sm:text-xs leading-relaxed text-[#31e992] pt-1">
                 <code>{`{
   "status": 200,
-  "case_id": "case_98f3b1a0",
+  "case_id": "case_1",
   "health_score": 98.4,
   "rows_processed": 1048576,
   "profiling_time_ms": 142,
@@ -555,7 +555,7 @@ curl -X POST "https://detective-ai-guio.onrender.com/api/datasets/upload" \\
     { "column": "latency_ms", "z_score": 3.84, "severity": "HIGH" },
     { "column": "error_rate", "z_score": 4.12, "severity": "CRITICAL" }
   ],
-  "briefing_pdf_url": "https://detective-ai-guio.onrender.com/reports/case_98f3b1a0.pdf"
+  "briefing_pdf_url": "https://detective-ai-guio.onrender.com/reports/case_1.pdf"
 }`}</code>
               </pre>
             )}

@@ -1,46 +1,24 @@
 """
-Slug encryption and tokenization logic.
-Obfuscates internal database integer IDs using a bitwise XOR and Base36 encoding.
+Sequential Case ID slug formatting logic.
+Encodes integer database IDs into clean sequential identifiers ("case_1", "case_2", "case_3").
 """
 
 from __future__ import annotations
 
-SECRET_SALT = 84729103
 
 def encode_id(db_id: int) -> str:
-    """XOR obfuscates and encodes an integer database ID into a Base36 slug."""
-    obfuscated = db_id ^ SECRET_SALT
-    # Base36 conversion
-    chars = "0123456789abcdefghijklmnopqrstuvwxyz"
-    result = []
-    val = obfuscated
-    
-    if val == 0:
-        return "case_0"
-        
-    while val > 0:
-        val, r = divmod(val, 36)
-        result.append(chars[r])
-        
-    return "case_" + "".join(reversed(result))
+    """Encodes an integer database ID into a clean sequential case identifier (e.g. 'case_1')."""
+    return f"case_{db_id}"
 
-def decode_id(slug: str) -> int | None:
-    """Decodes a Base36 slug and resolves it back to the integer database ID."""
-    if not slug:
+
+def decode_id(slug: str | int) -> int | None:
+    """Decodes a sequential case identifier (e.g. 'case_1' or '1') back to an integer database ID."""
+    if slug is None:
         return None
-        
-    slug_str = str(slug)
-    
-    # Fallback to integer conversion if it's already a raw database ID
-    if not slug_str.startswith("case_"):
-        try:
-            return int(slug_str)
-        except ValueError:
-            return None
-            
-    val_str = slug_str[5:]
+    s = str(slug).strip()
+    if s.startswith("case_"):
+        s = s[5:]
     try:
-        obfuscated = int(val_str, 36)
-        return obfuscated ^ SECRET_SALT
-    except Exception:
+        return int(s)
+    except (ValueError, TypeError):
         return None
