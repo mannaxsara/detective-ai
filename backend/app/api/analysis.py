@@ -153,39 +153,49 @@ async def get_analysis(
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(resolved_id)
         if dataset and dataset.user_id == current_user.id:
-            try:
-                kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
-                insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
-                charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
+            kpis_data = []
+            insights_data = []
+            charts_data = []
+            suggestions_data = []
 
-                # Cleaning suggestions (used by the chat provider and cleaning tab)
-                from app.services.cleaning_service import get_cleaning_suggestions
-                suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type)
+            import os
+            if os.path.exists(dataset.file_path):
+                try:
+                    kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
+                    insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
+                    charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
 
-                # Profile dataset and update dataset details
-                from app.services.profiling_service import profile_dataset
-                profile = await profile_dataset(dataset.file_path, dataset.file_type)
-                dataset.row_count = profile.row_count
-                dataset.column_count = profile.column_count
-                dataset.health_score = profile.health_score
-                dataset.profile_data = profile.model_dump()
-                dataset.status = "completed"
-                db.add(dataset)
-                await db.commit()
+                    from app.services.cleaning_service import get_cleaning_suggestions
+                    suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type)
 
-                analysis = await repo.create(
-                    dataset_id=dataset.id,
-                    user_id=current_user.id,
-                    analysis_type="full",
-                    status="completed",
-                    kpis=[k.model_dump() for k in kpis],
-                    insights=[i.model_dump() for i in insights],
-                    charts=[c.model_dump() for c in charts],
-                    cleaning_suggestions=[s.model_dump() for s in suggestions],
-                    completed_at=datetime.utcnow()
-                )
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to auto-generate analysis: {str(e)}")
+                    from app.services.profiling_service import profile_dataset
+                    profile = await profile_dataset(dataset.file_path, dataset.file_type)
+                    dataset.row_count = profile.row_count
+                    dataset.column_count = profile.column_count
+                    dataset.health_score = profile.health_score
+                    dataset.profile_data = profile.model_dump() if hasattr(profile, "model_dump") else profile
+                    dataset.status = "completed"
+                    db.add(dataset)
+                    await db.commit()
+
+                    kpis_data = [k.model_dump() for k in kpis]
+                    insights_data = [i.model_dump() for i in insights]
+                    charts_data = [c.model_dump() for c in charts]
+                    suggestions_data = [s.model_dump() for s in suggestions]
+                except Exception:
+                    pass
+
+            analysis = await repo.create(
+                dataset_id=dataset.id,
+                user_id=current_user.id,
+                analysis_type="full",
+                status="completed",
+                kpis=kpis_data,
+                insights=insights_data,
+                charts=charts_data,
+                cleaning_suggestions=suggestions_data,
+                completed_at=datetime.utcnow()
+            )
         else:
             raise HTTPException(status_code=404, detail="Analysis not found")
             

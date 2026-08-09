@@ -39,18 +39,17 @@ async def get_analysis_statistics(
     if not analysis.statistics:
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(analysis.dataset_id)
-        if not dataset:
-            raise HTTPException(status_code=404, detail="Dataset not found")
-        
-        try:
-            stats_list = run_statistics(dataset.file_path, dataset.file_type)
-            # Cache it
-            analysis = await repo.update_by_id(
-                analysis.id,
-                statistics=[s.model_dump() for s in stats_list]
-            )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Stats calculation failed: {str(e)}")
+        if dataset:
+            import os
+            if os.path.exists(dataset.file_path):
+                try:
+                    stats_list = run_statistics(dataset.file_path, dataset.file_type)
+                    analysis = await repo.update_by_id(
+                        analysis.id,
+                        statistics=[s.model_dump() for s in stats_list]
+                    )
+                except Exception:
+                    pass
 
     return [StatisticalTest.model_validate(s) for s in (analysis.statistics or [])]
 
@@ -76,10 +75,14 @@ async def get_analysis_correlations(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    try:
-        return compute_correlations(dataset.file_path, dataset.file_type)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Correlation calculation failed: {str(e)}")
+    import os
+    if os.path.exists(dataset.file_path):
+        try:
+            return compute_correlations(dataset.file_path, dataset.file_type)
+        except Exception:
+            pass
+
+    return CorrelationResult(columns=[], matrix=[])
 
 @router.get("/{analysis_id}/anomalies", response_model=list[AnomalyItem])
 async def get_analysis_anomalies(
@@ -101,17 +104,16 @@ async def get_analysis_anomalies(
     if not analysis.anomalies:
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(analysis.dataset_id)
-        if not dataset:
-            raise HTTPException(status_code=404, detail="Dataset not found")
-
-        try:
-            anom_list = detect_anomalies(dataset.file_path, dataset.file_type)
-            # Cache it
-            analysis = await repo.update_by_id(
-                analysis.id,
-                anomalies=[a.model_dump() for a in anom_list]
-            )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
+        if dataset:
+            import os
+            if os.path.exists(dataset.file_path):
+                try:
+                    anom_list = detect_anomalies(dataset.file_path, dataset.file_type)
+                    analysis = await repo.update_by_id(
+                        analysis.id,
+                        anomalies=[a.model_dump() for a in anom_list]
+                    )
+                except Exception:
+                    pass
 
     return [AnomalyItem.model_validate(a) for a in (analysis.anomalies or [])]

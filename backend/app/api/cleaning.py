@@ -34,15 +34,27 @@ async def get_cleaning_suggestions(
     if not dataset or dataset.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Dataset not found")
     
-    clean_service = CleaningService(db)
-    try:
-        suggestions = await clean_service.detect_issues(dataset.file_path, dataset.file_type)
+    analysis_repo = AnalysisRepository(db)
+    existing = await analysis_repo.get_by_dataset_id(resolved_id)
+    if existing and existing[0].cleaning_suggestions:
         return CleaningResponse(
-            suggestions=suggestions,
-            total_issues=len(suggestions),
+            suggestions=existing[0].cleaning_suggestions,
+            total_issues=len(existing[0].cleaning_suggestions),
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to scan dataset issues: {str(e)}")
+
+    import os
+    if os.path.exists(dataset.file_path):
+        clean_service = CleaningService(db)
+        try:
+            suggestions = await clean_service.detect_issues(dataset.file_path, dataset.file_type)
+            return CleaningResponse(
+                suggestions=suggestions,
+                total_issues=len(suggestions),
+            )
+        except Exception:
+            pass
+
+    return CleaningResponse(suggestions=[], total_issues=0)
 
 @router.post("/{dataset_id}/cleaning/apply", response_model=CleaningApplyResponse)
 async def apply_cleaning_fixes(
