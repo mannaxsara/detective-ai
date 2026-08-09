@@ -210,14 +210,20 @@ class RuleBasedInsightProvider(InsightProvider):
                 return f"{val:,.2f}" if isinstance(val, float) else f"{val:,}"
             return str(val)
 
-        # 1. Hello / Greetings
+        # 1. Hello / Greetings / Farewells
         if any(greet in msg for greet in ["hello", "hi", "hey", "greetings", "yo"]):
             return (
                 "Hello! I am **DetectiveAI**, your autonomous data analyst assistant. "
                 "I have completed a profiling review of this case file. "
                 "Ask me anything about its column metrics, null values, outliers, health score, or trends! "
-                "For example: *'What is the average of [column_name]?'*, *'Are there missing values?'*, "
-                "or *'Show me recommendations.'*"
+                "For example: **\"Tell me about column TransactionID\"**, **\"Are there missing values?\"**, "
+                "or **\"Show me recommendations.\"**"
+            )
+
+        if any(farewell in msg for farewell in ["bye", "goodbye", "cya", "see ya", "thanks", "thank you", "thx"]):
+            return (
+                "You're very welcome! I'm here whenever you need further data analysis, evidence inspection, or reporting. "
+                "Have a great day!"
             )
 
         # 2. Specific Column Queries
@@ -442,11 +448,13 @@ class RuleBasedInsightProvider(InsightProvider):
         if len(col_list) > 10:
             col_list_str += f" and {len(col_list) - 10} more"
 
+        first_col = columns_profiles[0].get('name') if columns_profiles else 'TransactionID'
+
         return (
             f"I have profiled the dataset containing **{row_count:,}** rows and **{col_count}** attributes, including: {col_list_str}.\n\n"
             "Try asking me specific questions like:\n"
-            f"- *'Tell me about column {columns_profiles[0].get('name') if columns_profiles else 'X'}'*\n"
-            "- *'What is the overall health score?'*\n"
-            "- *'Are there any missing values?'*\n"
-            "- *'Show me recommendations.'*"
+            f"- **\"Tell me about column {first_col}\"**\n"
+            "- **\"What is the overall health score?\"**\n"
+            "- **\"Are there any missing values?\"**\n"
+            "- **\"Show me recommendations.\"**"
         )

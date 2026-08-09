@@ -81,9 +81,14 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
         return <div key={li} className="h-2" />;
       }
 
-      const trimmed = line.trim();
-      const isBullet = /^[-•*]\s+/.test(trimmed);
-      const content = isBullet ? trimmed.replace(/^[-•*]\s+/, "") : line;
+      let trimmed = line.trim();
+      // Strip leading bullet markers or raw quote asterisks like ▶ or *' or '*
+      const isBullet = /^[-•*▶]\s+/.test(trimmed) || /^\*['"‘]/.test(trimmed);
+      if (isBullet) {
+        trimmed = trimmed.replace(/^[-•*▶]\s+/, "").replace(/^\*['"‘]/, "").replace(/['"’]\*$/, "");
+      }
+
+      const content = trimmed;
       const isHeader = /^#{1,3}\s+/.test(content);
 
       const parts = content.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g);
@@ -111,8 +116,8 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
 
       if (isBullet) {
         return (
-          <div key={li} className="flex items-start gap-2.5 pl-1.5">
-            <span className="text-[#3b6fd4] dark:text-[#bed4fb] font-bold mt-px select-none">▸</span>
+          <div key={li} className="flex items-start gap-2 pl-1 my-1">
+            <span className="text-[#3b6fd4] dark:text-[#bed4fb] font-bold mt-px select-none shrink-0">▸</span>
             <span className="flex-1 min-w-0">{rendered}</span>
           </div>
         );
@@ -187,7 +192,7 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
             {messages.map((msg, index) => {
               const isBot = msg.role === "bot";
               return (
-                <div key={index} className={`flex gap-3 max-w-[85%] ${isBot ? "mr-auto" : "ml-auto flex-row-reverse"}`}>
+                <div key={index} className={`flex items-start gap-3 max-w-[85%] ${isBot ? "mr-auto" : "ml-auto flex-row-reverse"}`}>
                   <div
                     className={`w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0 border border-black ${
                       isBot
@@ -198,17 +203,17 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
                     {isBot ? <Bot className="w-4.5 h-4.5" /> : <User className="w-4.5 h-4.5" />}
                   </div>
 
-                  <div className="space-y-1">
+                  <div className={`space-y-1 ${isBot ? "text-left" : "text-right"}`}>
                     <div
-                      className={`p-4 rounded-[14px] text-xs leading-relaxed border border-black ${
+                      className={`p-3.5 rounded-[14px] text-xs leading-relaxed border border-black ${
                         isBot
                           ? "bg-white dark:bg-[#1c1d18] text-black dark:text-white shadow-[2px_2px_0px_#000000]"
-                          : "bg-[#edfe5e] text-black font-bold shadow-[2px_2px_0px_#000000]"
+                          : "bg-[#edfe5e] text-black font-bold shadow-[2px_2px_0px_#000000] inline-block text-left"
                       }`}
                     >
                       {isBot ? formatMessage(msg.content) : <p className="font-mono text-xs">{msg.content}</p>}
                     </div>
-                    <span className="text-[9px] font-mono font-bold text-black/60 dark:text-white/60 px-1 block text-right">
+                    <span className={`text-[9px] font-mono font-bold text-black/60 dark:text-white/60 px-1 block ${isBot ? "text-left" : "text-right"}`}>
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
