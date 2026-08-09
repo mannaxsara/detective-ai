@@ -76,18 +76,53 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
   };
 
   const formatMessage = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\n)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-bold text-black dark:text-white bg-[#edfe5e] px-1 rounded">{part.slice(2, -2)}</strong>;
+    return text.split(/\n/).map((line, li) => {
+      if (line.trim().length === 0) {
+        return <div key={li} className="h-2" />;
       }
-      if (part.startsWith('`') && part.endsWith('`')) {
-        return <code key={i} className="px-1.5 py-0.5 rounded border border-black bg-[#edf0e9] dark:bg-[#262720] text-xs font-mono font-bold text-black dark:text-white">{part.slice(1, -1)}</code>;
+
+      const trimmed = line.trim();
+      const isBullet = /^[-•*]\s+/.test(trimmed);
+      const content = isBullet ? trimmed.replace(/^[-•*]\s+/, "") : line;
+      const isHeader = /^#{1,3}\s+/.test(content);
+
+      const parts = content.split(/(\*\*[^*]+\*\*|`[^`]+`|_[^_]+_)/g);
+      const rendered = parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+          return <strong key={i} className="font-bold text-black dark:text-white">{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+          return <code key={i} className="px-1.5 py-0.5 rounded border border-black bg-[#edf0e9] dark:bg-[#262720] text-xs font-mono font-bold text-black dark:text-white">{part.slice(1, -1)}</code>;
+        }
+        if (part.startsWith('_') && part.endsWith('_') && part.length > 2) {
+          return <em key={i} className="italic text-black/85 dark:text-white/85">{part.slice(1, -1)}</em>;
+        }
+        return <span key={i}>{part}</span>;
+      });
+
+      if (isHeader) {
+        const headerText = content.replace(/^#{1,3}\s+/, "");
+        return (
+          <div key={li} className="font-mono text-[11px] font-bold uppercase tracking-wider text-black dark:text-white mt-3 first:mt-0 border-b border-black/15 dark:border-white/15 pb-1.5 mb-2">
+            {headerText}
+          </div>
+        );
       }
-      if (part === '\n') {
-        return <br key={i} />;
+
+      if (isBullet) {
+        return (
+          <div key={li} className="flex items-start gap-2.5 pl-1.5">
+            <span className="text-[#3b6fd4] dark:text-[#bed4fb] font-bold mt-px select-none">▸</span>
+            <span className="flex-1 min-w-0">{rendered}</span>
+          </div>
+        );
       }
-      return <span key={i}>{part}</span>;
+
+      return (
+        <div key={li} className="min-h-4">
+          {rendered}
+        </div>
+      );
     });
   };
 

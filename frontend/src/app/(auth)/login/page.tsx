@@ -122,7 +122,7 @@ export default function LoginPage() {
         className="w-full max-w-[420px] space-y-6"
       >
         {/* Editorial Brutalist Card Container */}
-        <div className="border border-black dark:border-white/20 rounded-2xl bg-white dark:bg-[#181914] p-7 sm:p-8 shadow-[4px_4px_0px_#000000] space-y-6">
+        <div className="border border-black dark:border-[#3b3a33] rounded-2xl bg-white dark:bg-[#1c1d18] p-7 sm:p-8 shadow-[4px_4px_0px_#000000] space-y-6">
           
           {/* Header Wordmark & Logo */}
           <div className="text-center space-y-3">

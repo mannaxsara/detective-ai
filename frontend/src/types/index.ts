@@ -174,6 +174,22 @@ export interface CorrelationMatrix {
   values: number[][];
 }
 
+export interface ScatterPoint {
+  x: number;
+  y: number;
+}
+
+export interface ScatterData {
+  x_column: string;
+  y_column: string;
+  points: ScatterPoint[];
+}
+
+export interface CorrelationResult {
+  matrix: CorrelationMatrix;
+  scatter: ScatterData | null;
+}
+
 export interface RegressionResult {
   equation: string;
   r_squared: number;
@@ -280,11 +296,10 @@ export interface UploadProgress {
 // ========== Dashboard Stats ==========
 export interface DashboardStats {
   total_datasets: number;
-  total_analyses: number;
-  total_reports: number;
+  avg_health_score: number | null;
   total_insights: number;
-  recent_analyses: Analysis[];
-  activity_timeline: ActivityItem[];
+  total_anomalies: number;
+  total_reports: number;
 }
 
 export interface ActivityItem {

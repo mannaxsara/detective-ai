@@ -132,7 +132,7 @@ export default function AnalysisPage() {
     <div className="max-w-7xl mx-auto space-y-6 font-sans text-black dark:text-white bg-[#f9f9f7] dark:bg-[#11120d]">
       
       {/* Distinct Dataset Header Card */}
-      <div className="border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] rounded-xl p-6 md:p-7 shadow-sm">
+      <div className="border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] rounded-[18px] p-6 md:p-7 shadow-[4px_4px_0px_#000000]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl bg-[#edfe5e] border border-black flex items-center justify-center text-black shrink-0 font-bold shadow-xs">
@@ -161,7 +161,7 @@ export default function AnalysisPage() {
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="btn-ink-accent inline-flex items-center gap-2 py-2.5 px-5 font-mono text-xs uppercase tracking-wider font-bold cursor-pointer disabled:opacity-50 shadow-sm"
+              className="btn-ink-accent inline-flex items-center gap-2 py-2.5 px-5 font-mono text-xs uppercase tracking-wider font-bold cursor-pointer disabled:opacity-50"
             >
               {downloading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

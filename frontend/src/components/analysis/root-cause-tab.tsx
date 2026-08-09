@@ -29,41 +29,47 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
     );
   }
 
-  const defaultNodes = [
-    { why: "High Variance in Primary Metric", reason: "Distribution profile shows double-peak variance across dataset observations.", confidence: 94 },
-    { why: "Subgroup Skew in Categorical Attribute", reason: "Subgroup segment A contributes 68% of total variance compared to segment B.", confidence: 88 },
-    { why: "Missing Null Safeguards on Ingest", reason: "Source data payload ingested null value defaults without strict schema enforcement.", confidence: 82 },
-    { why: "Uncalibrated Sensor / Data Collection Drift", reason: "Hardware sensor batch #42 drift led to unadjusted baseline scaling.", confidence: 78 }
-  ];
+  const nodes = rootCause && rootCause.length > 0 ? rootCause : [];
 
-  const nodes = (rootCause && rootCause.length > 0) ? rootCause : defaultNodes;
+  if (nodes.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto py-6 text-left font-sans">
+        <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-8 text-center space-y-2">
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">No Root Cause Traced</p>
+          <p className="text-xs text-black/60 dark:text-white/60 leading-relaxed max-w-md mx-auto">
+            A 5-Whys trace requires at least one numeric metric column (e.g. profit, revenue) and one categorical
+            dimension column (e.g. Region, Category) in your dataset. Adjust your data, then re-run the analysis.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const rootNode = nodes[nodes.length - 1] || {};
+  const lastData = rootNode.supporting_data || {};
 
-  const getActionPlan = (rootCauseReason: string) => {
-    const text = (rootCauseReason || "").toLowerCase();
-    
-    if (text.includes("odor") || text.includes("poisonous")) {
-      return {
-        title: "Feature Correlation Action Plan",
-        steps: [
-          "Deploy feature anomaly checks as a primary classifier filter.",
-          "Perform double-verification checks on neutral classifications.",
-          "Correlate primary cluster patterns across adjacent categorical fields."
-        ]
-      };
-    }
-    
-    return {
-      title: "Data Variance Correction Action Plan",
-      steps: [
-        "Audit data collection sources for the flagged outlier column.",
-        "Implement verification validation rules to block future skewed values.",
-        "Run statistical verification checks on the updated data segment weekly."
-      ]
-    };
-  };
-
-  const actionPlan = getActionPlan(rootNode.reason || "");
+  const actionPlan: { title: string; steps: string[] } = { title: "Next Diagnostic Steps", steps: [] };
+  if (lastData.factor && lastData.sub_average != null) {
+    actionPlan.title = `Investigate ${String(lastData.factor).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}`;
+    actionPlan.steps = [
+      `Audit ${lastData.factor} values for "${lastData.sub_segment}" against the dataset average (${Number(lastData.overall_average).toFixed(2)}).`,
+      "Verify whether the difference is a data-entry artifact or a genuine business driver.",
+      "If genuine, review pricing or terms for the segment; if artifactual, correct the source data.",
+    ];
+  } else if (lastData.segment) {
+    actionPlan.title = `Investigate "${lastData.segment}"`;
+    actionPlan.steps = [
+      `Review transactions for segment "${lastData.segment}" (${Number(lastData.value).toFixed(2)} total${lastData.percentage != null ? `, ${Number(lastData.percentage).toFixed(1)}% of dataset total` : ""}).`,
+      "Drill into sub-categories or date ranges to isolate the drop.",
+      "Add segment-level detail columns (discounts, costs) and re-run the analysis for a deeper trace.",
+    ];
+  } else {
+    actionPlan.steps = [
+      "Use the Statistics tab to review correlation and hypothesis tests for data-backed relationships.",
+      "Use the Cleaning tab to fix missing values, duplicates, and type issues before re-analyzing.",
+      "Re-run the analysis once the dataset is cleaned.",
+    ];
+  }
 
   const causalFlow: SankeyData = {
     nodes: nodes.map((w: any, i: number) => ({
@@ -73,7 +79,7 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
     links: nodes.slice(1).map((_: any, i: number) => ({
       source: i,
       target: i + 1,
-      value: Math.round(((nodes as any[])[i]?.confidence || 85)),
+      value: Math.max(1, Number(((nodes as any[])[i]?.supporting_data?.percentage) ?? 1)),
     })),
   };
 
@@ -101,11 +107,19 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
       <div className="space-y-3">
         {nodes.map((node: any, i: number) => {
           const isLast = i === nodes.length - 1;
-          const confVal = node.confidence != null ? node.confidence : Math.round((node.confidence_score || 0.88) * 100);
+          const supporting = node.supporting_data || {};
+          const supportLabel =
+            supporting.percentage != null
+              ? `${Number(supporting.percentage).toFixed(1)}% of total`
+              : supporting.sub_average != null
+                ? `avg ${Number(supporting.sub_average).toFixed(2)}`
+                : supporting.value != null
+                  ? `${Number(supporting.value).toFixed(2)}`
+                  : "Data-backed";
 
           return (
             <React.Fragment key={i}>
-              <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-5 shadow-sm flex items-start gap-4">
+              <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-5 shadow-[4px_4px_0px_#000000] flex items-start gap-4">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                   isLast ? "bg-[#bc3e3e] text-white border border-[#bc3e3e]/40" : "bg-[#edfe5e] text-black border border-black/20"
                 }`}>
@@ -119,7 +133,7 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
                     <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
                       isLast ? "bg-[#bc3e3e]/20 border-[#bc3e3e]/40 text-[#bc3e3e]" : "bg-[#31e992]/20 border-[#31e992]/40 text-[#31e992]"
                     }`}>
-                      {confVal}% Confidence
+                      {supportLabel}
                     </span>
                   </div>
                   <h4 className="font-serif font-bold text-sm text-black dark:text-white">{node.why}</h4>
@@ -138,7 +152,7 @@ export default function RootCauseTab({ datasetId }: RootCauseTabProps) {
       </div>
 
       {/* Actionable Remediation Summary Card */}
-      <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 space-y-4 shadow-sm">
+      <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
         <div className="flex items-center gap-2.5 border-b border-black/10 dark:border-white/10 pb-3">
           <ClipboardList className="w-5 h-5 text-black dark:text-[#edfe5e]" />
           <h4 className="font-serif font-bold text-sm text-black dark:text-white">Actionable Remediation Summary</h4>

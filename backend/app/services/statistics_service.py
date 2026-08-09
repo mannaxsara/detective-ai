@@ -10,8 +10,16 @@ import numpy as np
 import polars as pl
 from scipy import stats
 import statsmodels.api as sm
-from app.schemas.analysis import StatisticalTest
+from app.schemas.analysis import (
+    CorrelationMatrix,
+    CorrelationResult,
+    ScatterData,
+    ScatterPoint,
+    StatisticalTest,
+)
 from app.services.profiling_service import _load_dataframe
+
+MAX_SCATTER_POINTS = 300
 
 def _safe_float(val: Any) -> float:
     """Ensure value is a standard JSON-compatible float."""
@@ -232,3 +240,70 @@ def run_statistics(file_path: str, file_type: str) -> list[StatisticalTest]:
         )
 
     return results
+
+
+def _pearson(a: np.ndarray, b: np.ndarray) -> float:
+    """Pearson correlation between two arrays, or 0.0 when not computable."""
+    try:
+        r, _ = stats.pearsonr(a, b)
+        return _safe_float(r)
+    except Exception:
+        return 0.0
+
+
+def compute_correlations(file_path: str, file_type: str) -> CorrelationResult:
+    """Compute the full Pearson correlation matrix and a bivariate scatter.
+
+    Each pair is computed over its pairwise-complete observations. Pairs with
+    fewer than 5 shared non-null observations (or constant columns) yield 0.0.
+    The scatter uses the strongest correlated column pair, sampled down to
+    MAX_SCATTER_POINTS for a bounded payload.
+    """
+    try:
+        df = _load_dataframe(file_path, file_type)
+    except Exception:
+        return CorrelationResult(matrix=CorrelationMatrix(columns=[], values=[]))
+
+    numeric_cols = [c for c in df.columns if df[c].dtype.is_numeric()]
+    if len(numeric_cols) < 2:
+        return CorrelationResult(matrix=CorrelationMatrix(columns=numeric_cols, values=[]))
+
+    matrix_values: list[list[float]] = []
+    best_r = 0.0
+    best_pair: tuple[str, str] | None = None
+    best_points: list[tuple[float, float]] = []
+
+    for c1 in numeric_cols:
+        row_vals: list[float] = []
+        for c2 in numeric_cols:
+            if c1 == c2:
+                row_vals.append(1.0)
+                continue
+            aligned = df.select([c1, c2]).drop_nulls()
+            if aligned.height < 5:
+                row_vals.append(0.0)
+                continue
+            a = aligned[c1].to_numpy()
+            b = aligned[c2].to_numpy()
+            r = _pearson(a, b)
+            row_vals.append(r)
+            if abs(r) > best_r and abs(r) < 1.0:
+                best_r = abs(r)
+                best_pair = (c1, c2)
+                best_points = [(float(x), float(y)) for x, y in zip(a, b)]
+        matrix_values.append(row_vals)
+
+    scatter: ScatterData | None = None
+    if best_pair and len(best_points) >= 5:
+        step = max(1, len(best_points) // MAX_SCATTER_POINTS)
+        sampled = best_points[::step][:MAX_SCATTER_POINTS]
+        scatter = ScatterData(
+            x_column=best_pair[0],
+            y_column=best_pair[1],
+            points=[ScatterPoint(x=x, y=y) for x, y in sampled],
+        )
+
+    return CorrelationResult(
+        matrix=CorrelationMatrix(columns=numeric_cols, values=matrix_values),
+        scatter=scatter,
+    )

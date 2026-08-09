@@ -10,6 +10,7 @@ import numpy as np
 import polars as pl
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 from app.schemas.analysis import AnomalyItem
 from app.services.profiling_service import _load_dataframe
@@ -40,31 +41,39 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
     # 2. Univariate Outliers (Z-score & IQR)
     # Check top numeric columns
     for col in numeric_cols[:2]:
-        series = df[col].drop_nulls()
-        if len(series) < 10:
+        arr_full = df[col].to_numpy()
+        valid_mask = ~np.isnan(arr_full)
+        if np.count_nonzero(valid_mask) < 10:
             continue
-        
-        arr = series.to_numpy()
+
+        arr = arr_full[valid_mask]
+        orig_indices = np.where(valid_mask)[0]
         mean = np.mean(arr)
         std = np.std(arr)
-        
+
         if std == 0:
             continue
 
         # Z-score check
         z_scores = (arr - mean) / std
-        extreme_idx = np.where(np.abs(z_scores) > 3.5)[0]
+        extreme_mask = np.abs(z_scores) > 3.5
 
-        if len(extreme_idx) > 0:
+        if np.any(extreme_mask):
             # Report up to 5 extreme outliers
-            for idx in extreme_idx[:5]:
-                orig_row_idx = int(idx)
-                val = arr[orig_row_idx]
-                z_val = z_scores[orig_row_idx]
+            for pos in np.where(extreme_mask)[0][:5]:
+                orig_row_idx = int(orig_indices[pos])
+                val = arr[pos]
+                z_val = z_scores[pos]
+                confidence = float(min(0.99, abs(z_val) / 5.0))
                 anomalies.append(
                     AnomalyItem(
                         entity_type="row",
                         entity_id=str(orig_row_idx + 1),
+                        row_index=orig_row_idx,
+                        column_name=col,
+                        value=float(val),
+                        z_score=float(z_val),
+                        confidence_score=round(confidence, 2),
                         description=f"Outlier in column '{col}' with a value of {val} (Z-score: {z_val:.2f}).",
                         severity="critical" if abs(z_val) > 4.5 else "warning",
                         detection_method="Z-Score",
@@ -74,11 +83,13 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
                 )
 
     # 3. Multivariate Outliers (Isolation Forest)
-    # Filter numeric data, drop null rows
-    multi_df = df.select(numeric_cols).drop_nulls()
-    if multi_df.height >= 15:
+    # Numeric rows without nulls are used for the model; NaN rows are excluded
+    X_full = df.select(numeric_cols).to_numpy()
+    valid_mask = ~np.isnan(X_full).any(axis=1)
+    if np.count_nonzero(valid_mask) >= 15:
         try:
-            X = multi_df.to_numpy()
+            X = X_full[valid_mask]
+            orig_rows = np.where(valid_mask)[0]
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
 
@@ -86,14 +97,18 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
             # contamination specifies the expected proportion of outliers (e.g. 2%)
             clf = IsolationForest(contamination=0.02, random_state=42, n_estimators=100)
             preds = clf.fit_predict(X_scaled)  # -1 represents outlier, 1 is normal
-            
+            scores = clf.decision_function(X_scaled)  # lower score -> more anomalous
+
             outlier_indices = np.where(preds == -1)[0]
             for idx in outlier_indices[:5]:
-                orig_row_idx = int(idx)
+                orig_row_idx = int(orig_rows[idx])
+                confidence = float(min(0.99, max(0.5, -scores[idx])))
                 anomalies.append(
                     AnomalyItem(
                         entity_type="row",
                         entity_id=str(orig_row_idx + 1),
+                        row_index=orig_row_idx,
+                        confidence_score=round(confidence, 2),
                         description="Multivariate anomaly detected. This row represents an unusual combination of numeric variables.",
                         severity="warning",
                         detection_method="Isolation Forest",
@@ -105,28 +120,40 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
             pass
 
     # 4. DBSCAN Clustering for Density-Based Outliers
-    if len(numeric_cols) >= 2 and multi_df.height >= 20:
+    if len(numeric_cols) >= 2 and np.count_nonzero(valid_mask) >= 20:
         try:
-            X = multi_df.select(numeric_cols[:3]).to_numpy()
+            X = X_full[valid_mask][:, :3]
+            orig_rows = np.where(valid_mask)[0]
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
 
             # DBSCAN labels -1 as noise (anomalies)
             db = DBSCAN(eps=1.5, min_samples=5)
             db.fit(X_scaled)
-            
+
             noise_idx = np.where(db.labels_ == -1)[0]
             # Avoid duplicating anomalies. If already flagged by Isolation Forest, skip or add if space permits
             current_ids = {a.entity_id for a in anomalies}
-            
-            for idx in noise_idx:
-                orig_row_idx = int(idx)
+
+            # Distance to the nearest core point -> confidence that the row is isolated
+            if db.core_sample_indices_.size > 0:
+                nn = NearestNeighbors(n_neighbors=1)
+                nn.fit(X_scaled[db.core_sample_indices_])
+                noise_dists, _ = nn.kneighbors(X_scaled[noise_idx])
+            else:
+                noise_dists = np.zeros((len(noise_idx), 1))
+
+            for j, idx in enumerate(noise_idx):
+                orig_row_idx = int(orig_rows[idx])
                 str_id = str(orig_row_idx + 1)
                 if str_id not in current_ids and len(anomalies) < 15:
+                    confidence = float(min(0.95, max(0.5, noise_dists[j][0] / 3.0)))
                     anomalies.append(
                         AnomalyItem(
                             entity_type="row",
                             entity_id=str_id,
+                            row_index=orig_row_idx,
+                            confidence_score=round(confidence, 2),
                             description="Low-density anomaly. This row does not belong to any main data clusters.",
                             severity="info",
                             detection_method="DBSCAN",

@@ -28,7 +28,7 @@ sequenceDiagram
     participant DB as Postgres Database
     
     User->>API: POST /api/datasets/upload (File Stream)
-    API->>API: Validate file extensions & size (max 100MB)
+    API->>API: Validate file extensions & size (MAX_UPLOAD_SIZE: 15 MB free-tier default)
     API->>API: Write file to uploads/ directory
     API->>Polars: Load dataset dataframe
     Polars-->>API: Extract rows count, column types, & schema
@@ -86,14 +86,14 @@ sequenceDiagram
     actor Client as Browser
     participant API as FastAPI Backend
     participant DB as Postgres Database
-    participant Service as Report Service (ReportLab)
+    participant Service as Report Service (ReportLab + python-docx)
     
     Client->>API: POST /api/reports/analysis/{id} (PDF request)
     API->>DB: Fetch analysis metrics, statistics, & insights
     DB-->>API: Return JSON datasets
     API->>API: Parse summaries using _md_to_html formatter
     API->>Service: Send parsed HTML snippets & metrics
-    Service->>Service: Build ReportLab Canvas (Charcoal & Sand colors)
+    Service->>Service: Build PDF via ReportLab Canvas (Ink palette: paper/ink/charcoal tones)
     Service->>Service: Write PDF report to disk
     API->>DB: Save report file details
     API-->>Client: Return report ID

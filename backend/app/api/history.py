@@ -79,4 +79,4 @@ async def search_history(
                 completed_at=a.completed_at,
             )
         )
-    return AnalysisHistoryResponse(analyses=items, total=len(items))
+    return AnalysisHistoryResponse(analyses=items, total=total)

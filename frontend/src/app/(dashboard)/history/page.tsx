@@ -70,7 +70,7 @@ export default function HistoryPage() {
           placeholder="Search cases by name... (Press '/' to focus)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-11 w-full rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] pl-11 pr-12 text-xs font-mono text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#edfe5e] transition-all shadow-sm"
+          className="h-11 w-full rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] pl-11 pr-12 text-xs font-mono text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#edfe5e] transition-all shadow-[4px_4px_0px_#000000]"
         />
         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded border border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] font-mono text-[10px] font-bold select-none text-black/70 dark:text-white/70">
           /
@@ -85,7 +85,7 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : historyData?.analyses && historyData.analyses.length > 0 ? (
-        <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] overflow-hidden shadow-sm">
+        <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
           <div className="w-full overflow-x-auto">
             <table className="w-full border-collapse min-w-[700px] text-left">
               <thead>
@@ -140,7 +140,7 @@ export default function HistoryPage() {
                               e.stopPropagation();
                               handleReopenAnalysis(item);
                             }}
-                            className="btn-ink-accent inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-mono font-bold uppercase shrink-0 cursor-pointer shadow-sm"
+                            className="btn-ink-accent inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-mono font-bold uppercase shrink-0 cursor-pointer"
                             title="Inspect Case Details"
                           >
                             <span>Inspect</span>
@@ -168,7 +168,7 @@ export default function HistoryPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] py-16 px-6 text-center shadow-sm space-y-3">
+        <div className="rounded-[18px] border border-dashed border-black/30 dark:border-white/30 bg-white dark:bg-[#1c1d18] py-16 px-6 text-center shadow-[4px_4px_0px_#000000] space-y-3">
           <div className="w-12 h-12 rounded-xl bg-[#edf0e9] dark:bg-[#262720] border border-black/15 dark:border-white/15 flex items-center justify-center mx-auto text-black dark:text-[#edfe5e] shrink-0">
             <FolderOpen className="w-6 h-6" />
           </div>
@@ -217,7 +217,7 @@ export default function HistoryPage() {
                 }
               }}
               disabled={isDeleting}
-              className="h-9 px-4.5 rounded-lg bg-[#bc3e3e] text-white border border-[#bc3e3e]/40 font-mono font-bold text-xs uppercase shadow-sm hover:brightness-110 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              className="h-9 px-4.5 rounded-lg bg-[#bc3e3e] text-white border border-[#bc3e3e]/40 font-mono font-bold text-xs uppercase shadow-[4px_4px_0px_#000000] hover:brightness-110 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isDeleting ? "Deleting..." : "Delete Case"}
             </button>

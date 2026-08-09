@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DetectiveAI — Frontend
+
+Next.js 16 (App Router + Turbopack) frontend for the DetectiveAI autonomous data intelligence platform. Built with React 19, TypeScript, TanStack Query, Zustand, and the custom **Ink Design System** on TailwindCSS v4.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The FastAPI backend must be running on port 8000 (see the [root README](../README.md)).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Start the development server (Turbopack) |
+| `npm run build` | Production build (type-check + static generation) |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
 
-## Learn More
+## Environment Variables (`frontend/.env.local`)
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Optional — Google Sign-In (Firebase Web App)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## App Structure
 
-## Deploy on Vercel
+```text
+src/
+├── app/
+│   ├── (auth)/      # login, register, forgot-password
+│   ├── (dashboard)/ # dashboard, upload, history, analysis/[id], profile, settings
+│   ├── blog/        # Blog landing
+│   ├── pricing/     # Interactive pricing studio
+│   └── page.tsx     # Marketing landing
+├── components/
+│   ├── analysis/    # 12 analysis tab modules
+│   ├── reports/     # Executive report generator
+│   ├── layout/      # Dashboard shell (sidebar, header)
+│   ├── ui/          # Base primitives + forensic charts (ECharts)
+│   └── animate-ui/  # Motion & micro-interaction components
+├── hooks/           # Theme-aware ECharts hook, UI listeners
+├── lib/             # Axios API client, Firebase init, utils
+├── store/           # Zustand stores (auth, analysis)
+└── types/           # Shared TypeScript contracts
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Design System
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The UI uses the **Ink Design System** — hard offset shadows, 18px-radius panels, monospace status readouts, and an `#edfe5e` acid accent on near-black/paper canvases. Design tokens and component specs live in [`docs/DESIGN_SYSTEM.md`](../docs/DESIGN_SYSTEM.md) at the repository root.
+
+## Key Dependencies
+
+- **Routing/Data:** `next` (App Router), `@tanstack/react-query`, `axios`
+- **State:** `zustand`
+- **Styling:** `tailwindcss` v4, `tw-animate-css`, `class-variance-authority`, `tailwind-merge`
+- **Charts:** `echarts` + custom theme-aware wrapper hook
+- **Motion:** `framer-motion` / `motion`
+- **UI:** `@base-ui/react`, `lucide-react`, `sonner`, `react-dropzone`, `next-themes`
+- **Auth:** `firebase` (email/password + Google popup), `jwt-decode`

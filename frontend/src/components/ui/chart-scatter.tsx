@@ -190,7 +190,7 @@ export function ScatterTooltip() {
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute z-50 bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl backdrop-blur-md text-xs font-sans min-w-[140px] pointer-events-none"
+          className="absolute z-50 bg-white dark:bg-[#1c1d18] text-black dark:text-white border border-black dark:border-[#3b3a33] p-3 rounded-lg shadow-[4px_4px_0px_#000000] backdrop-blur-md text-xs font-sans min-w-[140px] pointer-events-none"
           style={{
             left: xScale(data[hoveredIndex][xDataKey]) + 20,
             top: yScale(data[hoveredIndex].y || Object.values(data[hoveredIndex]).find(v => typeof v === 'number' && v !== data[hoveredIndex][xDataKey]) as number) - 40,

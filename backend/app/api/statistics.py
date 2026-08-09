@@ -13,9 +13,9 @@ from app.database.session import get_db
 from app.models.user import User
 from app.repositories.analysis_repository import AnalysisRepository
 from app.repositories.dataset_repository import DatasetRepository
-from app.schemas.analysis import AnomalyItem, StatisticalTest
+from app.schemas.analysis import AnomalyItem, CorrelationResult, StatisticalTest
 from app.services.anomaly_service import detect_anomalies
-from app.services.statistics_service import run_statistics
+from app.services.statistics_service import compute_correlations, run_statistics
 
 router = APIRouter(prefix="/analysis", tags=["statistics"])
 
@@ -53,6 +53,33 @@ async def get_analysis_statistics(
             raise HTTPException(status_code=500, detail=f"Stats calculation failed: {str(e)}")
 
     return [StatisticalTest.model_validate(s) for s in (analysis.statistics or [])]
+
+
+@router.get("/{analysis_id}/correlations", response_model=CorrelationResult)
+async def get_analysis_correlations(
+    analysis_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CorrelationResult:
+    from app.core.slug import decode_id
+    resolved_id = decode_id(analysis_id)
+    if resolved_id is None:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    repo = AnalysisRepository(db)
+    analysis = await repo.get_by_id_or_dataset_id(resolved_id)
+    if not analysis or analysis.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    ds_repo = DatasetRepository(db)
+    dataset = await ds_repo.get_by_id(analysis.dataset_id)
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    try:
+        return compute_correlations(dataset.file_path, dataset.file_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Correlation calculation failed: {str(e)}")
 
 @router.get("/{analysis_id}/anomalies", response_model=list[AnomalyItem])
 async def get_analysis_anomalies(

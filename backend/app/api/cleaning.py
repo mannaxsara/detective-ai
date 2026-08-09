@@ -79,7 +79,7 @@ async def apply_cleaning_fixes(
             profile_data=profile_dict,
         )
 
-        # Clear cached statistics, anomalies, and forecasts for this dataset's analysis
+        # Clear cached statistics, anomalies, forecasts, and derived analysis caches for this dataset
         analysis_repo = AnalysisRepository(db)
         existing_analyses = await analysis_repo.get_by_dataset_id(resolved_id)
         if existing_analyses:
@@ -89,6 +89,10 @@ async def apply_cleaning_fixes(
                     statistics=None,
                     anomalies=None,
                     forecast=None,
+                    kpis=None,
+                    insights=None,
+                    charts=None,
+                    cleaning_suggestions=None,
                 )
 
         return res

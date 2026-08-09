@@ -90,7 +90,7 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 bg-white dark:bg-[#181914] border border-black/15 dark:border-white/15 rounded-lg px-3 py-1.5 shadow-sm text-xs font-mono">
+          <div className="flex items-center gap-2 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] rounded-lg px-3 py-1.5 shadow-[4px_4px_0px_#000000] text-xs font-mono">
             <span className="text-black/60 dark:text-white/60">Alpha (α):</span>
             <Select
               value={alpha.toString()}
@@ -110,7 +110,7 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
       </div>
 
       {/* Methodology Collapsible Guide */}
-      <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] overflow-hidden shadow-sm">
+      <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
         <button
           onClick={() => setShowGuide(!showGuide)}
           className="w-full px-5 py-3.5 bg-[#edf0e9]/50 dark:bg-[#262720]/50 flex items-center justify-between text-black dark:text-white font-mono font-bold text-xs uppercase tracking-wider cursor-pointer"
@@ -156,7 +156,7 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
           return (
             <div
               key={index}
-              className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 shadow-sm flex flex-col justify-between min-h-[240px] space-y-4"
+              className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 shadow-[4px_4px_0px_#000000] flex flex-col justify-between min-h-[240px] space-y-4"
             >
               {/* Header */}
               <div className="space-y-2">
@@ -219,7 +219,7 @@ export default function HypothesisTab({ datasetId }: HypothesisTabProps) {
                   className={`w-full h-10 text-xs rounded-lg flex items-center justify-center gap-2 font-mono font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                     isTested
                       ? "bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 text-black/50 dark:text-white/50 cursor-default"
-                      : "bg-[#edfe5e] border border-black text-black hover:opacity-90 active:scale-[0.99] shadow-sm"
+                      : "bg-[#edfe5e] border border-black text-black hover:opacity-90 active:scale-[0.99] shadow-[4px_4px_0px_#000000]"
                   }`}
                 >
                   {isTested ? (

@@ -50,7 +50,7 @@ export default function KPITab({ datasetId }: KPITabProps) {
       <div className="space-y-6 animate-pulse font-sans">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 rounded-[16px] bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33]" />
+            <div key={i} className="h-28 rounded-[18px] bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33]" />
           ))}
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function KPITab({ datasetId }: KPITabProps) {
           return (
             <div
               key={idx}
-              className="p-6 rounded-[16px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex flex-col justify-between min-h-[140px] shadow-[4px_4px_0px_#000000] space-y-3"
+              className="p-6 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex flex-col justify-between min-h-[140px] shadow-[4px_4px_0px_#000000] space-y-3"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-mono uppercase font-bold tracking-wider opacity-85">

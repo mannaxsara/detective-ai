@@ -13,6 +13,7 @@ export interface AreaChartContextType {
   setHoveredIndex: (idx: number | null) => void;
   yMin: number;
   yMax: number;
+  stackBases: Record<string, Record<string, number[]>>;
 }
 
 const AreaChartContext = createContext<AreaChartContextType | null>(null);
@@ -52,12 +53,45 @@ export function AreaChart({ data, xDataKey = "date", height = 260, className, ch
   }, []);
 
   const allValues = data.flatMap(d => Object.values(d).filter(v => typeof v === 'number')) as number[];
-  const yMin = allValues.length ? Math.min(...allValues, 0) : 0;
-  const yMax = allValues.length ? Math.max(...allValues, 1) : 1;
+  let yMin = allValues.length ? Math.min(...allValues, 0) : 0;
+  let yMax = allValues.length ? Math.max(...allValues, 1) : 1;
   const numHeight = typeof height === 'number' ? height : 260;
 
+  const stackGroups: Record<string, string[]> = {};
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child) && child.type === Area) {
+      const props = child.props as AreaProps;
+      if (props.stackId && props.dataKey) {
+        (stackGroups[props.stackId] = stackGroups[props.stackId] || []).push(props.dataKey);
+      }
+    }
+  });
+
+  const stackBases: Record<string, Record<string, number[]>> = {};
+  Object.entries(stackGroups).forEach(([sid, keys]) => {
+    const totals = new Array(data.length).fill(0);
+    keys.forEach((k) => {
+      data.forEach((d, i) => {
+        totals[i] += typeof d[k] === "number" ? d[k] : 0;
+      });
+    });
+    if (totals.length) {
+      yMin = Math.min(yMin, ...totals);
+      yMax = Math.max(yMax, ...totals);
+    }
+    const bases: Record<string, number[]> = {};
+    const running = new Array(data.length).fill(0);
+    keys.forEach((k) => {
+      bases[k] = running.slice();
+      data.forEach((d, i) => {
+        running[i] += typeof d[k] === "number" ? d[k] : 0;
+      });
+    });
+    stackBases[sid] = bases;
+  });
+
   return (
-    <AreaChartContext.Provider value={{ data, xDataKey, width, height: numHeight, hoveredIndex, setHoveredIndex, yMin, yMax }}>
+    <AreaChartContext.Provider value={{ data, xDataKey, width, height: numHeight, hoveredIndex, setHoveredIndex, yMin, yMax, stackBases }}>
       <div 
         ref={containerRef} 
         className={cn("relative w-full overflow-visible", className)} 
@@ -92,19 +126,23 @@ export interface AreaProps {
 }
 
 export function Area({ dataKey, fill, fillOpacity = 0.4, stroke, strokeWidth = 2, stackId }: AreaProps) {
-  const { data, width, height, yMin, yMax } = useAreaChart();
+  const { data, width, height, yMin, yMax, stackBases } = useAreaChart();
   
   if (data.length === 0) return null;
+
+  const baseArr = stackId ? stackBases[stackId]?.[dataKey] : undefined;
 
   const points = data.map((d, i) => {
     const x = (i / Math.max(data.length - 1, 1)) * width;
     const val = typeof d[dataKey] === 'number' ? d[dataKey] : 0;
-    const y = height - ((val - yMin) / Math.max(yMax - yMin, 1)) * height;
-    return { x, y };
+    const base = baseArr ? baseArr[i] : 0;
+    const y = height - ((val + base - yMin) / Math.max(yMax - yMin, 1)) * height;
+    const baseY = height - ((base - yMin) / Math.max(yMax - yMin, 1)) * height;
+    return { x, y, baseY };
   });
 
   const pathD = `M ${points.map(p => `${p.x},${p.y}`).join(" L ")}`;
-  const areaD = `${pathD} L ${width},${height} L 0,${height} Z`;
+  const areaD = `${pathD} L ${points.slice().reverse().map(p => `${p.x},${p.baseY}`).join(" L ")} Z`;
 
   return (
     <g>
@@ -251,7 +289,7 @@ export function AreaTooltip() {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            className="bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl text-xs font-sans min-w-[130px] backdrop-blur-md"
+            className="bg-white dark:bg-[#1c1d18] text-black dark:text-white border border-black dark:border-[#3b3a33] p-3 rounded-lg shadow-[4px_4px_0px_#000000] text-xs font-sans min-w-[130px] backdrop-blur-md"
           >
             <p className="font-bold text-black dark:text-white mb-1.5 border-b border-black/10 dark:border-white/10 pb-1 font-mono">{datum[xDataKey]}</p>
             {keys.map(k => (

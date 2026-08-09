@@ -176,7 +176,7 @@ export function PieTooltip() {
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl backdrop-blur-md flex flex-col gap-1 text-xs font-sans pointer-events-none min-w-[140px]"
+          className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-[#1c1d18] text-black dark:text-white border border-black dark:border-[#3b3a33] p-3 rounded-lg shadow-[4px_4px_0px_#000000] backdrop-blur-md flex flex-col gap-1 text-xs font-sans pointer-events-none min-w-[140px]"
         >
           <div className="flex items-center gap-2 mb-1 border-b border-black/10 dark:border-white/10 pb-1">
             <span className="w-2.5 h-2.5 rounded-full border border-black/20" style={{ backgroundColor: data[hoveredIndex].fill }} />

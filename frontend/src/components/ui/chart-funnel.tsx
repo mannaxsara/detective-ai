@@ -40,7 +40,7 @@ export function FunnelChart({
   const maxVal = Math.max(...data.map(d => d.value));
 
   return (
-    <div className={cn("w-full flex items-center justify-between font-sans", className)} style={{ height, gap: `${gap}px` }}>
+    <div className={cn("w-full flex items-center justify-between font-sans", className)} style={{ height, gap: `${gap}px`, paddingBottom: 34 }}>
       {data.map((stage, idx) => {
         const ratio = maxVal > 0 ? stage.value / maxVal : 0;
         const prevRatio = idx > 0 && maxVal > 0 ? data[idx - 1].value / maxVal : 1;
@@ -58,7 +58,7 @@ export function FunnelChart({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * staggerDelay + 0.2 }}
-                className="z-10 bg-muted/80 backdrop-blur text-foreground border border-border px-2 py-1 rounded-full text-[10px] font-mono font-bold whitespace-nowrap shadow-sm"
+                className="z-10 bg-white dark:bg-[#1c1d18] text-black dark:text-white border border-black dark:border-[#3b3a33] px-2 py-1 rounded-full text-[10px] font-mono font-bold whitespace-nowrap shadow-[2px_2px_0px_#000000]"
               >
                 {conversion.toFixed(1)}%
               </motion.div>
@@ -98,9 +98,9 @@ export function FunnelChart({
               </div>
               
               {/* Labels below */}
-              <div className="absolute -bottom-8 left-0 w-full text-center">
-                <div className="font-bold text-xs text-foreground truncate">{stage.label}</div>
-                <div className="text-[10px] font-mono text-muted-foreground">{stage.displayValue}</div>
+              <div className="absolute top-full left-0 w-full text-center">
+                <div className="font-bold text-xs text-black dark:text-white truncate">{stage.label}</div>
+                <div className="text-[10px] font-mono text-black/60 dark:text-white/60">{stage.displayValue}</div>
               </div>
             </motion.div>
           </React.Fragment>

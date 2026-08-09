@@ -133,6 +133,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     predicted: forecast.values[i],
     lower: forecast.lower_bound[i],
     upper: forecast.upper_bound[i],
+    band: Math.max(0, (forecast.upper_bound[i] ?? 0) - (forecast.lower_bound[i] ?? 0)),
   })) : [];
 
   if (isLoading) {
@@ -224,9 +225,9 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
                 <AreaGrid horizontal strokeDasharray="4 4" />
                 <AreaXAxis dataKey="date" />
                 <AreaYAxis numTicks={5} />
-                <Area dataKey="upper" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
+                <Area dataKey="lower" stackId="confidence" fill="transparent" stroke="transparent" />
+                <Area dataKey="band" stackId="confidence" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.6} />
                 <Area dataKey="predicted" fill="url(#predictedGrad)" stroke="#000000" strokeWidth={2} />
-                <Area dataKey="lower" fill="url(#confidenceGrad)" stroke="transparent" fillOpacity={0.3} />
                 <AreaTooltip />
               </AreaChart>
             </div>

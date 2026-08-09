@@ -44,7 +44,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
         <p className="text-xs text-black/60 dark:text-white/60">The profiling data could not be retrieved. Please try again.</p>
         <button
           onClick={() => refetch()}
-          className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer"
+          className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold cursor-pointer"
         >
           Retry
         </button>
@@ -113,7 +113,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <div key={idx} className="p-5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] shadow-sm flex items-center justify-between">
+            <div key={idx} className="p-5 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[4px_4px_0px_#000000] flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">{card.label}</p>
                 <p className="text-xl font-mono font-bold text-black dark:text-white mt-1">{card.value}</p>
@@ -131,7 +131,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {typeDistribution.length > 0 && (
-          <div className="border border-black/15 dark:border-white/15 rounded-xl p-6 bg-white dark:bg-[#181914] space-y-4 shadow-sm">
+          <div className="border border-black dark:border-[#3b3a33] rounded-[18px] p-6 bg-white dark:bg-[#1c1d18] space-y-4 shadow-[4px_4px_0px_#000000]">
             <div>
               <h3 className="text-sm font-serif font-bold text-black dark:text-white">Column Type Distribution</h3>
               <p className="text-black/60 dark:text-white/60 text-xs font-sans mt-0.5">Classification breakdown across dataset schema</p>
@@ -148,7 +148,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
           </div>
         )}
 
-        <div className="border border-black/15 dark:border-white/15 rounded-xl p-6 bg-white dark:bg-[#181914] space-y-4 shadow-sm">
+        <div className="border border-black dark:border-[#3b3a33] rounded-[18px] p-6 bg-white dark:bg-[#1c1d18] space-y-4 shadow-[4px_4px_0px_#000000]">
           <div>
             <h3 className="text-sm font-serif font-bold text-black dark:text-white">Quality Radar Assessment</h3>
             <p className="text-black/60 dark:text-white/60 text-xs font-sans mt-0.5">Multi-dimensional dataset quality scoring</p>
@@ -163,7 +163,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
       </div>
 
       {/* Columns Profile Table */}
-      <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] overflow-hidden shadow-sm">
+      <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
         <div className="p-4 border-b border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720]">
           <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Column Schema & Profiling</h3>
         </div>

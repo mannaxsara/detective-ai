@@ -47,7 +47,7 @@ function DashboardMetricCard({
   progress?: number;
 }) {
   return (
-    <div className="p-6 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] text-black dark:text-white flex flex-col justify-between shadow-sm min-h-[175px] transition-all hover:-translate-y-0.5 hover:border-black/30 dark:hover:border-white/30 hover:shadow-md">
+    <div className="p-6 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] text-black dark:text-white flex flex-col justify-between shadow-[4px_4px_0px_#000000] min-h-[175px] transition-all hover:-translate-y-0.5 hover:border-black/30 dark:hover:border-white/30 hover:shadow-[6px_6px_0px_#000000]">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-mono uppercase font-bold tracking-wider text-black/70 dark:text-white/70 leading-tight pt-1">{title}</p>
         <div className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-xl border-2 border-black bg-[#edfe5e] text-black flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#000000]">
@@ -103,9 +103,10 @@ export default function DashboardPage() {
 
   const totalRowsParsed = datasetsList.reduce((acc: number, d: any) => acc + (d.row_count || 0), 0);
   const totalColumnsScanned = datasetsList.reduce((acc: number, d: any) => acc + (d.column_count || 0), 0);
-  const avgHealthScore = datasetsList.length > 0
-    ? Math.round(datasetsList.reduce((acc: number, d: any) => acc + (d.health_score || 95), 0) / datasetsList.length)
-    : 100;
+  const scoredDatasets = datasetsList.filter((d: any) => d.health_score != null);
+  const avgHealthScore = scoredDatasets.length > 0
+    ? Math.round(scoredDatasets.reduce((acc: number, d: any) => acc + d.health_score, 0) / scoredDatasets.length)
+    : null;
 
   const handleOpenCase = (caseId: string | number, tabName = "profile") => {
     setActiveTab(tabName);
@@ -156,7 +157,7 @@ export default function DashboardPage() {
 
         <div className="flex items-center gap-3 shrink-0">
           <Link href="/upload">
-            <button className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase tracking-wider font-bold cursor-pointer inline-flex items-center gap-2 shadow-sm">
+            <button className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase tracking-wider font-bold cursor-pointer inline-flex items-center gap-2">
               <Upload className="w-4 h-4 text-black" />
               File New Evidence
             </button>
@@ -168,11 +169,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <DashboardMetricCard
           title="Average Case Health"
-          value={`${avgHealthScore}%`}
+          value={avgHealthScore != null ? `${avgHealthScore}%` : "—"}
           description="Overall dataset structural validity"
           icon={CheckCircle2}
-          trend="+2.4%"
-          progress={avgHealthScore}
+          progress={avgHealthScore ?? 0}
         />
         <DashboardMetricCard
           title="Total Records Logged"
@@ -213,7 +213,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] overflow-hidden shadow-sm">
+          <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
             {isDatasetsLoading ? (
               <div className="p-8 text-center space-y-3 font-mono text-xs animate-pulse">
                 <div className="h-6 bg-black/5 dark:bg-white/5 rounded max-w-sm mx-auto" />
@@ -311,7 +311,7 @@ export default function DashboardPage() {
             Forensics Toolkit
           </h2>
 
-          <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-5 space-y-4 shadow-sm">
+          <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-5 space-y-4 shadow-[4px_4px_0px_#000000]">
             <Link href="/upload" className="block">
               <div className="p-4 rounded-lg bg-[#edf0e9]/50 dark:bg-[#262720]/50 border border-black/10 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30 transition-all cursor-pointer space-y-1.5 group">
                 <div className="flex items-center justify-between">

@@ -37,7 +37,12 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
     queryFn: () => analysisAPI.getStatistics(datasetId),
   });
 
-  const isLoading = profileLoading || statsLoading;
+  const { data: correlations, isLoading: corrLoading } = useQuery({
+    queryKey: ["analysis-correlations", datasetId],
+    queryFn: () => analysisAPI.getCorrelations(datasetId),
+  });
+
+  const isLoading = profileLoading || statsLoading || corrLoading;
 
   if (isLoading) {
     return (
@@ -51,65 +56,22 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
   const numericColumns = profile?.columns?.filter((c: any) => c.classification === "numeric") || [];
   const numCols = numericColumns.map((c: any) => c.name);
 
-  // Heatmap correlation calculation
-  const heatmapData: HeatmapCellData[] = [];
-  numCols.forEach((colX: string, i: number) => {
-    numCols.forEach((colY: string, j: number) => {
-      let val = 0;
-      if (i === j) {
-        val = 1.0;
-      } else {
-        const combinedHash = (colX.length * colY.length + colX.charCodeAt(0) + colY.charCodeAt(0)) % 100;
-        val = (combinedHash - 50) / 100;
-        if (colX.toLowerCase().includes("revenue") && colY.toLowerCase().includes("profit")) val = 0.82;
-        if (colX.toLowerCase().includes("cost") && colY.toLowerCase().includes("profit")) val = -0.45;
-        if (colX.toLowerCase().includes("discount") && colY.toLowerCase().includes("revenue")) val = -0.31;
-      }
-      heatmapData.push({ x: colX, y: colY, value: val });
-    });
-  });
+  // Real correlation matrix from backend
+  const matrixColumns = correlations?.matrix?.columns ?? [];
+  const matrixValues = correlations?.matrix?.values ?? [];
+  const heatmapData: HeatmapCellData[] = matrixColumns.flatMap((colX: string, i: number) =>
+    matrixColumns.map((colY: string, j: number) => ({
+      x: colX,
+      y: colY,
+      value: matrixValues[i]?.[j] ?? 0,
+    }))
+  );
 
-  // Scatter plot data
-  let scatterData: any[] = [];
-  if (numCols.length >= 2) {
-    const col1 = numCols[0];
-    const col2 = numCols[1];
-    scatterData = Array.from({ length: 35 }, (_, i) => {
-      const seed = (col1.charCodeAt(0) * (i + 1) + col2.charCodeAt(0)) % 1000;
-      return {
-        x: Math.round((seed / 10 + Math.sin(i) * 5) * 100) / 100,
-        y: Math.round((seed / 12 + Math.cos(i) * 8 + i * 2) * 100) / 100,
-      };
-    });
-  }
+  // Real strongest-pair scatter from backend (null when no valid pair exists)
+  const scatter = correlations?.scatter ?? null;
+  const scatterData: { x: number; y: number }[] = scatter?.points ?? [];
 
-  // Fallback tests if backend returned empty list
-  const statList = (stats && stats.length > 0) ? stats : [
-    {
-      test_name: "Pearson Correlation Coefficient Test",
-      description: `Evaluates linear dependence between primary numeric columns ${numCols[0] || 'X'} and ${numCols[1] || 'Y'}.`,
-      statistic: 0.8421,
-      p_value: 0.0012,
-      significant: true,
-      interpretation: `Statistically significant strong positive relationship detected between ${numCols[0] || 'primary features'}.`
-    },
-    {
-      test_name: "One-Way ANOVA (Variance Uniformity)",
-      description: "Tests variance homogeneity across categorical distribution cohorts.",
-      statistic: 4.1520,
-      p_value: 0.0410,
-      significant: true,
-      interpretation: "Significant variance observed across categorical subgroups at α = 0.05 level."
-    },
-    {
-      test_name: "Shapiro-Wilk Normality Test",
-      description: "Assesses numerical target column for normal Gaussian distribution alignment.",
-      statistic: 0.9612,
-      p_value: 0.1240,
-      significant: false,
-      interpretation: "Fail to reject H₀. Data follows an approximately normal distribution curve."
-    }
-  ];
+  const statList = stats && stats.length > 0 ? stats : null;
 
   const getHypothesisDetails = (testName?: string) => {
     const name = (testName || "").toLowerCase();
@@ -163,7 +125,7 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
 
       {/* Pearson Correlation Heatmap */}
       {numCols.length > 1 && (
-        <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 space-y-4 shadow-sm">
+        <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-serif font-bold text-black dark:text-white">Pearson Correlation Matrix</h3>
@@ -188,19 +150,19 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Bivariate Scatter Plot */}
-        {numCols.length >= 2 && (
-          <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 space-y-4 shadow-sm">
+        {scatter && scatter.points.length >= 2 && (
+          <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
             <div>
               <h3 className="text-sm font-serif font-bold text-black dark:text-white">Bivariate Scatter Plot</h3>
               <p className="text-black/60 dark:text-white/60 text-xs mt-0.5">
-                Observed distribution pair: <span className="font-mono font-bold text-black dark:text-white">{numCols[0]}</span> vs <span className="font-mono font-bold text-black dark:text-white">{numCols[1]}</span>
+                Observed distribution pair: <span className="font-mono font-bold text-black dark:text-white">{scatter.x_column}</span> vs <span className="font-mono font-bold text-black dark:text-white">{scatter.y_column}</span>
               </p>
             </div>
             <ScatterChart data={scatterData} xDataKey="x" height={220}>
               <ScatterGrid horizontal vertical />
               <ScatterSeries dataKey="y" radius={4} fadeOnHover inactiveOpacity={0.3} fill="#edfe5e" />
-              <ScatterXAxis label={numCols[0]} />
-              <ScatterYAxis label={numCols[1]} numTicks={4} />
+              <ScatterXAxis label={scatter.x_column} />
+              <ScatterYAxis label={scatter.y_column} numTicks={4} />
               <ScatterTooltip />
             </ScatterChart>
           </div>
@@ -208,7 +170,7 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
 
         {/* Descriptive Summary Stats */}
         {profile && profile.columns && (
-          <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 space-y-4 shadow-sm flex flex-col justify-between">
+          <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000] flex flex-col justify-between">
             <div>
               <h3 className="text-sm font-serif font-bold text-black dark:text-white">Feature Profile Overview</h3>
               <p className="text-black/60 dark:text-white/60 text-xs mt-0.5">
@@ -261,6 +223,7 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
           Statistical Hypothesis & Diagnostic Audits
         </h3>
 
+        {statList ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {statList.map((test: any, idx: number) => {
             const hInfo = getHypothesisDetails(test.test_name);
@@ -269,7 +232,7 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
             return (
               <div
                 key={idx}
-                className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-5 space-y-4 shadow-sm flex flex-col justify-between"
+                className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-5 space-y-4 shadow-[4px_4px_0px_#000000] flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -316,6 +279,16 @@ export default function StatisticsTab({ datasetId }: StatisticsTabProps) {
             );
           })}
         </div>
+        ) : (
+          <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-8 text-center space-y-2">
+            <p className="text-xs font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">
+              No Tests Computed
+            </p>
+            <p className="text-xs text-black/60 dark:text-white/60 leading-relaxed">
+              No statistical hypothesis tests could be computed for this dataset (needs at least 2 numeric columns with sufficient overlapping rows).
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

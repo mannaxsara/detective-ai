@@ -158,15 +158,15 @@ def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, A
                             "supporting_data": {}
                         })
                     else:
-                        # Fallback step 4: Outlier or general check
+                        # No factor column available: state it plainly instead of inventing causes
                         tree.append({
                             "why": f"Are there any distribution anomalies in '{worst_sub}'?",
-                            "reason": f"Reviewing transactions under '{worst_sub}' reveals high volatility and transactional variances in {metric_name}.",
+                            "reason": f"No numeric factor columns (discount, shipping, cost, tax, fee) exist to explain the variance of '{worst_sub}'. The underperformance is factual, but its driver cannot be isolated from this dataset alone.",
                             "supporting_data": {}
                         })
                         tree.append({
                             "why": "What is the recommended business action?",
-                            "reason": f"Investigate warehouse availability or vendor delivery schedules for '{worst_sub}' to reduce volatility.",
+                            "reason": f"Compare '{worst_sub}' against its peers within '{worst_cat}' using transaction-level detail (pricing, volumes, timing) not present in this dataset.",
                             "supporting_data": {}
                         })
     except Exception as e:
@@ -174,14 +174,6 @@ def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, A
         tree.append({
             "why": "An unexpected error occurred during root-cause trace",
             "reason": str(e),
-            "supporting_data": {}
-        })
-
-    # Ensure we return at least 3 nodes for a good 5 Whys visual feel
-    while len(tree) < 3:
-        tree.append({
-            "why": "What is the general recommendation?",
-            "reason": "Verify your column classifications and perform custom segment filters on the dashboard to trace further.",
             "supporting_data": {}
         })
 

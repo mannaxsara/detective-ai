@@ -3,25 +3,28 @@
 ## 1. System Technology Stack
 
 ### Frontend Architecture
-* **Framework:** Next.js (version 16) with App Router, utilizing React Server Components (RSC) and Client Components.
-* **Styling:** Tailwind CSS with custom brand variables (Sand & Charcoal system).
+* **Framework:** Next.js (version 16) with App Router + Turbopack, utilizing React Server Components (RSC) and Client Components.
+* **Styling:** Tailwind CSS v4 (CSS-first, no `tailwind.config` file — tokens live in `globals.css` `@theme`) using the **Ink design system** (explicit hex / arbitrary-value classes on pages; CSS-var tokens inside `components/ui/*` primitives).
 * **State Management:** Zustand (used for authentication stores and analytical tab state).
 * **Data Fetching:** React Query (TanStack Query version 5) for cache handling and automated API invalidation.
-* **Component Library:** Radix UI primitives.
-* **Visualization:** Apache ECharts (via custom canvas bindings) for data dashboards and time-series charting.
+* **Component Library:** Base UI (`@base-ui/react`) primitives + shadcn/ui registry; Lucide icon set.
+* **Visualization:** Apache ECharts v6 (via a custom theme-aware `use-echarts` hook) for data dashboards and time-series charting.
+* **Motion:** Framer Motion / Motion for theme reveals and micro-interactions; Sonner for toast notifications.
 
 ### Backend Architecture
 * **Framework:** FastAPI (Python 3.12-slim) executing behind Uvicorn.
-* **Database Driver:** SQLAlchemy 2.0 (AsyncPG driver wrapper) managing async queries.
+* **Database Driver:** SQLAlchemy 2.0 (AsyncPG driver wrapper for Postgres; AIOSQLite for local dev) managing async queries.
 * **Data Frame Engine:** Polars (Rust-backed dataframe library) for high-performance column processing.
-* **Forensics Engines:** SciPy, Statsmodels (ARIMA model computing), NumPy.
-* **Report Compiler:** ReportLab (PDF rendering), python-docx (Microsoft Word compiling).
+* **Forensics Engines:** SciPy, Statsmodels (ARIMA model computing), NumPy, Scikit-Learn (Isolation Forest), Prophet.
+* **Report Compiler:** ReportLab (PDF rendering), python-docx (Microsoft Word compiling), Jinja2 (HTML briefing template).
+* **Authentication:** PyJWT (access/refresh tokens), Pwdlib (Argon2 password hashing), HTTPX + `httpx-oauth` (Google OAuth), Firebase Auth on the frontend.
 * **HTTP Client:** HTTPX (handling external auth requests).
 
 ### Databases & Cloud hosting
-* **Relational Database:** Supabase PostgreSQL instance (Postgres 15+).
+* **Relational Database:** Supabase PostgreSQL instance (Postgres 15+), SQLite fallback for local dev.
 * **Frontend Hosting:** Vercel (Serverless Deployment).
 * **Backend Hosting:** Render Free Tier Container Instance (512MB RAM limit).
+* **Auth Provider:** Firebase (email/password + Google popup sign-in).
 
 ---
 
@@ -29,26 +32,32 @@
 ```
 detective-ai/
 ├── backend/
+│   ├── alembic/              # Migration scripts (alembic.ini at backend root)
 │   ├── app/
-│   │   ├── api/                 # Endpoint routes (auth, datasets, cleaning, reports, analysis)
-│   │   ├── core/                # Configuration settings, security logic, dependencies
-│   │   ├── database/            # SQLAlchemy session setup
-│   │   ├── models/              # SQLAlchemy database ORM model schemas
-│   │   ├── repositories/        # Database CRUD execution interfaces
-│   │   ├── schemas/             # Pydantic schemas (request/response schemas)
-│   │   └── services/            # Forensics business logic (cleaning, profiling, forecast)
-│   ├── Dockerfile
+│   │   ├── api/              # Endpoint routers (auth, datasets, cleaning, analysis,
+│   │   │                     #   statistics, forecast, reports, history, dashboard)
+│   │   ├── core/             # Config settings, JWT security, Base36 slug encoding
+│   │   ├── database/         # SQLAlchemy async session setup
+│   │   ├── models/           # ORM models (user, dataset, analysis, report)
+│   │   ├── repositories/     # Database CRUD execution interfaces
+│   │   ├── schemas/          # Pydantic schemas (request/response contracts)
+│   │   ├── services/         # Analytics engines (profiling, EDA, KPI, forecast,
+│   │   │                     #   anomaly, root-cause, insight, cleaning, report)
+│   │   └── templates/        # Jinja2 HTML briefing template (report.html)
+│   ├── Dockerfile            # python:3.12-slim
 │   └── requirements.txt
 ├── frontend/
-│   ├── src/
-│   │   ├── app/                 # Next.js pages and layouts (auth guard wrappers, dashboard)
-│   │   ├── components/          # Reusable UI widgets and tabs (profile, cleaning, charts)
-│   │   ├── hooks/               # Custom hooks (e.g. ECharts binding resize handler)
-│   │   ├── lib/                 # Axios clients and API mappings
-│   │   └── store/               # Zustand global store files
-│   ├── package.json
-│   └── tailwind.config.ts
-└── docs/                        # Architectural, Design, Product, and Technical documents
+│   └── src/
+│       ├── app/              # Next.js routes: (auth)/, (dashboard)/, blog/, pricing/,
+│       │                     #   landing page, layout.tsx, globals.css (design tokens)
+│       ├── components/       # analysis/ (12 tab modules), reports/, layout/ (shell),
+│       │                     #   ui/ (primitives + charts), animate-ui/
+│       ├── hooks/            # Custom hooks (theme-aware ECharts binding)
+│       ├── lib/              # Axios API client, Firebase init, utils
+│       ├── store/            # Zustand global stores (auth, analysis)
+│       └── types/            # Shared TypeScript contracts
+├── docs/                     # Architectural, Design, Product, and Technical documents
+└── .github/workflows/        # Render keep-alive cron
 ```
 
 ---
@@ -140,14 +149,19 @@ CREATE INDEX idx_reports_user_id ON reports(user_id);
 
 ## 4. Key API Endpoint Specifications
 
-### Authentication Routes
+All routers are registered under the `/api` prefix (`backend/app/api/__init__.py` → `app.main.py`).
+
+### Authentication Routes (`/api/auth`)
 * `POST /api/auth/register`: Create user account. Returns user info & tokens.
 * `POST /api/auth/login`: Basic email/password authentication.
 * `POST /api/auth/google`: Authenticates Google ID Token credentials.
+* `POST /api/auth/refresh`: Rotates the expired access token via a stored refresh token.
+* `POST /api/auth/forgot-password`: Sends a password reset token to the user's email.
+* `POST /api/auth/reset-password`: Resets the password using the emailed token.
 * `GET /api/auth/me`: Fetches profile details of the currently logged-in user.
 
-### Datasets Routes
-* `POST /api/datasets/upload`: Streams input file (CSV/JSON/Parquet/Excel) to disk. Max 100MB.
+### Datasets Routes (`/api/datasets`)
+* `POST /api/datasets/upload`: Streams input file (CSV/JSON/Parquet/Excel) to disk. Enforced by `MAX_UPLOAD_SIZE` — 15 MB default on the free cloud tier, configurable (e.g. 100 MB) for local/self-hosted instances.
 * `GET /api/datasets`: Paginated listing of datasets owned by the caller.
 * `GET /api/datasets/{id}`: Detailed metadata configuration.
 * `DELETE /api/datasets/{id}`: Removes the file from the local container disk and deletes metadata records.
@@ -155,10 +169,36 @@ CREATE INDEX idx_reports_user_id ON reports(user_id);
 * `GET /api/datasets/{id}/profile`: Evaluates health score metrics.
 * `GET /api/datasets/{id}/download`: Serves the cleaned data file directly via HTTP binary stream download.
 
-### Data Cleaning Routes
+### Data Cleaning Routes (`/api/datasets/{id}/cleaning`)
 * `GET /api/datasets/{id}/cleaning`: Returns dynamic formatting anomalies and suggests actions.
 * `POST /api/datasets/{id}/cleaning/apply`: Executes selected correction scripts on the raw dataframe file, updates profile records, and invalidates analytics caches.
 
-### Reports Routes
+### Analysis Routes (`/api/analysis`)
+* `POST /api/analysis/trigger`: Starts an autonomous analysis (profiling, EDA, insights, KPIs) in a background task for a dataset.
+* `GET /api/analysis/{id}`: Retrieves the analysis status and aggregated result payload.
+* `GET /api/analysis/{id}/charts`: Returns chart configuration JSON consumed by the ECharts frontend.
+* `GET /api/analysis/{id}/kpis`: Returns computed KPI cards.
+* `GET /api/analysis/{id}/insights`: Returns discovered insight narratives.
+* `GET /api/analysis/{id}/recommendations`: Returns suggested actions for the analyst.
+* `POST /api/analysis/{id}/chat`: Question-answering assistant grounded in the analysis results.
+* `GET /api/analysis/{id}/root-cause`: Root-cause analysis (contribution index) for weak metrics.
+
+### Statistics Routes (`/api/analysis/{id}/…`)
+* `GET /api/analysis/{analysis_id}/statistics`: Descriptive statistics for all columns.
+* `GET /api/analysis/{analysis_id}/correlations`: Pairwise correlation matrix (Pearson/Spearman).
+* `GET /api/analysis/{analysis_id}/anomalies`: Anomaly detection report (Isolation Forest / IQR).
+
+### Forecast Routes (`/api/analysis/{analysis_id}/forecast`)
+* `POST /api/analysis/{analysis_id}/forecast`: Fits an ARIMA/Prophet model and stores the forecast series.
+* `GET /api/analysis/{analysis_id}/forecast`: Retrieves the stored forecast series.
+
+### Reports Routes (`/api/reports`)
 * `POST /api/reports/analysis/{analysis_id}`: Compiles PDF/DOCX briefings on the server.
 * `GET /api/reports/{report_id}/download`: Downloads compiled report documents.
+
+### History Routes (`/api/history`)
+* `GET /api/history`: Lists past analyses performed by the caller.
+* `GET /api/history/search`: Searches past analyses (SQL `ILIKE` across names/types).
+
+### Dashboard Routes (`/api/dashboard`)
+* `GET /api/dashboard/stats`: Aggregated platform statistics (totals, recent activity) for the landing/dashboard page.

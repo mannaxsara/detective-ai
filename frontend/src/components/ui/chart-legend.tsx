@@ -59,7 +59,7 @@ export function Legend({
   hoveredIndex: controlledHoveredIndex,
   onHoverChange,
   title,
-  titleClassName = "text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground mb-3",
+  titleClassName = "text-xs font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60 mb-3",
   className = "flex flex-col gap-2.5",
   children,
 }: LegendProps) {
@@ -103,7 +103,7 @@ export interface LegendItemComponentProps {
 }
 
 export function LegendItemComponent({
-  className = "flex items-center gap-3 p-2 rounded-lg border border-transparent hover:border-border/80 transition-all duration-150 cursor-pointer",
+  className = "flex items-center gap-3 p-2 rounded-lg border border-transparent hover:border-black/30 dark:hover:border-white/30 transition-all duration-150 cursor-pointer",
   children,
 }: LegendItemComponentProps) {
   const { setHoveredIndex } = useLegend();
@@ -133,7 +133,7 @@ export function LegendMarker({ className = "h-2.5 w-2.5 rounded-full shrink-0" }
   );
 }
 
-export function LegendLabel({ className = "text-xs font-semibold text-foreground truncate" }: { className?: string }) {
+export function LegendLabel({ className = "text-xs font-semibold text-black dark:text-white truncate" }: { className?: string }) {
   const { item } = useLegendItem();
   return <span className={cn(className)}>{item.label}</span>;
 }
@@ -147,9 +147,9 @@ export interface LegendValueProps {
 }
 
 export function LegendValue({
-  className = "text-xs font-mono font-bold text-foreground tabular-nums",
+  className = "text-xs font-mono font-bold text-black dark:text-white tabular-nums",
   showPercentage = false,
-  percentageClassName = "text-[11px] font-mono text-muted-foreground ml-1.5 tabular-nums",
+  percentageClassName = "text-[11px] font-mono text-black/60 dark:text-white/60 ml-1.5 tabular-nums",
   formatValue = (v) => v.toLocaleString(),
   formatPercentage = (p) => `(${p.toFixed(0)}%)`,
 }: LegendValueProps) {
@@ -173,7 +173,7 @@ export interface LegendProgressProps {
 
 export function LegendProgress({
   height = "h-1.5",
-  trackClassName = "w-full rounded-full bg-muted/60 overflow-hidden mt-1",
+  trackClassName = "w-full rounded-full bg-black/15 dark:bg-white/15 overflow-hidden mt-1",
   indicatorClassName = "h-full rounded-full transition-all duration-300",
 }: LegendProgressProps) {
   const { item, percentage } = useLegendItem();

@@ -50,6 +50,35 @@ class StatisticalTest(BaseModel):
     significant: bool
 
 
+class CorrelationMatrix(BaseModel):
+    """Full Pearson correlation matrix for all numeric columns."""
+
+    columns: list[str]
+    values: list[list[float]]
+
+
+class ScatterPoint(BaseModel):
+    """A single (x, y) observation for a bivariate scatter plot."""
+
+    x: float
+    y: float
+
+
+class ScatterData(BaseModel):
+    """Bivariate scatter data for the most strongly correlated column pair."""
+
+    x_column: str
+    y_column: str
+    points: list[ScatterPoint]
+
+
+class CorrelationResult(BaseModel):
+    """Correlation matrix plus the strongest-pair scatter plot."""
+
+    matrix: CorrelationMatrix
+    scatter: ScatterData | None = None
+
+
 class AnomalyItem(BaseModel):
     """A detected anomaly."""
 
@@ -60,6 +89,11 @@ class AnomalyItem(BaseModel):
     detection_method: str
     reason: str
     affected_columns: list[str] | None = None
+    row_index: int | None = None
+    column_name: str | None = None
+    value: float | None = None
+    z_score: float | None = None
+    confidence_score: float | None = None
 
 
 class ForecastResult(BaseModel):

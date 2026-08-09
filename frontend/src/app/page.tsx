@@ -10,6 +10,7 @@ import {
   Clock, Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useThemeToggle } from "@/components/ui/ThemeToggle";
 
 /* ─────────────────────────────────────────────────────────────
    MAGNIFYING LENS LOGO — Official High-Contrast Monogram SVG
@@ -35,35 +36,14 @@ export default function HomePage() {
   const [selectedCodeTab, setSelectedCodeTab] = useState<"python" | "nodejs" | "curl">("python");
   const [copiedCode, setCopiedCode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDark: isDarkMode, toggleTheme } = useThemeToggle();
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [apiViewMode, setApiViewMode] = useState<"code" | "response">("code");
 
   useEffect(() => {
     if (localStorage.getItem("detective_token")) setIsLoggedIn(true);
-    const savedTheme = localStorage.getItem("detective_theme");
-    // Default to LIGHT mode unless explicitly saved as 'dark'
-    if (savedTheme === "dark") {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove("dark");
-    }
     setLoading(false);
   }, []);
-
-  const toggleTheme = () => {
-    const nextTheme = !isDarkMode;
-    setIsDarkMode(nextTheme);
-    if (nextTheme) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("detective_theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("detective_theme", "light");
-    }
-  };
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);

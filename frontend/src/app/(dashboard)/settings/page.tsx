@@ -109,7 +109,7 @@ export default function SettingsPage() {
         {/* Right Side: Settings panels */}
         <div className="md:col-span-2 space-y-6">
           {activeTab === "profile" && (
-            <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
+            <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-5 shadow-[4px_4px_0px_#000000]">
               <div>
                 <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Agent Information</h2>
                 <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Update account credentials and authentication targets.</p>
@@ -155,7 +155,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "ui" && (
-            <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
+            <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-5 shadow-[4px_4px_0px_#000000]">
               <div>
                 <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Application Settings</h2>
                 <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Toggle interface styling and engine behaviors.</p>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "security" && (
-            <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
+            <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-5 shadow-[4px_4px_0px_#000000]">
               <div>
                 <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Security Controls</h2>
                 <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Manage session credentials and active API keys.</p>
@@ -203,7 +203,7 @@ export default function SettingsPage() {
           )}
 
           {/* Danger Zone */}
-          <div className="border border-[#bc3e3e]/30 rounded-xl bg-[#bc3e3e]/5 p-6 space-y-4 shadow-sm">
+          <div className="border border-[#bc3e3e]/30 rounded-[18px] bg-[#bc3e3e]/5 p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
             <div>
               <h2 className="text-xs font-mono font-bold text-[#bc3e3e] uppercase tracking-wider">Danger Zone</h2>
               <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1 font-medium">Permanently delete your agent profile and all active case logs.</p>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={handleDeleteAccount}
-                className="bg-[#bc3e3e] text-white border border-[#bc3e3e]/40 font-mono font-bold text-xs uppercase py-2.5 px-5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer hover:brightness-110 shrink-0"
+                className="bg-[#bc3e3e] text-white border border-[#bc3e3e]/40 font-mono font-bold text-xs uppercase py-2.5 px-5 rounded-lg shadow-[4px_4px_0px_#000000] flex items-center gap-1.5 cursor-pointer hover:brightness-110 shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete Profile

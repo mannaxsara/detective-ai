@@ -1,11 +1,12 @@
 # 🔍 DetectiveAI — Autonomous Data Intelligence Platform
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.10-black?style=for-the-badge&logo=nextdotjs)
-![FastAPI](https://img.shields.io/badge/FastAPI-1.0.0-009688?style=for-the-badge&logo=fastapi)
+![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=for-the-badge&logo=fastapi)
 ![Polars](https://img.shields.io/badge/Polars-1.18.0-blue?style=for-the-badge&logo=python)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss)
-![License](https://img.shields.io/badge/License-MIT-green.style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 > **DetectiveAI** is an autonomous business intelligence and data analyst assistant. Upload tabular data files (CSV, Excel, JSON, Parquet) and instantly receive automated schema profiling, interactive AI Q&A analysis, ARIMA time-series forecasts, Isolation Forest anomaly clusters, 5-Whys root-cause trees, and executive PDF/DOCX report exports.
 
@@ -36,7 +37,8 @@ DetectiveAI is built to run seamlessly in two deployment configurations:
 - 🔍 **Root-Cause Analysis (5 Whys):** Constructs hierarchical 5-Whys root cause diagnostic trees with remediation action steps.
 - 📄 **Executive Report Exporting:** One-click automated PDF and DOCX document compiling complete with KPI summaries, chart data, dataset metadata, anomaly logs, and rule-based recommendations.
 - 🔑 **Tokenized Case URL Slugs:** Security-focused URL obfuscation converting internal database auto-increment IDs into XOR Base36 case identifiers (`/analysis/case_xxxx`).
-- 🎨 **Adaptive Theme & Responsive UI:** Clean semantic Tailwind token system supporting Light/Dark themes, responsive horizontal table wrappers, and smooth dialog overlays.
+- 💰 **Interactive Pricing Studio:** Ingestion-capacity calculator with tiered storage slider, annual (-20%) billing toggle, and live price result card.
+- 🎨 **Ink Design System:** Brutalist-diagnostics visual language — hard offset shadows (`4px 4px 0 #000`), 18px-radius panels, monospace status readouts, and an `#edfe5e` acid-accent on near-black/paper canvases. Fully light/dark adaptive.
 
 ---
 
@@ -44,12 +46,32 @@ DetectiveAI is built to run seamlessly in two deployment configurations:
 
 | Architecture Layer | Technology | Key Dependencies |
 | :--- | :--- | :--- |
-| **Frontend Framework** | Next.js 16 (App Router + Turbopack) | React 19, TypeScript, TanStack Query v5 |
-| **Styling & UI** | Vanilla CSS Tokens + TailwindCSS v4 | Lucide Icons, Framer Motion, ECharts, Sonner |
-| **Backend Engine** | Python 3.11 + FastAPI | Uvicorn, Pydantic v2, PyJWT, Pwdlib |
+| **Frontend Framework** | Next.js 16 (App Router + Turbopack) | React 19, TypeScript, TanStack Query v5, Zustand |
+| **Styling & UI** | Ink Design System + TailwindCSS v4 | Lucide Icons, Framer Motion, ECharts (theme-aware), Sonner |
+| **Backend Engine** | Python 3.12 + FastAPI | Uvicorn, Pydantic v2, PyJWT, Pwdlib (Argon2) |
 | **Data Engine & Stats** | Polars + Scikit-Learn | Prophet, Statsmodels, Pandas, NumPy, SciPy |
-| **Document Generation** | ReportLab + Python-Docx | Jinja2 |
+| **Document Generation** | ReportLab + Python-Docx | Jinja2 (HTML → PDF via WeasyPrint) |
 | **Database & ORM** | Async SQLAlchemy 2.0 + Alembic | AsyncPG (Supabase / Postgres), AIOSQLite |
+| **Auth** | Firebase Auth (email/password + Google OAuth) | Firebase JS SDK, `httpx-oauth` for Google code flow |
+
+---
+
+## 🎨 Design System
+
+The UI follows the **Ink Design System** (see [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)):
+
+| Token | Light | Dark | Usage |
+| :--- | :--- | :--- | :--- |
+| Ink / Paper | `#000000` / `#f9f9f7` | `#f9f9f7` / `#11120d` | Primary text / canvas |
+| Card surface | `#ffffff` | `#1c1d18` | Panels, cards, modals |
+| Hairline border | `#000000` | `#3b3a33` | 1px borders (`border-black dark:border-[#3b3a33]`) |
+| Acid accent | `#000000` | `#edfe5e` | CTAs, active states (`bg-black dark:bg-[#edfe5e]`) |
+| Success / Danger | `#31e992` / `#bc3e3e` | `#31e992` / `#bc3e3e` | Health scores, alerts |
+| Muted text | `#555555` | `#a09e93` | Secondary copy, metadata |
+
+- **Panels:** `rounded-[18px]` with hard offset shadow `shadow-[4px_4px_0px_#000000]`
+- **Typography:** sans-serif for UI copy, monospace (`font-mono`) for numbers, health scores, and status readouts with uppercase `tracking-widest` labels
+- **Icons:** custom SVG brand mark (magnifying-glass / wireframe motif) used across landing, auth, and favicon
 
 ---
 
@@ -60,26 +82,46 @@ detective-ai/
 ├── backend/
 │   ├── alembic/             # Database Migration Framework & Revision Scripts
 │   ├── app/
-│   │   ├── api/             # FastAPI Endpoint Routers (datasets, analysis, auth, history, reports)
+│   │   ├── api/             # FastAPI Routers (auth, datasets, analysis, cleaning,
+│   │   │                    #   dashboard, forecast, history, reports, statistics)
 │   │   ├── core/            # Config, Security JWT, Base36 Slug Tokenization
 │   │   ├── database/        # Async SQLAlchemy Engine & Session Factories
 │   │   ├── models/          # ORM Models (User, Dataset, Analysis, Report)
 │   │   ├── repositories/    # Async DB Repositories
 │   │   ├── schemas/         # Pydantic Request & Response Data Contracts
-│   │   └── services/        # Analytics Engines (profiling, ARIMA forecast, anomalies, report gen)
+│   │   ├── services/        # Analytics Engines (profiling, EDA, KPI, ARIMA forecast,
+│   │   │                    #   anomalies, root cause, insights, cleaning, reports)
+│   │   └── templates/       # Jinja2 HTML Report Template (report.html)
 │   ├── Dockerfile           # Backend Containerization Definition
 │   ├── requirements.txt     # Python Dependencies
-│   └── alembic.ini          # Alembic Migration Settings
+│   ├── alembic.ini          # Alembic Migration Settings
+│   └── .env.example         # Backend Environment Variable Template
 │
 ├── frontend/
-│   ├── src/
-│   │   ├── app/             # Next.js App Router Pages (dashboard, history, upload, analysis)
-│   │   ├── components/      # UI Layout Shells, Analysis Tabs, Report Generator
-│   │   ├── hooks/           # Theme-Aware ECharts hook & UI listeners
-│   │   ├── lib/             # Axios API Client & Interceptors
-│   │   └── store/           # Zustand Auth & Analysis State Stores
-│   └── package.json         # Frontend Dependencies
+│   └── src/
+│       ├── app/
+│       │   ├── (auth)/      # login, register, forgot-password
+│       │   ├── (dashboard)/ # dashboard, upload, history, analysis/[id], profile, settings
+│       │   ├── blog/        # Blog landing page
+│       │   ├── pricing/     # Interactive pricing studio
+│       │   ├── page.tsx     # Marketing landing page
+│       │   └── layout.tsx / providers.tsx / globals.css / icon.tsx
+│       ├── components/
+│       │   ├── analysis/    # 12 Tab Modules (profile, statistics, kpi, charts, anomalies,
+│       │   │                #   forecast, root-cause, insights, recommendations, cleaning,
+│       │   │                #   hypothesis, chat)
+│       │   ├── reports/     # Executive Report Generator
+│       │   ├── layout/      # Dashboard Shell (sidebar, header, layout)
+│       │   ├── ui/          # Base UI Primitives + Forensic Chart Components
+│       │   └── animate-ui/  # Animation & Micro-interaction Components
+│       ├── hooks/           # Theme-Aware ECharts Hook & UI Listeners
+│       ├── lib/             # Axios API Client, Firebase Init, Utils
+│       ├── store/           # Zustand Auth & Analysis State Stores
+│       └── types/           # Shared TypeScript Contracts
 │
+├── docs/                    # PRD.md, TRD.md, ARCHITECTURE.md, DESIGN_SYSTEM.md
+├── .github/workflows/       # Render Free-Tier Keep-Alive Cron
+├── .env.example             # Root Environment Variable Template
 └── README.md
 ```
 
@@ -107,6 +149,10 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Copy the env template (edit values as needed)
+copy .env.example .env   # Windows
+# cp .env.example .env   # macOS/Linux
+
 # Start FastAPI server on port 8000
 python -m uvicorn app.main:app --reload --port 8000
 ```
@@ -132,18 +178,31 @@ npm run dev
 ### Frontend (`frontend/.env.local`)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+# Firebase Auth (optional — email/password auth works without these;
+# Google Sign-In requires a Firebase Web App configured in the console)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 
 ### Backend (`backend/.env`)
 ```env
+DATABASE_URL=sqlite+aiosqlite:///./detectiveai.db
 SECRET_KEY=your_production_secret_key_here
 JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-DATABASE_URL=sqlite+aiosqlite:///./detectiveai.db
-CORS_ORIGINS=["http://localhost:3000","https://projectdetective.vercel.app"]
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 UPLOAD_DIR=./uploads
 MAX_UPLOAD_SIZE=104857600
+CORS_ORIGINS=http://localhost:3000,https://projectdetective.vercel.app
 ```
+*`CORS_ORIGINS` is a comma-separated list of allowed origins.*
 
 ---
 

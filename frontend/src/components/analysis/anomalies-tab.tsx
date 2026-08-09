@@ -27,23 +27,43 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
     );
   }
 
-  const defaultAnomalies = [
-    { entity_id: 42, detection_method: "Isolation Forest", description: "Row vector isolates within 2 tree splits across feature dimensions.", reason: "Multivariate outlier magnitude exceeds 3.4 sigma", severity: "critical", confidence_score: 96 },
-    { entity_id: 108, detection_method: "Z-Score Profiler", description: "Numerical value deviates past baseline standard deviation interval.", reason: "Z-score = 3.82 above 3.0 threshold", severity: "warning", confidence_score: 91 },
-    { entity_id: 215, detection_method: "DBSCAN Cluster", description: "Spatial sample lies outside dense core cluster neighborhood.", reason: "Epsilon radius density = 0.04", severity: "info", confidence_score: 87 }
-  ];
+  const rawAnomalyList = anomalies && anomalies.length > 0 ? anomalies : [];
 
-  const rawAnomalyList = (anomalies && anomalies.length > 0) ? anomalies : defaultAnomalies;
+  if (rawAnomalyList.length === 0) {
+    return (
+      <div className="space-y-4 py-4 text-left font-sans text-black dark:text-white">
+        <div className="border-b border-black/10 dark:border-white/10 pb-4">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black/20">
+            Anomaly Scan
+          </span>
+          <h2 className="text-lg font-serif font-bold text-black dark:text-white mt-1">
+            Data Anomaly & Outlier Logs
+          </h2>
+        </div>
+        <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-8 text-center space-y-2">
+          <CheckCircle2 className="w-6 h-6 mx-auto text-[#31e992]" />
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">No Anomalies Detected</p>
+          <p className="text-xs text-black/60 dark:text-white/60 leading-relaxed max-w-md mx-auto">
+            No rows exceeded the detection thresholds (Z-score &gt; 3.0σ, Isolation Forest, DBSCAN). Re-run the analysis
+            after uploading data to scan for outliers.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const anomalyList = rawAnomalyList.filter((a: any) => {
     if (!a.z_score) return true;
     return Math.abs(a.z_score) >= sensitivity - 0.5;
   });
 
-  const trendData = (rawAnomalyList || []).map((a: any, i: number) => ({
-    index: `#${i + 1}`,
-    z_score: Math.abs(a.z_score || (3.5 - i * 0.4)),
-    threshold: sensitivity,
-  }));
+  const trendData = rawAnomalyList
+    .filter((a: any) => a.z_score != null)
+    .map((a: any, i: number) => ({
+      index: `#${i + 1}`,
+      z_score: Math.abs(a.z_score),
+      threshold: sensitivity,
+    }));
 
   return (
     <div className="space-y-6 text-left font-sans text-black dark:text-white">
@@ -65,7 +85,7 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
         </div>
 
         {/* Slider Control Container */}
-        <div className="p-3 rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] flex items-center gap-4 shadow-sm text-xs font-mono">
+          <div className="p-3 rounded-lg border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex items-center gap-4 shadow-[4px_4px_0px_#000000] text-xs font-mono">
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[10px] font-bold text-black/60 dark:text-white/60">
               <span>Z-Score Sensitivity</span>
@@ -105,7 +125,7 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
         ].map((item, idx) => {
           const Icon = item.icon;
           return (
-            <div key={idx} className="p-5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] shadow-sm space-y-2">
+            <div key={idx} className="p-5 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[4px_4px_0px_#000000] space-y-2">
               <div className="flex items-center gap-2">
                 <Icon className="w-4 h-4 text-black dark:text-[#edfe5e]" />
                 <h4 className="text-xs font-mono font-bold uppercase tracking-wider">{item.title}</h4>
@@ -118,7 +138,7 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
 
       {/* Anomaly Trend Chart */}
       {trendData.length > 0 && (
-        <div className="rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] p-6 space-y-3 shadow-sm">
+        <div className="rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] p-6 space-y-3 shadow-[4px_4px_0px_#000000]">
           <div>
             <h3 className="text-sm font-serif font-bold text-black dark:text-white">Anomaly Score Distribution</h3>
             <p className="text-black/60 dark:text-white/60 text-xs">Z-score magnitude across detected anomalies</p>
@@ -143,7 +163,7 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
           return (
             <div
               key={idx}
-              className="p-5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm"
+              className="p-5 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-[4px_4px_0px_#000000]"
             >
               <div className="flex items-start gap-4">
                 <div className={`p-2.5 rounded-lg border shrink-0 ${
@@ -170,7 +190,7 @@ export default function AnomaliesTab({ datasetId }: AnomaliesTabProps) {
               <div className="flex items-center gap-4 self-stretch md:self-auto border-t md:border-t-0 border-black/10 dark:border-white/10 pt-3 md:pt-0 shrink-0 justify-end font-mono">
                 <div className="text-right">
                   <p className="text-[10px] text-black/50 dark:text-white/50 uppercase">Confidence</p>
-                  <p className="text-xs font-bold text-black dark:text-white mt-0.5">{(anomaly as any).confidence_score ?? 95}%</p>
+                  <p className="text-xs font-bold text-black dark:text-white mt-0.5">{(anomaly as any).confidence_score ?? "—"}%</p>
                 </div>
                 <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 border rounded-full ${
                   isCritical ? "bg-[#bc3e3e]/10 border-[#bc3e3e]/30 text-[#bc3e3e]" : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black/70 dark:text-white/70"

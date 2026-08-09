@@ -49,7 +49,7 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto space-y-6 text-black dark:text-white font-sans bg-[#f9f9f7] dark:bg-[#11120d]">
       
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] shadow-sm">
+      <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[4px_4px_0px_#000000]">
         
         <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#edfe5e] border border-black/20 text-black shrink-0 font-bold">
           <UserIcon className="w-8 h-8 text-black" />
@@ -73,7 +73,7 @@ export default function ProfilePage() {
         {statItems.map((item, idx) => {
           const Icon = item.icon;
           return (
-            <div key={idx} className="p-5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#181914] flex items-center justify-between shadow-sm">
+            <div key={idx} className="p-5 rounded-[18px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] flex items-center justify-between shadow-[4px_4px_0px_#000000]">
               <div>
                 <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-black/60 dark:text-white/60">{item.label}</p>
                 <p className="text-2xl font-mono font-bold text-black dark:text-white mt-1">{item.value}</p>
@@ -87,7 +87,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Security Profile */}
-      <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-6 space-y-5 shadow-sm">
+      <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-5 shadow-[4px_4px_0px_#000000]">
         <div>
           <h2 className="text-xs font-mono font-bold text-black dark:text-white uppercase tracking-wider">Security Credentials</h2>
           <p className="text-xs font-sans text-black/70 dark:text-white/70 mt-1">Change your account password securely.</p>
@@ -126,7 +126,7 @@ export default function ProfilePage() {
           </div>
           <button
             type="submit"
-            className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer"
+            className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold cursor-pointer"
           >
             Update Password
           </button>

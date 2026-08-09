@@ -242,7 +242,7 @@ export function LineTooltip() {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            className="bg-white/95 dark:bg-[#181914]/95 text-black dark:text-white border border-black/20 dark:border-white/20 p-3 rounded-lg shadow-xl text-xs font-sans min-w-[130px] backdrop-blur-md"
+            className="bg-white dark:bg-[#1c1d18] text-black dark:text-white border border-black dark:border-[#3b3a33] p-3 rounded-lg shadow-[4px_4px_0px_#000000] text-xs font-sans min-w-[130px] backdrop-blur-md"
           >
             <p className="font-bold text-black dark:text-white mb-1.5 border-b border-black/10 dark:border-white/10 pb-1 font-mono">{datum[xDataKey]}</p>
             {keys.map(k => (

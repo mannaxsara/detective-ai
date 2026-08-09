@@ -134,7 +134,7 @@ TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
       </div>
 
       {/* Main Upload Box */}
-      <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-7 sm:p-9 shadow-sm space-y-6">
+      <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-7 sm:p-9 shadow-[4px_4px_0px_#000000] space-y-6">
         <AnimatePresence mode="wait">
           {status === "idle" && (
             <motion.div
@@ -197,7 +197,7 @@ TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
 
               {/* Selected File Bar */}
               {file && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-black/15 dark:border-white/15 bg-[#edf0e9] dark:bg-[#262720] shadow-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-black/15 dark:border-white/15 bg-[#edf0e9] dark:bg-[#262720] shadow-[4px_4px_0px_#000000]">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="p-2.5 rounded-lg bg-[#edfe5e] text-black border border-black/20 shrink-0">
                       <FileSpreadsheet className="w-5 h-5" />
@@ -328,7 +328,7 @@ TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
       </div>
 
       {/* Quick Test Sample Datasets Bar */}
-      <div className="border border-black/15 dark:border-white/15 rounded-xl bg-white dark:bg-[#181914] p-5 shadow-sm space-y-3">
+      <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-5 shadow-[4px_4px_0px_#000000] space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-black dark:text-[#edfe5e]" />
           <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Quick Test Sample Datasets</h3>

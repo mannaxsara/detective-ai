@@ -347,23 +347,40 @@ class RuleBasedInsightProvider(InsightProvider):
 
         # 7. Forecast Queries
         if any(term in msg for term in ["forecast", "predict", "future", "arima", "time series"]):
-            target_metric = forecast.get("target_column")
-            if not target_metric:
+            metric_name = forecast.get("metric_name")
+            dates = forecast.get("dates", [])
+            values = forecast.get("values", [])
+            if not metric_name or not dates:
                 return (
                     "No time-series forecast has been computed yet, or the dataset does not have a temporal column. "
                     "Navigate to the **Time-Series Forecast** tab to choose a numeric metric and generate predictions!"
                 )
-            
-            predictions = forecast.get("forecast", [])
-            pred_desc = ""
-            if predictions:
-                pred_desc = f"• **Forecast Target**: `{target_metric}`\n"
-                pred_desc += f"• **Forecast Period**: {len(predictions)} days ahead\n"
-                pred_desc += f"• **Predicted Trend**: {forecast.get('trend_summary', 'stable').upper()}\n\n"
+
+            pred_desc = f"• **Forecast Target**: `{metric_name}`\n"
+            pred_desc += f"• **Forecast Period**: {len(dates)} days ahead\n"
+
+            if values:
+                first_val = values[0]
+                last_val = values[-1]
+                if last_val > first_val:
+                    trend = "INCREASING"
+                elif last_val < first_val:
+                    trend = "DECREASING"
+                else:
+                    trend = "STABLE"
+                pred_desc += f"• **Predicted Trend**: {trend}\n\n"
+
                 pred_desc += "**Upcoming Predictions (Estimates)**:\n"
-                for p in predictions[:5]:
-                    pred_desc += f"  - {p.get('ds')}: {format_number(p.get('yhat'))} (Range: {format_number(p.get('yhat_lower'))} to {format_number(p.get('yhat_upper'))})\n"
-                
+                lower_bound = forecast.get("lower_bound", [])
+                upper_bound = forecast.get("upper_bound", [])
+                for i, (d, v) in enumerate(zip(dates, values)):
+                    if i >= 5:
+                        break
+                    lo = lower_bound[i] if i < len(lower_bound) else None
+                    hi = upper_bound[i] if i < len(upper_bound) else None
+                    range_str = f" (Range: {format_number(lo)} to {format_number(hi)})" if lo is not None and hi is not None else ""
+                    pred_desc += f"  - {d}: {format_number(v)}{range_str}\n"
+
             return f"Here is the time-series forecasting review:\n\n{pred_desc}"
 
         # 8. KPIs / Key Metrics
@@ -376,7 +393,12 @@ class RuleBasedInsightProvider(InsightProvider):
             
             kpi_list = []
             for k in kpis:
-                kpi_list.append(f"• **{k.get('name')}**: {k.get('formatted_value')} (*{k.get('description')}*)")
+                trend_text = {
+                    "up": "trending up",
+                    "down": "trending down",
+                    "stable": "stable",
+                }.get(str(k.get("trend", "")), k.get("trend", "unknown"))
+                kpi_list.append(f"• **{k.get('name')}**: {k.get('formatted_value')} ({trend_text})")
             
             kpi_str = "\n".join(kpi_list)
             return f"Here are the business and structural KPIs detected in your dataset:\n\n{kpi_str}"

@@ -16,7 +16,7 @@ DetectiveAI is an autonomous, web-based data forensics and intelligence platform
 
 ### A. Data Ingestion Dropzone
 * Drag-and-drop file ingestion support for `.csv`, `.xlsx`, `.xls`, `.json`, and `.parquet` files.
-* Soft file size constraint of **100MB** to ensure operation runs within standard free hosting resource quotas (512MB RAM).
+* Tiered file size limits — **15 MB** per file on the free cloud tier (memory-safe for 512MB RAM hosting), configurable up to **100 MB+** on local/self-hosted deployments via `MAX_UPLOAD_SIZE`.
 * Dynamic status feedback showing stages: Parsing schema, locking column constraints, analyzing correlations, and compiling results.
 
 ### B. Automated Cleansing System
@@ -46,7 +46,7 @@ DetectiveAI is an autonomous, web-based data forensics and intelligence platform
 ---
 
 ## 4. User Experience & Design Guidelines
-* **Minimalist Aesthetic:** Styled in a premium Sand & Charcoal color palette with bone-outline containers and monospaced diagnostic labels.
+* **Minimalist Aesthetic:** Styled in the premium **Ink design system** — near-black/paper canvases, hairline borders, hard offset shadows, and monospaced diagnostic labels (see [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md)).
 * **Dual Theme Compatibility:** Adaptive color parameters scaling gracefully between light and dark modes.
 * **Interactive Fluidity:** High-fidelity theme reveal animations, sliding calculators, and responsive metric cards.
 

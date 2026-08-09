@@ -12,6 +12,7 @@ import type {
   InsightItem,
   StatisticalTest,
   CorrelationMatrix,
+  CorrelationResult,
   RegressionResult,
   AnomalyItem,
   ForecastResult,
@@ -225,6 +226,11 @@ export const statisticsApi = {
     return data;
   },
 
+  getCorrelations: async (analysisId: string | number): Promise<CorrelationResult> => {
+    const { data } = await api.get(`/analysis/${analysisId}/correlations`);
+    return data;
+  },
+
   getAnomalies: async (analysisId: string | number): Promise<AnomalyItem[]> => {
     const { data } = await api.get(`/analysis/${analysisId}/anomalies`);
     return data;
@@ -305,6 +311,7 @@ export const cleaningAPI = cleaningApi;
 export const analysisAPI = {
   ...analysisApi,
   getStatistics: statisticsApi.getStatistics,
+  getCorrelations: statisticsApi.getCorrelations,
   getAnomalies: statisticsApi.getAnomalies,
   getForecast: forecastApi.getForecast,
   generateForecast: forecastApi.generateForecast,

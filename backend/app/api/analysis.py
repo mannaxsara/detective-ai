@@ -40,12 +40,17 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
             insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
             charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
 
+            # Cleaning suggestions (used by the chat provider and cleaning tab)
+            from app.services.cleaning_service import get_cleaning_suggestions
+            suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type)
+
             # Profile dataset and update dataset details
             from app.services.profiling_service import profile_dataset
             profile = await profile_dataset(dataset.file_path, dataset.file_type)
             dataset.row_count = profile.row_count
             dataset.column_count = profile.column_count
             dataset.health_score = profile.health_score
+            dataset.profile_data = profile.model_dump()
             dataset.status = "completed"
             session.add(dataset)
 
@@ -57,6 +62,7 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
                 kpis=[k.model_dump() for k in kpis],
                 insights=[i.model_dump() for i in insights],
                 charts=[c.model_dump() for c in charts],
+                cleaning_suggestions=[s.model_dump() for s in suggestions],
                 completed_at=datetime.utcnow()
             )
             await session.commit()
@@ -151,17 +157,22 @@ async def get_analysis(
                 kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
                 insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
                 charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
-                
+
+                # Cleaning suggestions (used by the chat provider and cleaning tab)
+                from app.services.cleaning_service import get_cleaning_suggestions
+                suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type)
+
                 # Profile dataset and update dataset details
                 from app.services.profiling_service import profile_dataset
                 profile = await profile_dataset(dataset.file_path, dataset.file_type)
                 dataset.row_count = profile.row_count
                 dataset.column_count = profile.column_count
                 dataset.health_score = profile.health_score
+                dataset.profile_data = profile.model_dump()
                 dataset.status = "completed"
                 db.add(dataset)
                 await db.commit()
-                
+
                 analysis = await repo.create(
                     dataset_id=dataset.id,
                     user_id=current_user.id,
@@ -170,6 +181,7 @@ async def get_analysis(
                     kpis=[k.model_dump() for k in kpis],
                     insights=[i.model_dump() for i in insights],
                     charts=[c.model_dump() for c in charts],
+                    cleaning_suggestions=[s.model_dump() for s in suggestions],
                     completed_at=datetime.utcnow()
                 )
             except Exception as e:
