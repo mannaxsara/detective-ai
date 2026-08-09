@@ -201,6 +201,25 @@ def generate_forecast(
     if is_synthesized_time:
         metric_label += " [Index Series]"
 
+    # ── Automated Model Recommendation Logic ────────────────────────────────
+    diffs = np.diff(y) if len(y) > 1 else np.array([0.0])
+    if len(diffs) > 2 and float(np.std(diffs[:-1])) > 0:
+        phi_val = float(np.corrcoef(diffs[:-1], diffs[1:])[0, 1])
+        if math.isnan(phi_val):
+            phi_val = 0.3
+    else:
+        phi_val = 0.3
+
+    if not is_synthesized_time and n_samples >= 14:
+        recommended_model = "prophet"
+        recommendation_reason = f"Prophet Model is recommended for '{selected_target}' due to clear calendar periodicity and weekly harmonic seasonality."
+    elif phi_val >= 0.45 or n_samples < 14:
+        recommended_model = "arima"
+        recommendation_reason = f"ARIMA Model is recommended for '{selected_target}' due to high auto-regressive differencing correlation (lag-1 phi = {phi_val:.2f})."
+    else:
+        recommended_model = "prophet"
+        recommendation_reason = f"Prophet Model is recommended for '{selected_target}' to capture overall trend trajectory and confidence bounds."
+
     return ForecastResult(
         dates=future_dates,
         values=values,
@@ -212,4 +231,6 @@ def generate_forecast(
             "trend": trend_component,
             "weekly": weekly_component,
         },
+        recommended_model=recommended_model,
+        recommendation_reason=recommendation_reason,
     )

@@ -106,6 +106,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
   const [targetCol, setTargetCol] = useState<string | null>(null);
   const [modelType, setModelType] = useState<string>("prophet");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [userHasSelectedModel, setUserHasSelectedModel] = useState<boolean>(false);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["dataset-profile", datasetId],
@@ -125,6 +126,12 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     queryFn: () => analysisAPI.getForecast(datasetId, targetCol, periods, modelType),
     enabled: !!targetCol || numericColumns.length === 0,
   });
+
+  React.useEffect(() => {
+    if (forecast?.recommended_model && !userHasSelectedModel) {
+      setModelType(forecast.recommended_model);
+    }
+  }, [forecast, userHasSelectedModel]);
 
   const handleRunForecast = async () => {
     setIsGenerating(true);
@@ -161,6 +168,8 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     );
   }
 
+  const recModel = forecast?.recommended_model || "prophet";
+
   return (
     <div className="space-y-6 font-sans text-black dark:text-white">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black dark:border-[#3b3a33] pb-4">
@@ -174,14 +183,21 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
         <div className="flex items-center gap-3 flex-wrap">
           <Select
             value={modelType}
-            onValueChange={(val) => setModelType(val || "prophet")}
+            onValueChange={(val) => {
+              setUserHasSelectedModel(true);
+              setModelType(val || "prophet");
+            }}
           >
-            <SelectTrigger className="w-40 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
+            <SelectTrigger className="w-56 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
               <SelectValue placeholder="Algorithm" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold">
-              <SelectItem value="prophet">Prophet Model</SelectItem>
-              <SelectItem value="arima">ARIMA (1,1,1) Model</SelectItem>
+              <SelectItem value="prophet">
+                Prophet Model {recModel === "prophet" ? "(Recommended)" : ""}
+              </SelectItem>
+              <SelectItem value="arima">
+                ARIMA (1,1,1) Model {recModel === "arima" ? "(Recommended)" : ""}
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -238,6 +254,21 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
 
       {forecast ? (
         <>
+          {forecast.recommendation_reason && (
+            <div className="border border-black dark:border-[#3b3a33] rounded-[12px] bg-[#edf0e9] dark:bg-[#262720] p-3 px-4 flex items-center justify-between gap-3 text-xs font-sans shadow-[2px_2px_0px_#000000]">
+              <div className="flex items-center gap-2 min-w-0">
+                <Sparkles className="w-4 h-4 text-[#78c51c] shrink-0" />
+                <span className="truncate">
+                  <strong className="font-mono uppercase font-bold text-black dark:text-white mr-1">AI Recommendation:</strong>
+                  {forecast.recommendation_reason}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono font-bold uppercase bg-[#edfe5e] text-black border border-black px-2 py-0.5 rounded shrink-0">
+                {forecast.recommended_model === modelType ? "Active Recommendation" : "Custom Model"}
+              </span>
+            </div>
+          )}
+
           <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] p-6 space-y-4 shadow-[4px_4px_0px_#000000]">
             <div className="flex flex-row items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
               <h3 className="text-xs uppercase font-mono font-bold text-black dark:text-white">

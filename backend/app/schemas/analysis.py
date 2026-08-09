@@ -106,6 +106,8 @@ class ForecastResult(BaseModel):
     metric_name: str
     periods: int
     components: dict[str, Any] | None = None
+    recommended_model: str | None = "prophet"
+    recommendation_reason: str | None = None
 
 
 class AnalysisResponse(BaseModel):

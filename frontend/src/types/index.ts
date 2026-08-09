@@ -231,6 +231,8 @@ export interface ForecastResult {
   growth_percentage?: number;
   confidence_level?: number;
   model_used?: string;
+  recommended_model?: string;
+  recommendation_reason?: string;
 }
 
 // ========== Cleaning Types ==========
