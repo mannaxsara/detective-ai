@@ -23,7 +23,7 @@ interface RadarChartContextType {
   margin: number;
   hoveredIndex: number | null;
   setHoveredIndex: (idx: number | null) => void;
-  getPointPosition: (metricIndex: number, value: number) => { x: number, y: number };
+  getPointPosition: (metricIndex: number, value: number) => { x: number; y: number };
   center: number;
   radius: number;
 }
@@ -49,9 +49,9 @@ export interface RadarChartProps {
 export function RadarChart({
   data,
   metrics,
-  size = 300,
+  size = 320,
   levels = 5,
-  margin = 60,
+  margin = 70,
   className,
   children,
 }: RadarChartProps) {
@@ -84,7 +84,7 @@ export function RadarChart({
         radius,
       }}
     >
-      <div className={cn("relative flex items-center justify-center", className)} style={{ width: size, height: size }}>
+      <div className={cn("relative flex items-center justify-center select-none font-sans", className)} style={{ width: size, height: size }}>
         <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full overflow-visible">
           {children}
         </svg>
@@ -93,11 +93,11 @@ export function RadarChart({
   );
 }
 
-export function RadarGrid({ showLabels = true, stroke = "var(--border)" }: { showLabels?: boolean, stroke?: string }) {
-  const { levels, metrics, getPointPosition, center } = useRadarChart();
+export function RadarGrid({ showLabels = true, stroke = "currentColor" }: { showLabels?: boolean; stroke?: string }) {
+  const { levels, metrics, getPointPosition, center, radius } = useRadarChart();
 
   return (
-    <g className="radar-grid">
+    <g className="radar-grid opacity-60 dark:opacity-40">
       {Array.from({ length: levels }).map((_, levelIdx) => {
         const levelValue = ((levelIdx + 1) / levels) * 100;
         const points = metrics.map((_, i) => {
@@ -111,18 +111,18 @@ export function RadarGrid({ showLabels = true, stroke = "var(--border)" }: { sho
               points={points}
               fill="none"
               stroke={stroke}
+              strokeWidth={1}
               strokeDasharray={levelIdx !== levels - 1 ? "3 3" : "none"}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: levelIdx * 0.1, duration: 0.5, ease: "easeOut" }}
+              transition={{ delay: levelIdx * 0.08, duration: 0.4, ease: "easeOut" }}
               style={{ transformOrigin: `${center}px ${center}px` }}
             />
-            {showLabels && levelIdx > 0 && (
+            {showLabels && levelIdx > 0 && levelIdx < levels - 1 && (
               <text
                 x={center}
-                y={center - (levelValue / 100) * useRadarChart().radius}
-                dy={-4}
-                className="text-[8px] fill-muted-foreground font-mono"
+                y={center - (levelValue / 100) * radius + 10}
+                className="text-[9px] fill-black/60 dark:fill-white/60 font-mono font-bold"
                 textAnchor="middle"
               >
                 {levelValue}
@@ -135,11 +135,11 @@ export function RadarGrid({ showLabels = true, stroke = "var(--border)" }: { sho
   );
 }
 
-export function RadarAxis({ stroke = "var(--border)" }: { stroke?: string }) {
+export function RadarAxis({ stroke = "currentColor" }: { stroke?: string }) {
   const { metrics, getPointPosition, center } = useRadarChart();
 
   return (
-    <g className="radar-axis">
+    <g className="radar-axis opacity-50 dark:opacity-30">
       {metrics.map((_, i) => {
         const { x, y } = getPointPosition(i, 100);
         return (
@@ -150,6 +150,7 @@ export function RadarAxis({ stroke = "var(--border)" }: { stroke?: string }) {
             x2={x}
             y2={y}
             stroke={stroke}
+            strokeWidth={1}
             strokeDasharray="3 3"
           />
         );
@@ -158,23 +159,49 @@ export function RadarAxis({ stroke = "var(--border)" }: { stroke?: string }) {
   );
 }
 
-export function RadarLabels({ offset = 24, fontSize = 10 }: { offset?: number, fontSize?: number }) {
+export function RadarLabels({ offset = 26, fontSize = 10 }: { offset?: number; fontSize?: number }) {
   const { metrics, getPointPosition } = useRadarChart();
 
   return (
     <g className="radar-labels">
       {metrics.map((metric, i) => {
-        const { x, y } = getPointPosition(i, 100 + (offset / useRadarChart().radius) * 100);
+        const angle = (Math.PI * 2 * i) / metrics.length - Math.PI / 2;
+        const { x, y } = getPointPosition(i, 100);
         
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        let textAnchor: "start" | "middle" | "end" = "middle";
+        let dx = 0;
+        let dy = 0;
+
+        if (cos > 0.3) {
+          textAnchor = "start";
+          dx = 10;
+        } else if (cos < -0.3) {
+          textAnchor = "end";
+          dx = -10;
+        }
+
+        if (sin < -0.8) {
+          textAnchor = "middle";
+          dy = -12;
+          dx = 0;
+        } else if (sin > 0.8) {
+          textAnchor = "middle";
+          dy = 16;
+          dx = 0;
+        }
+
         return (
           <text
             key={`label-${i}`}
-            x={x}
-            y={y}
-            className="fill-foreground font-sans font-bold text-xs uppercase tracking-wider"
-            fontSize={fontSize}
-            textAnchor="middle"
-            alignmentBaseline="middle"
+            x={x + dx}
+            y={y + dy}
+            className="fill-black dark:fill-white font-mono font-bold tracking-wider"
+            style={{ fontSize: `${fontSize}px` }}
+            textAnchor={textAnchor}
+            dominantBaseline="central"
           >
             {metric.label}
           </text>
@@ -184,14 +211,14 @@ export function RadarLabels({ offset = 24, fontSize = 10 }: { offset?: number, f
   );
 }
 
-export function RadarArea({ index, fill, stroke, strokeWidth = 2 }: { index: number, fill?: string, stroke?: string, strokeWidth?: number }) {
+export function RadarArea({ index, fill, stroke, strokeWidth = 2 }: { index: number; fill?: string; stroke?: string; strokeWidth?: number }) {
   const { data, metrics, getPointPosition, hoveredIndex, setHoveredIndex, center } = useRadarChart();
   
   const item = data[index];
   if (!item) return null;
 
-  const areaColor = fill || item.color || "#d8cfbc";
-  const strokeColor = stroke || item.color || "#d8cfbc";
+  const areaColor = fill || item.color || "#edfe5e";
+  const strokeColor = stroke || item.color || "#edfe5e";
 
   const isHovered = hoveredIndex === index;
   const isDimmed = hoveredIndex !== null && hoveredIndex !== index;
@@ -208,12 +235,12 @@ export function RadarArea({ index, fill, stroke, strokeWidth = 2 }: { index: num
     <g
       onMouseEnter={() => setHoveredIndex(index)}
       onMouseLeave={() => setHoveredIndex(null)}
-      className={cn("cursor-pointer transition-opacity duration-300", isDimmed && "opacity-10")}
+      className={cn("cursor-pointer transition-opacity duration-300", isDimmed && "opacity-20")}
     >
       <motion.polygon
         points={points}
         fill={areaColor}
-        fillOpacity={isHovered ? 0.35 : 0.15}
+        fillOpacity={isHovered ? 0.45 : 0.25}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         initial={{ points: centerPoints }}
@@ -228,8 +255,10 @@ export function RadarArea({ index, fill, stroke, strokeWidth = 2 }: { index: num
             key={`point-${i}`}
             cx={x}
             cy={y}
-            r={isHovered ? 4 : 3}
+            r={isHovered ? 5 : 4}
             fill={strokeColor}
+            stroke="#000000"
+            strokeWidth={1.5}
             className="transition-all duration-200"
           />
         );
