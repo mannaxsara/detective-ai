@@ -247,11 +247,12 @@ export const forecastApi = {
     return data;
   },
 
-  getForecast: async (analysisId: string | number, targetCol?: string | null, periods?: number): Promise<ForecastResult> => {
+  getForecast: async (analysisId: string | number, targetCol?: string | null, periods?: number, modelType?: string): Promise<ForecastResult> => {
     const { data } = await api.get(`/analysis/${analysisId}/forecast`, {
       params: {
         target_col: targetCol || undefined,
         periods: periods || undefined,
+        model_type: modelType || undefined,
       }
     });
     return data;

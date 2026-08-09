@@ -104,6 +104,7 @@ function ForecastChartItem({ forecast }: { forecast: any }) {
 export default function ForecastTab({ datasetId }: ForecastTabProps) {
   const [periods, setPeriods] = useState<number>(30);
   const [targetCol, setTargetCol] = useState<string | null>(null);
+  const [modelType, setModelType] = useState<string>("prophet");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -120,8 +121,8 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
   }, [numericColumns, targetCol]);
 
   const { data: forecast, isLoading: forecastLoading, refetch } = useQuery({
-    queryKey: ["analysis-forecast", datasetId, periods, targetCol],
-    queryFn: () => analysisAPI.getForecast(datasetId, targetCol, periods),
+    queryKey: ["analysis-forecast", datasetId, periods, targetCol, modelType],
+    queryFn: () => analysisAPI.getForecast(datasetId, targetCol, periods, modelType),
     enabled: !!targetCol || numericColumns.length === 0,
   });
 
@@ -130,7 +131,7 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     try {
       const res = await refetch();
       if (res.data) {
-        toast.success(`Generated ${periods}-day forecast projection for "${targetCol || 'selected metric'}".`);
+        toast.success(`Generated ${periods}-day ${modelType.toUpperCase()} forecast projection for "${targetCol || 'selected metric'}".`);
       } else {
         toast.error("Failed to generate forecast for this column.");
       }
@@ -166,17 +167,30 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
         <div>
           <h2 className="text-base font-serif font-bold tracking-tight">Predictive Time-Series Forecasting</h2>
           <p className="text-xs font-sans text-black/75 dark:text-white/75 mt-0.5">
-            Auto-detect temporal dates and run predictive statistical models to project 30-day or 90-day future trends with 80% confidence bands.
+            Auto-detect temporal dates and run Prophet or ARIMA statistical models to project future trends with 80% confidence bands.
           </p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          <Select
+            value={modelType}
+            onValueChange={(val) => setModelType(val || "prophet")}
+          >
+            <SelectTrigger className="w-40 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
+              <SelectValue placeholder="Algorithm" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold">
+              <SelectItem value="prophet">Prophet Model</SelectItem>
+              <SelectItem value="arima">ARIMA (1,1,1) Model</SelectItem>
+            </SelectContent>
+          </Select>
+
           {numericColumns.length > 0 && (
             <Select
               value={targetCol || ""}
               onValueChange={(val) => setTargetCol(val || null)}
             >
-              <SelectTrigger className="w-48 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
+              <SelectTrigger className="w-44 bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold rounded-[8px]">
                 <SelectValue placeholder="Select Metric" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-[#1c1d18] border border-black dark:border-[#3b3a33] text-black dark:text-white text-xs font-mono font-bold">

@@ -24,6 +24,7 @@ async def run_analysis_forecast(
     analysis_id: str,
     target_col: str | None = None,
     periods: int = 30,
+    model_type: str = "prophet",
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ForecastResult:
@@ -43,15 +44,14 @@ async def run_analysis_forecast(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     try:
-        res = generate_forecast(dataset.file_path, dataset.file_type, target_col, periods)
+        res = generate_forecast(dataset.file_path, dataset.file_type, target_col, periods, model_type)
         if not res:
             raise HTTPException(
                 status_code=400,
                 detail="Unable to generate forecast. Verify that your dataset has a temporal column and numeric columns."
             )
         
-        # Cache standard 30-day forecast inside analysis record
-        if periods == 30:
+        if periods == 30 and model_type == "prophet":
             await repo.update_by_id(
                 analysis.id,
                 forecast=res.model_dump()
@@ -66,6 +66,7 @@ async def get_analysis_forecast(
     analysis_id: str,
     target_col: str | None = None,
     periods: int = 30,
+    model_type: str = "prophet",
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ForecastResult:
@@ -79,8 +80,8 @@ async def get_analysis_forecast(
     if not analysis or analysis.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
-    # Serve cached default 30-day forecast if no custom target is selected
-    if not target_col and periods == 30 and analysis.forecast:
+    # Serve cached default 30-day forecast if no custom target/model is selected
+    if not target_col and periods == 30 and model_type == "prophet" and analysis.forecast:
         return ForecastResult.model_validate(analysis.forecast)
 
     # Otherwise, generate forecast dynamically
@@ -92,9 +93,9 @@ async def get_analysis_forecast(
     import os
     if os.path.exists(dataset.file_path):
         try:
-            res = generate_forecast(dataset.file_path, dataset.file_type, target_col, periods)
+            res = generate_forecast(dataset.file_path, dataset.file_type, target_col, periods, model_type)
             if res:
-                if not target_col and periods == 30 and not analysis.forecast:
+                if not target_col and periods == 30 and model_type == "prophet" and not analysis.forecast:
                     await repo.update_by_id(analysis.id, forecast=res.model_dump())
                 return res
         except Exception:
