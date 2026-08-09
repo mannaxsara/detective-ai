@@ -8,7 +8,7 @@
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-> **DetectiveAI** is an autonomous business intelligence and data analyst assistant. Upload tabular data files (CSV, Excel, JSON, Parquet) and instantly receive automated schema profiling, interactive AI Q&A analysis, ARIMA time-series forecasts, Isolation Forest anomaly clusters, 5-Whys root-cause trees, and executive PDF/DOCX report exports.
+> **DetectiveAI** is an autonomous business intelligence and data analyst assistant. Upload tabular data files (CSV, Excel, JSON, Parquet) and instantly receive automated schema profiling, interactive AI Q&A analysis, predictive time-series trend forecasts, Isolation Forest anomaly clusters, 5-Whys root-cause trees, and executive PDF/DOCX report exports.
 
 ---
 
@@ -32,11 +32,11 @@ DetectiveAI is built to run seamlessly in two deployment configurations:
 
 - 📊 **Automated Schema Profiler & Data Health:** Computes data integrity scores, row/column cardinality, null percentages, memory footprints, and statistical distribution metrics using high-speed Polars engines.
 - 💬 **Interactive AI Analyst Assistant:** Natural language context-aware Q&A console connected directly to dataset profiling matrices and anomaly telemetry nodes.
-- 📈 **Time-Series Forecasting Engine:** Calculates ARIMA trend lines, seasonality horizons, and confidence interval bounds over temporal data series.
+- 📈 **Predictive Time-Series Forecasting:** Calculates polynomial trend projections, weekly/monthly seasonality horizons, and 80% confidence interval bounds over temporal data series.
 - 🛡️ **Outlier & Anomaly Detection:** Applies Isolation Forest models and univariate z-score checks to flag critical deviations across tabular attributes.
 - 🔍 **Root-Cause Analysis (5 Whys):** Constructs hierarchical 5-Whys root cause diagnostic trees with remediation action steps.
 - 📄 **Executive Report Exporting:** One-click automated PDF and DOCX document compiling complete with KPI summaries, chart data, dataset metadata, anomaly logs, and rule-based recommendations.
-- 🔑 **Tokenized Case URL Slugs:** Security-focused URL obfuscation converting internal database auto-increment IDs into XOR Base36 case identifiers (`/analysis/case_xxxx`).
+- 🔑 **Sequential Case Slugs:** Clean sequential case identifiers (`case_1`, `case_2`, `case_3`) for clear navigation.
 - 💰 **Interactive Pricing Studio:** Ingestion-capacity calculator with tiered storage slider, annual (-20%) billing toggle, and live price result card.
 - 🎨 **Ink Design System:** Brutalist-diagnostics visual language — hard offset shadows (`4px 4px 0 #000`), 18px-radius panels, monospace status readouts, and an `#edfe5e` acid-accent on near-black/paper canvases. Fully light/dark adaptive.
 
@@ -48,8 +48,8 @@ DetectiveAI is built to run seamlessly in two deployment configurations:
 | :--- | :--- | :--- |
 | **Frontend Framework** | Next.js 16 (App Router + Turbopack) | React 19, TypeScript, TanStack Query v5, Zustand |
 | **Styling & UI** | Ink Design System + TailwindCSS v4 | Lucide Icons, Framer Motion, ECharts (theme-aware), Sonner |
-| **Backend Engine** | Python 3.12 + FastAPI | Uvicorn, Pydantic v2, PyJWT, Pwdlib (Argon2) |
-| **Data Engine & Stats** | Polars + Scikit-Learn | Prophet, Statsmodels, Pandas, NumPy, SciPy |
+| **Backend Engine** | Python 3.12 + FastAPI | Uvicorn, Pydantic v2, PyJWT, PBKDF2 (`hashlib`) |
+| **Data Engine & Stats** | Polars + Scikit-Learn | NumPy, Pandas, SciPy, Time-Series Statistical Modeling |
 | **Document Generation** | ReportLab + Python-Docx | Jinja2 (HTML → PDF via WeasyPrint) |
 | **Database & ORM** | Async SQLAlchemy 2.0 + Alembic | AsyncPG (Supabase / Postgres), AIOSQLite |
 | **Auth** | Firebase Auth (email/password + Google OAuth) | Firebase JS SDK, `httpx-oauth` for Google code flow |

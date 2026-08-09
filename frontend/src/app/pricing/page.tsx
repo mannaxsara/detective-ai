@@ -29,9 +29,9 @@ export default function PricingPage() {
 
   const storageSteps = [
     { label: "100 MB", val: 100, price: 0, specs: "Single-thread Polars, standard Z-Score scans", tier: "Sand Free" },
-    { label: "1 GB", val: 1000, price: 19, specs: "4-core parallel engine, ARIMA vector checks", tier: "Developer" },
+    { label: "1 GB", val: 1000, price: 19, specs: "4-core parallel engine, predictive forecast checks", tier: "Developer" },
     { label: "10 GB", val: 10000, price: 49, specs: "16-core parallel parsing, full AI copilot support", tier: "Charcoal Pro" },
-    { label: "100 GB", val: 100000, price: 149, specs: "Dedicated memory-only sandbox, custom ARIMA coefficients", tier: "Enterprise Scale" },
+    { label: "100 GB", val: 100000, price: 149, specs: "Dedicated memory-only sandbox, custom forecast horizons", tier: "Enterprise Scale" },
     { label: "1 TB", val: 1000000, price: 399, specs: "Custom FastAPI execution cluster, unlimited executive report briefings", tier: "Forensic Core" }
   ];
 
@@ -152,7 +152,7 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full mx-auto pt-4">
           {[
             { t: "Polars Core Ingestion", d: "High speed rust-backed schema parsers run on every case file, coercing types under 15ms." },
-            { t: "Predictive ARIMA Arrays", d: "Compute autotuned auto-regressive integrations projecting forecasts 90 periods forward." },
+            { t: "Predictive Time-Series Forecasting", d: "Compute autotuned trend and seasonality projections 90 periods forward with confidence bands." },
             { t: "Zero-Retention Isolation", d: "No persistent databases. Your uploaded CSV, JSON and Parquet bytes reside entirely in RAM." }
           ].map((item, i) => (
             <div key={i} className="space-y-2 border-t border-black/30 dark:border-[#3b3a33]/30 pt-4 cursor-default">

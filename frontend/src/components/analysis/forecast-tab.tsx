@@ -164,9 +164,9 @@ export default function ForecastTab({ datasetId }: ForecastTabProps) {
     <div className="space-y-6 font-sans text-black dark:text-white">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black dark:border-[#3b3a33] pb-4">
         <div>
-          <h2 className="text-base font-serif font-bold tracking-tight">Prophet Predictive Forecasting</h2>
+          <h2 className="text-base font-serif font-bold tracking-tight">Predictive Time-Series Forecasting</h2>
           <p className="text-xs font-sans text-black/75 dark:text-white/75 mt-0.5">
-            Auto-detect temporal dates and run Facebook Prophet to predict 30-day or 90-day future trends.
+            Auto-detect temporal dates and run predictive statistical models to project 30-day or 90-day future trends with 80% confidence bands.
           </p>
         </div>
 

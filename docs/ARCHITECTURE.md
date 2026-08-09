@@ -65,7 +65,7 @@ When a user opens the Case Details dashboard, background analytical engines are 
 ```mermaid
 graph LR
     Dataset["Dataset Clean File"] --> Profile["Profiling Service"]
-    Dataset --> Forecast["ARIMA Forecast Service"]
+    Dataset --> Forecast["Time-Series Forecast Service"]
     Dataset --> Stats["SciPy Statistics Engine"]
     Dataset --> Insights["Insight Engine"]
     

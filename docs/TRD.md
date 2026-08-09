@@ -15,7 +15,7 @@
 * **Framework:** FastAPI (Python 3.12-slim) executing behind Uvicorn.
 * **Database Driver:** SQLAlchemy 2.0 (AsyncPG driver wrapper for Postgres; AIOSQLite for local dev) managing async queries.
 * **Data Frame Engine:** Polars (Rust-backed dataframe library) for high-performance column processing.
-* **Forensics Engines:** SciPy, Statsmodels (ARIMA model computing), NumPy, Scikit-Learn (Isolation Forest), Prophet.
+* **Forensics Engines:** SciPy, Statsmodels, NumPy, Scikit-Learn (Isolation Forest), Time-Series Forecasting Engine (Trend & Seasonality Modeling).
 * **Report Compiler:** ReportLab (PDF rendering), python-docx (Microsoft Word compiling), Jinja2 (HTML briefing template).
 * **Authentication:** PyJWT (access/refresh tokens), Pwdlib (Argon2 password hashing), HTTPX + `httpx-oauth` (Google OAuth), Firebase Auth on the frontend.
 * **HTTP Client:** HTTPX (handling external auth requests).

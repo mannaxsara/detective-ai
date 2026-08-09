@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     default: "DetectiveAI — Autonomous Data Forensics & Statistical Intelligence Engine",
     template: "%s | DetectiveAI Forensics"
   },
-  description: "Upload CSV, Excel, or Parquet datasets. DetectiveAI profiles schema health, isolates 3-sigma anomalies, projects ARIMA forecasts, and exports executive briefing reports in under 10 seconds.",
-  keywords: ["Data Forensics", "Polars Engine", "Statistical Intelligence", "Anomaly Detection", "ARIMA Forecasting", "Automated EDA", "Executive PDF Briefings"],
+  description: "Upload CSV, Excel, or Parquet datasets. DetectiveAI profiles schema health, isolates 3-sigma anomalies, projects time-series trend forecasts, and exports executive briefing reports in under 10 seconds.",
+  keywords: ["Data Forensics", "Polars Engine", "Statistical Intelligence", "Anomaly Detection", "Time-Series Forecasting", "Automated EDA", "Executive PDF Briefings"],
   authors: [{ name: "DetectiveAI Core Team" }],
   metadataBase: new URL("https://projectdetective.vercel.app"),
   openGraph: {

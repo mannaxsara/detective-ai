@@ -254,7 +254,7 @@ curl -X POST "https://detective-ai-guio.onrender.com/api/datasets/upload" \\
             </h1>
 
             <p className="text-base sm:text-lg font-sans text-black/85 dark:text-white/85 max-w-[640px] leading-relaxed tracking-[0.02em] pt-2">
-              Upload CSV, Excel, or Parquet datasets. DetectiveAI profiles schema health, isolates 3-sigma outliers, projects ARIMA forecasts, and exports executive briefing reports in under 10 seconds.
+              Upload CSV, Excel, or Parquet datasets. DetectiveAI profiles schema health, isolates 3-sigma outliers, projects time-series forecasts, and exports executive briefing reports in under 10 seconds.
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-3">
@@ -401,8 +401,8 @@ curl -X POST "https://detective-ai-guio.onrender.com/api/datasets/upload" \\
               },
               {
                 num: "03",
-                title: "90-Period ARIMA Forecasting",
-                desc: "Projects up to 90 future periods with 80% and 95% confidence bands using automated ARIMA order selection.",
+                title: "90-Period Predictive Forecasting",
+                desc: "Projects up to 90 future periods with 80% and 95% confidence bands using automated trend & seasonality modeling.",
                 accent: "bg-[#e6ebf5] dark:bg-[#1f2430] text-black dark:text-white",
                 icon: LineChart,
                 tag: "Confidence Bands",
@@ -429,7 +429,7 @@ curl -X POST "https://detective-ai-guio.onrender.com/api/datasets/upload" \\
               {
                 num: "06",
                 title: "Executive PDF Briefing Compiler",
-                desc: "Compiles all schema diagnostics, anomaly sweeps, ARIMA forecasts, and charts into publication-grade executive briefing PDFs with 1-click export.",
+                desc: "Compiles all schema diagnostics, anomaly sweeps, time-series forecasts, and charts into publication-grade executive briefing PDFs with 1-click export.",
                 accent: "bg-[#edfe5e] text-black",
                 icon: FileText,
                 tag: "PDF Export",
