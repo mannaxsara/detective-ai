@@ -337,6 +337,18 @@ def generate_charts(file_path: str, file_type: str) -> list[ChartConfig]:
     cat = _categorical_cols(df)
     dates = _date_cols(df)
 
+    # Convert numeric strings if num is empty
+    if not num:
+        for c in cat:
+            try:
+                converted = df[c].cast(pl.Float64, strict=False)
+                if converted.drop_nulls().len() > df.height * 0.5:
+                    df = df.with_columns(converted.alias(c))
+                    num.append(c)
+            except Exception:
+                pass
+        cat = [c for c in cat if c not in num]
+
     # 1. Histograms for up to 3 numeric columns
     for col in num[:3]:
         h = _histogram(df, col)
@@ -345,28 +357,51 @@ def generate_charts(file_path: str, file_type: str) -> list[ChartConfig]:
 
     # 2. Categorical distribution pie & bar charts
     for col in cat[:3]:
-        n_unique = df[col].n_unique()
-        if n_unique <= 10:
-            charts.append(_pie_categorical(df, col))
-        elif n_unique <= 30:
-            charts.append(_bar_categorical(df, col))
-        else:
-            charts.append(_treemap_categorical(df, col))
+        try:
+            n_unique = df[col].n_unique()
+            if n_unique <= 10:
+                charts.append(_pie_categorical(df, col))
+            elif n_unique <= 30:
+                charts.append(_bar_categorical(df, col))
+            else:
+                charts.append(_treemap_categorical(df, col))
+        except Exception:
+            pass
 
     # 3. Scatter plots for correlated numeric pairs
-    scatters = _scatter(df, num)
-    charts.extend(scatters)
+    if len(num) >= 2:
+        try:
+            scatters = _scatter(df, num)
+            charts.extend(scatters)
+        except Exception:
+            pass
 
     # 4. Time series trends if date column exists
     if dates and num:
-        trends = _time_trend(df, dates[0], num)
-        charts.extend(trends)
+        try:
+            trends = _time_trend(df, dates[0], num)
+            charts.extend(trends)
+        except Exception:
+            pass
 
     # 5. Cross-tabulation heatmap for low-cardinality categorical pairs
     if len(cat) >= 2:
-        hm = _heatmap_crosstab(df, cat)
-        if hm:
-            charts.append(hm)
+        try:
+            hm = _heatmap_crosstab(df, cat)
+            if hm:
+                charts.append(hm)
+        except Exception:
+            pass
+
+    # 6. Fallback chart generation if charts list is empty
+    if not charts and df.columns:
+        for col in df.columns[:3]:
+            try:
+                c = _bar_categorical(df, col)
+                if c:
+                    charts.append(c)
+            except Exception:
+                pass
 
     return charts
 

@@ -221,6 +221,20 @@ async def get_analysis_charts(
         raise HTTPException(status_code=404, detail="Analysis not found")
     
     chart_data = analysis.charts or []
+    if not chart_data:
+        ds_repo = DatasetRepository(db)
+        dataset = await ds_repo.get_by_id(analysis.dataset_id)
+        if dataset:
+            import os
+            if os.path.exists(dataset.file_path):
+                try:
+                    charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
+                    chart_dicts = [c.model_dump() for c in charts]
+                    analysis = await repo.update_by_id(analysis.id, charts=chart_dicts)
+                    chart_data = analysis.charts or []
+                except Exception:
+                    pass
+
     return [ChartConfig.model_validate(c) for c in chart_data]
 
 @router.get("/{analysis_id}/kpis", response_model=list[KPICard])
@@ -259,6 +273,20 @@ async def get_analysis_insights(
         raise HTTPException(status_code=404, detail="Analysis not found")
     
     insights = analysis.insights or []
+    if not insights:
+        ds_repo = DatasetRepository(db)
+        dataset = await ds_repo.get_by_id(analysis.dataset_id)
+        if dataset:
+            import os
+            if os.path.exists(dataset.file_path):
+                try:
+                    ins_list = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
+                    ins_dicts = [i.model_dump() for i in ins_list]
+                    analysis = await repo.update_by_id(analysis.id, insights=ins_dicts)
+                    insights = analysis.insights or []
+                except Exception:
+                    pass
+
     return [InsightItem.model_validate(i) for i in insights]
 
 @router.get("/{analysis_id}/recommendations", response_model=list[str])
