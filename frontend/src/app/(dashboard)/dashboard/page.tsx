@@ -170,27 +170,26 @@ export default function DashboardPage() {
         <DashboardMetricCard
           title="Average Case Health"
           value={avgHealthScore != null ? `${avgHealthScore}%` : "—"}
-          description="Overall dataset structural validity"
+          description="Overall schema quality"
           icon={CheckCircle2}
           progress={avgHealthScore ?? 0}
         />
         <DashboardMetricCard
           title="Total Records Logged"
           value={totalRowsParsed.toLocaleString()}
-          description="Total data rows parsed & profiled"
+          description="Parsed data rows"
           icon={Database}
-          trend="Polars SIMD"
         />
         <DashboardMetricCard
           title="Attributes Scanned"
           value={totalColumnsScanned}
-          description="Features evaluated for 3-sigma drift"
+          description="Evaluated features"
           icon={Activity}
         />
         <DashboardMetricCard
           title="Active Cases"
           value={totalCases}
-          description="Repository evidence datasets"
+          description="Evidence repository"
           icon={FolderOpen}
         />
       </div>
