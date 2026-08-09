@@ -15,8 +15,9 @@ interface CleaningTabProps {
 export default function CleaningTab({ datasetId }: CleaningTabProps) {
   const queryClient = useQueryClient();
   const [applying, setApplying] = useState<string | null>(null);
+  const [appliedFixIds, setAppliedFixIds] = useState<string[]>([]);
 
-  const { data: cleanData, isLoading, refetch } = useQuery({
+  const { data: cleanData, isLoading, isError, refetch } = useQuery({
     queryKey: ["cleaning-suggestions", datasetId],
     queryFn: () => cleaningAPI.getSuggestions(datasetId),
   });
@@ -30,6 +31,9 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
     mutationFn: (fixId: string) => cleaningAPI.applyFixes(datasetId, [fixId]),
     onSuccess: (data) => {
       toast.success(data.message || "Fix successfully applied!");
+      if (data?.applied?.length) {
+        setAppliedFixIds((prev) => [...new Set([...prev, ...data.applied])]);
+      }
       queryClient.invalidateQueries({ queryKey: ["dataset", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["dataset-profile", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["analysis", datasetId] });
@@ -66,9 +70,27 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-[#bc3e3e]/30 bg-[#bc3e3e]/5 p-8 text-center font-sans shadow-sm">
+        <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[#bc3e3e]" />
+        <h4 className="font-serif font-bold text-black dark:text-white">Failed to load cleaning suggestions</h4>
+        <p className="text-black/70 dark:text-white/70 text-xs mt-1 font-medium">
+          The data quality engine could not analyze this dataset.
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="btn-ink-accent text-xs py-2 px-4 font-mono uppercase font-bold shadow-sm cursor-pointer mt-4"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   const suggestions = cleanData?.suggestions || [];
   const totalIssues = cleanData?.total_issues || 0;
-  const appliedCount = suggestions.filter((s: any) => s.applied).length || 0;
+  const appliedCount = appliedFixIds.length;
   
   const cleaningPipeline: FunnelStage[] = [
     { label: 'Raw Records', value: profile?.row_count || 0, displayValue: (profile?.row_count || 0).toLocaleString() },
@@ -140,10 +162,15 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
 
                 <button
                   onClick={() => handleApplyFix(issue.fix_id)}
-                  disabled={applying === issue.fix_id}
-                  className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer shrink-0 w-full sm:w-auto mt-3 sm:mt-0"
+                  disabled={appliedFixIds.includes(issue.fix_id) || applying === issue.fix_id}
+                  className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer shrink-0 w-full sm:w-auto mt-3 sm:mt-0 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {applying === issue.fix_id ? (
+                  {appliedFixIds.includes(issue.fix_id) ? (
+                    <span className="flex items-center gap-1.5 font-bold">
+                      <CheckCircle className="w-4 h-4" />
+                      Applied
+                    </span>
+                  ) : applying === issue.fix_id ? (
                     <span className="flex items-center gap-1.5 font-bold">
                       <LoaderOne />
                       Fixing...

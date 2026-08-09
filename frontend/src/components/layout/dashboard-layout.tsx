@@ -12,25 +12,19 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
-  const { isAuthenticated, initialize } = useAuthStore();
-  const [loading, setLoading] = React.useState(true);
+  const { isAuthenticated, isLoading, initialize } = useAuthStore();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      const token = localStorage.getItem("detective_token");
-      if (!token) {
-        router.push("/login");
-      }
-    } else {
-      setLoading(false);
+    if (!isAuthenticated && !isLoading) {
+      router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  if (loading) {
+  if (!isAuthenticated || isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#f9f9f7] dark:bg-[#11120d] text-black dark:text-white font-mono text-[12px]">
         Checking credentials...

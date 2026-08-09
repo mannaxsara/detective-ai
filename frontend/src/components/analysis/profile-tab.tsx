@@ -7,6 +7,7 @@ import {
   Grid,
   HardDrive,
   Copy,
+  AlertCircle,
 } from "lucide-react";
 import { datasetsAPI } from "@/lib/api";
 import { RadialProfile } from "@/components/ui/radial-profile";
@@ -18,17 +19,35 @@ interface ProfileTabProps {
 }
 
 export default function ProfileTab({ datasetId }: ProfileTabProps) {
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, isError, refetch } = useQuery({
     queryKey: ["dataset-profile", datasetId],
     queryFn: () => datasetsAPI.getProfile(datasetId),
   });
 
-  if (isLoading || !profile) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5 animate-pulse font-sans">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-24 rounded-xl bg-white dark:bg-[#181914] border border-black/10 dark:border-white/10" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <div className="border border-[#bc3e3e]/40 bg-[#bc3e3e]/5 rounded-xl p-6 font-sans flex flex-col items-center gap-3 text-center">
+        <div className="w-10 h-10 rounded-lg bg-[#bc3e3e]/10 flex items-center justify-center">
+          <AlertCircle className="w-5 h-5 text-[#bc3e3e]" />
+        </div>
+        <p className="text-sm font-bold text-black dark:text-white">Failed to load dataset profile</p>
+        <p className="text-xs text-black/60 dark:text-white/60">The profiling data could not be retrieved. Please try again.</p>
+        <button
+          onClick={() => refetch()}
+          className="btn-ink-accent text-xs py-2.5 px-5 font-mono uppercase font-bold shadow-sm cursor-pointer"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -40,17 +59,22 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
     { label: "Duplicate Rows", value: profile.duplicate_row_count, icon: Copy },
   ];
 
-  const completeness = profile.row_count > 0 ? Math.round(profile.health_score || 95) : 100;
+  const columns = profile?.columns || [];
+  const avgNullPct = columns.reduce((s: number, c: any) => s + (c.null_percentage || 0), 0) / (columns.length || 1);
+  const knownTypes = columns.filter((c: any) => c.classification && c.classification !== 'unknown').length;
+  const typeIntegrity = profile.column_count > 0 ? Math.round((knownTypes / profile.column_count) * 100) : 100;
+
+  const completeness = profile.row_count > 0 ? Math.round(profile.health_score ?? 0) : 100;
   const uniqueness = profile.row_count > 0 ? Math.round(100 - (profile.duplicate_row_count / profile.row_count) * 100) : 100;
   
   const radialMetrics = [
     { label: "Schema Health & Completeness", score: completeness, color: "#edfe5e" },
     { label: "Row Uniqueness Ratio", score: uniqueness, color: "#31e992" },
-    { label: "Column Type Integrity", score: 98, color: "#bed4fb" },
-    { label: "Null Cell Safety", score: Math.max(70, completeness - 5), color: "#f59e0b" },
+    { label: "Column Type Integrity", score: typeIntegrity, color: "#bed4fb" },
+    { label: "Null Cell Safety", score: Math.round(100 - avgNullPct), color: "#f59e0b" },
   ];
 
-  const classifications = (profile?.columns || []).reduce((acc: Record<string,number>, col: any) => {
+  const classifications = columns.reduce((acc: Record<string,number>, col: any) => {
     const cls = col.classification || 'unknown';
     acc[cls] = (acc[cls] || 0) + 1;
     return acc;
@@ -62,8 +86,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
     { name: 'Boolean', value: classifications.boolean || 0, fill: '#f59e0b' },
   ].filter(d => d.value > 0);
 
-  const avgNullPct = profile?.columns?.reduce((s: number, c: any) => s + (c.null_percentage || 0), 0) / (profile?.columns?.length || 1);
-  const numericRatio = ((profile?.columns?.filter((c: any) => c.classification === 'numeric').length || 0) / (profile?.column_count || 1)) * 100;
+  const numericRatio = ((columns.filter((c: any) => c.classification === 'numeric').length || 0) / (profile?.column_count || 1)) * 100;
   const qualityMetrics: RadarMetric[] = [
     { key: 'completeness', label: 'Completeness' },
     { key: 'uniqueness', label: 'Uniqueness' },
@@ -75,7 +98,7 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
     label: 'Dataset Quality',
     color: '#edfe5e',
     values: {
-      completeness: Math.round(profile?.health_score || 95),
+      completeness: Math.round(profile?.health_score ?? 0),
       uniqueness: Math.round(100 - ((profile?.duplicate_row_count || 0) / (profile?.row_count || 1)) * 100),
       typeIntegrity: Math.round(numericRatio),
       nullSafety: Math.round(100 - avgNullPct),

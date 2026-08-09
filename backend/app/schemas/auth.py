@@ -4,7 +4,7 @@ Authentication & user Pydantic schemas.
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
 # ── Request schemas ───────────────────────────────────────────────────────────
@@ -13,15 +13,15 @@ from pydantic import BaseModel, EmailStr, Field
 class RegisterRequest(BaseModel):
     """Payload for user registration."""
 
-    email: EmailStr
-    password: str = Field(..., min_length=8, max_length=128)
+    email: str
+    password: str = Field(..., min_length=6, max_length=128)
     full_name: str = Field(..., min_length=1, max_length=255)
 
 
 class LoginRequest(BaseModel):
     """Payload for email/password login."""
 
-    email: EmailStr
+    email: str
     password: str
 
 
@@ -34,14 +34,14 @@ class GoogleAuthRequest(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     """Payload to request a password-reset email."""
 
-    email: EmailStr
+    email: str
 
 
 class ResetPasswordRequest(BaseModel):
     """Payload to reset a password using a reset token."""
 
     token: str
-    new_password: str = Field(..., min_length=8, max_length=128)
+    new_password: str = Field(..., min_length=6, max_length=128)
 
 
 class RefreshTokenRequest(BaseModel):
@@ -78,4 +78,3 @@ class MessageResponse(BaseModel):
     """Generic message response."""
 
     message: str
-

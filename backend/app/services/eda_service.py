@@ -369,3 +369,6 @@ def generate_charts(file_path: str, file_type: str) -> list[ChartConfig]:
             charts.append(hm)
 
     return charts
+
+
+run_eda = generate_charts

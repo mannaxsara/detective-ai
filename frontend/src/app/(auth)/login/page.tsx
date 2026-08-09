@@ -69,7 +69,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await authAPI.login({ email, password });
-      loginStore(res.user, res.access_token);
+      loginStore(res.user, res.access_token, res.refresh_token);
       toast.success("Welcome back to DetectiveAI!");
       router.push("/dashboard");
     } catch (err: any) {
@@ -90,7 +90,7 @@ export default function LoginPage() {
       const idToken = await result.user.getIdToken();
       
       const res = await authAPI.googleAuth(idToken);
-      loginStore(res.user, res.access_token);
+      loginStore(res.user, res.access_token, res.refresh_token);
       toast.success(`Welcome back, ${res.user.full_name || 'Agent'}!`);
       router.push("/dashboard");
     } catch (err: any) {

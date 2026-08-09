@@ -91,8 +91,8 @@ export const authApi = {
     return data;
   },
 
-  refreshToken: async (): Promise<{ access_token: string }> => {
-    const { data } = await api.post('/auth/refresh');
+  refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
+    const { data } = await api.post('/auth/refresh', { refresh_token: refreshToken });
     return data;
   },
 
@@ -102,7 +102,7 @@ export const authApi = {
   },
 
   resetPassword: async (token: string, password: string): Promise<{ message: string }> => {
-    const { data } = await api.post('/auth/reset-password', { token, password });
+    const { data } = await api.post('/auth/reset-password', { token, new_password: password });
     return data;
   },
 
@@ -277,9 +277,8 @@ export const reportsApi = {
 // ========== History API ==========
 export const historyApi = {
   list: async (skip = 0, limit = 10): Promise<any> => {
-    const page = Math.floor(skip / limit) + 1;
     const { data } = await api.get('/history', {
-      params: { page, per_page: limit },
+      params: { skip, limit },
     });
     return data;
   },

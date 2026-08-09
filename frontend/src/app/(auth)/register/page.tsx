@@ -87,7 +87,7 @@ export default function RegisterPage() {
         password,
         full_name: fullName,
       });
-      loginStore(res.user, res.access_token);
+      loginStore(res.user, res.access_token, res.refresh_token);
       toast.success("Account created successfully!");
       router.push("/dashboard");
     } catch (err: any) {
@@ -108,7 +108,7 @@ export default function RegisterPage() {
       const idToken = await result.user.getIdToken();
       
       const res = await authAPI.googleAuth(idToken);
-      loginStore(res.user, res.access_token);
+      loginStore(res.user, res.access_token, res.refresh_token);
       toast.success(`Welcome to DetectiveAI, ${res.user.full_name || 'Agent'}!`);
       router.push("/dashboard");
     } catch (err: any) {

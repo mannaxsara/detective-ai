@@ -4,9 +4,10 @@ import type { User } from '@/types';
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token: string) => void;
+  login: (user: User, token: string, refreshToken?: string) => void;
   logout: () => void;
   setUser: (user: User) => void;
   initialize: () => void;
@@ -15,23 +16,28 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
+  refreshToken: null,
   isAuthenticated: false,
   isLoading: true,
 
-  login: (user: User, token: string) => {
+  login: (user: User, token: string, refreshToken?: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('detective_token', token);
       localStorage.setItem('detective_user', JSON.stringify(user));
+      if (refreshToken) {
+        localStorage.setItem('detective_refresh_token', refreshToken);
+      }
     }
-    set({ user, token, isAuthenticated: true, isLoading: false });
+    set({ user, token, refreshToken: refreshToken ?? null, isAuthenticated: true, isLoading: false });
   },
 
   logout: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('detective_token');
       localStorage.removeItem('detective_user');
+      localStorage.removeItem('detective_refresh_token');
     }
-    set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+    set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isLoading: false });
   },
 
   setUser: (user: User) => {
@@ -45,15 +51,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('detective_token');
       const userStr = localStorage.getItem('detective_user');
+      const refreshToken = localStorage.getItem('detective_refresh_token');
 
       if (token && userStr) {
         try {
           const user = JSON.parse(userStr) as User;
-          set({ user, token, isAuthenticated: true, isLoading: false });
+          set({ user, token, refreshToken, isAuthenticated: true, isLoading: false });
         } catch {
           localStorage.removeItem('detective_token');
           localStorage.removeItem('detective_user');
-          set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+          localStorage.removeItem('detective_refresh_token');
+          set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isLoading: false });
         }
       } else {
         set({ isLoading: false });

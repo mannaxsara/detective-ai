@@ -67,24 +67,6 @@ h1, h2, h3, .font-serif-display {
   --text-heading: 57px;
   --text-display: 68px;
 
-  /* Spacing */
-  --spacing-5: 5px;
-  --spacing-6: 6px;
-  --spacing-8: 8px;
-  --spacing-10: 10px;
-  --spacing-12: 12px;
-  --spacing-13: 13px;
-  --spacing-15: 15px;
-  --spacing-16: 16px;
-  --spacing-19: 19px;
-  --spacing-20: 20px;
-  --spacing-29: 29px;
-  --spacing-30: 30px;
-  --spacing-40: 40px;
-  --spacing-60: 60px;
-  --spacing-160: 160px;
-  --spacing-170: 170px;
-
   /* Border Radius */
   --radius-sm: 3px;
   --radius-md: 6px;
