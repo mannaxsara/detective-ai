@@ -443,16 +443,18 @@ curl -X POST "https://detective-ai-guio.onrender.com/api/datasets/upload" \\
                   className={`border border-black dark:border-[#3b3a33] rounded-2xl p-7 sm:p-8 space-y-6 ${mod.accent} ${mod.span} shadow-[6px_6px_0px_#000000] hover:shadow-[8px_8px_0px_#000000] hover:translate-y-[-2px] transition-all flex flex-col justify-between`}
                 >
                   <div className="space-y-5 text-left">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-start justify-between gap-2">
                       {/* Prominent High-Contrast 56x56px Icon Badge with size={28} Icon */}
                       <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl border-2 border-black bg-[#edfe5e] flex items-center justify-center text-black font-bold shadow-[3px_3px_0px_#000000] shrink-0">
                         <Icon size={28} className="text-black shrink-0 stroke-[2.5]" />
                       </div>
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        <span className="font-mono text-[11px] font-bold uppercase tracking-wider bg-black text-white px-3 py-1 rounded border border-black shadow-[1px_1px_0px_#000000]">
+                      
+                      {/* Right Tag & Number: Stacked cleanly to prevent overflow on 4-col layout */}
+                      <div className="flex flex-col items-end gap-1.5 min-w-0">
+                        <span className="font-mono text-xs sm:text-sm font-extrabold opacity-60 leading-none">#{mod.num}</span>
+                        <span className="font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-black text-white px-2.5 py-1 rounded border border-black shadow-[1px_1px_0px_#000000] whitespace-nowrap">
                           {mod.tag}
                         </span>
-                        <span className="font-mono text-base font-bold opacity-60">#{mod.num}</span>
                       </div>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-serif font-bold leading-tight">{mod.title}</h3>
