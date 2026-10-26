@@ -4,7 +4,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Database, AlertTriangle, Sparkles, Zap, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Database, AlertTriangle, Sparkles, Zap, ShieldCheck, ArrowRight, Loader2, Printer } from "lucide-react";
 import { analysisAPI } from "@/lib/api";
 import { GaugeChart } from "@/components/ui/gauge-chart";
 
@@ -54,32 +54,44 @@ export default function PublicSharePage() {
   const anomalies = shareData.anomalies || [];
 
   return (
-    <div className="min-h-screen bg-[#f9f9f7] dark:bg-[#11120d] text-black dark:text-white font-sans py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#f9f9f7] dark:bg-[#11120d] text-black dark:text-white font-sans py-8 px-4 sm:px-6 lg:px-8 print:p-4 print:bg-white print:text-black">
+      <div className="max-w-5xl mx-auto space-y-8 print:space-y-6">
         
         {/* Navigation Bar */}
-        <div className="flex items-center justify-between pb-4 border-b border-black/15 dark:border-white/15">
+        <div className="flex items-center justify-between pb-4 border-b border-black/15 dark:border-white/15 print:border-black/30">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-[#edfe5e] border border-black flex items-center justify-center text-black font-serif font-black text-xs shadow-xs">
               D
             </div>
             <span className="font-serif font-bold tracking-tight text-sm">DetectiveAI</span>
-            <span className="text-[10px] font-mono uppercase bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 px-2 py-0.5 rounded font-bold text-black/70 dark:text-white/70">
+            <span className="text-[10px] font-mono uppercase bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 px-2 py-0.5 rounded font-bold text-black/70 dark:text-white/70 print:border-black/20">
               Public Dossier
             </span>
           </div>
 
-          <Link
-            href="/"
-            className="text-xs font-mono font-bold uppercase tracking-wider text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white flex items-center gap-1.5"
-          >
-            <span>Analyze Your Data</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-3 print:hidden">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="px-3 py-1.5 rounded-xl border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] text-black dark:text-white hover:bg-[#edf0e9] dark:hover:bg-[#262720] transition-colors cursor-pointer inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider"
+              title="Print Dossier or Save as PDF"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print / PDF</span>
+            </button>
+
+            <Link
+              href="/"
+              className="text-xs font-mono font-bold uppercase tracking-wider text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white flex items-center gap-1.5"
+            >
+              <span>Analyze Your Data</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* Case File Header Banner */}
-        <div className="border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] rounded-[18px] p-6 sm:p-8 shadow-[4px_4px_0px_#000000] flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] rounded-[18px] p-6 sm:p-8 shadow-[4px_4px_0px_#000000] print:shadow-none print:border-black/30 flex flex-col md:flex-row md:items-center justify-between gap-6 print:break-inside-avoid">
           <div className="space-y-2 text-left">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full">
@@ -106,7 +118,7 @@ export default function PublicSharePage() {
 
         {/* Key Metrics Grid */}
         {kpis.length > 0 && (
-          <div className="space-y-3 text-left">
+          <div className="space-y-3 text-left print:break-inside-avoid">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-[#edfe5e]" />
               <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">
@@ -115,7 +127,7 @@ export default function PublicSharePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {kpis.slice(0, 4).map((kpi: any, idx: number) => (
-                <div key={idx} className="p-5 rounded-[14px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[3px_3px_0px_#000000] space-y-1">
+                <div key={idx} className="p-5 rounded-[14px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[3px_3px_0px_#000000] print:shadow-none print:border-black/30 space-y-1">
                   <p className="text-[11px] font-mono uppercase font-bold text-black/60 dark:text-white/60 truncate">{kpi.name}</p>
                   <p className="text-2xl font-mono font-bold text-black dark:text-white">{kpi.formatted_value || kpi.value}</p>
                   <p className="text-[10px] font-mono text-black/60 dark:text-white/60">{kpi.description || "Primary signal"}</p>
@@ -127,7 +139,7 @@ export default function PublicSharePage() {
 
         {/* Discovered Insights */}
         {insights.length > 0 && (
-          <div className="space-y-3 text-left">
+          <div className="space-y-3 text-left print:break-inside-avoid">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#edfe5e]" />
               <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">
@@ -136,7 +148,7 @@ export default function PublicSharePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {insights.slice(0, 4).map((item: any, idx: number) => (
-                <div key={idx} className="p-5 rounded-[14px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[3px_3px_0px_#000000] space-y-2">
+                <div key={idx} className="p-5 rounded-[14px] border border-black dark:border-[#3b3a33] bg-white dark:bg-[#1c1d18] shadow-[3px_3px_0px_#000000] print:shadow-none print:border-black/30 space-y-2">
                   <span className="text-[10px] font-mono uppercase font-bold bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black/20">
                     {item.category || "Observation"}
                   </span>
@@ -151,14 +163,14 @@ export default function PublicSharePage() {
 
         {/* Anomalies Table */}
         {anomalies.length > 0 && (
-          <div className="space-y-3 text-left">
+          <div className="space-y-3 text-left print:break-inside-avoid">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-[#bc3e3e]" />
               <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">
                 Key Anomalies Detected
               </h2>
             </div>
-            <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
+            <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000] print:shadow-none print:border-black/30">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs font-sans min-w-[500px]">
                   <thead>
