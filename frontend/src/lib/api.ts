@@ -48,7 +48,7 @@ api.interceptors.request.use(
 // Response interceptor: handle 401 & error formatting
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     // Format validation errors (FastAPI 422 lists) into a readable string
     if (error.response?.data?.detail) {
       const detail = error.response.data.detail;
@@ -60,12 +60,38 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      const url = error.config?.url || '';
-      // Avoid redirecting on auth endpoints
-      if (!url.includes('/auth/login') && !url.includes('/auth/register') && !url.includes('/auth/google')) {
-        if (typeof window !== 'undefined') {
+      const originalRequest = error.config;
+      const url = originalRequest?.url || '';
+      // Avoid redirecting or refreshing on auth endpoints
+      if (
+        !url.includes('/auth/login') &&
+        !url.includes('/auth/register') &&
+        !url.includes('/auth/google') &&
+        !url.includes('/auth/refresh')
+      ) {
+        if (typeof window !== 'undefined' && !originalRequest._retry) {
+          originalRequest._retry = true;
+          const refreshToken = localStorage.getItem('detective_refresh_token');
+          if (refreshToken) {
+            try {
+              const res = await axios.post(
+                `${api.defaults.baseURL}/auth/refresh`,
+                { refresh_token: refreshToken },
+                { headers: { 'Content-Type': 'application/json' } }
+              );
+              const { access_token, refresh_token: newRefresh } = res.data;
+              localStorage.setItem('detective_token', access_token);
+              if (newRefresh) {
+                localStorage.setItem('detective_refresh_token', newRefresh);
+              }
+              originalRequest.headers.Authorization = `Bearer ${access_token}`;
+              return api(originalRequest);
+            } catch {
+              // Refresh failed, proceed to logout
+            }
+          }
           // Clear Zustand auth state to prevent ghost sessions
-          const { useAuthStore } = require('@/store/auth-store');
+          const { useAuthStore } = await import('@/store/auth-store');
           useAuthStore.getState().logout();
           window.location.href = '/login';
         }
@@ -323,5 +349,6 @@ export const reportsAPI = reportsApi;
 export const historyAPI = historyApi;
 export const dashboardAPI = dashboardApi;
 
+export { api };
 export default api;
 

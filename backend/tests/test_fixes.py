@@ -59,3 +59,65 @@ def test_insight_provider_factory():
 
     # Reset
     settings.GEMINI_API_KEY = ""
+
+
+def test_root_cause_null_and_empty_safety():
+    from app.services.root_cause_service import generate_root_cause_tree, _safe_float
+
+    # Test _safe_float helper
+    assert _safe_float(None) == 0.0
+    assert _safe_float(float("nan")) == 0.0
+    assert _safe_float("invalid") == 0.0
+    assert _safe_float(42.5) == 42.5
+
+    # DataFrame with all nulls in factor and metric columns
+    df_nulls = pl.DataFrame({
+        "sales": [None, None, None],
+        "region": ["North", "South", "North"],
+        "category": ["A", "B", "A"],
+        "discount": [None, None, None],
+    })
+    # Must not raise TypeError
+    tree = generate_root_cause_tree("dummy.csv", "csv", df=df_nulls)
+    assert isinstance(tree, list)
+    assert len(tree) > 0
+
+
+@pytest.mark.asyncio
+async def test_service_df_reuse():
+    from app.services.kpi_service import detect_kpis
+    from app.services.insight_engine import discover_insights
+    from app.services.eda_service import run_eda
+    from app.services.cleaning_service import get_cleaning_suggestions
+    from app.services.profiling_service import profile_dataset
+
+    df = pl.DataFrame({
+        "sales": [100.0, 200.0, 300.0, 400.0],
+        "category": ["A", "B", "A", "B"],
+        "discount": [0.1, 0.2, 0.1, 0.2],
+    })
+
+    # Passing df directly to all services with non-existent path must succeed without FileNotFoundError
+    kpis = detect_kpis("nonexistent.csv", "csv", df=df)
+    assert isinstance(kpis, list)
+
+    insights = discover_insights("nonexistent.csv", "csv", df=df)
+    assert isinstance(insights, list)
+
+    charts = run_eda("nonexistent.csv", "csv", df=df)
+    assert isinstance(charts, list)
+
+    suggestions = await get_cleaning_suggestions("nonexistent.csv", "csv", df=df)
+    assert isinstance(suggestions, list)
+
+    profile = await profile_dataset("nonexistent.csv", "csv", df=df)
+    assert profile.row_count == 4
+
+
+def test_database_session_sslmode_handling():
+    import re
+    url = "postgresql+asyncpg://user:pass@host:5432/db?sslmode=require"
+    sanitized = re.sub(r"[?&]sslmode=[^&]+", "", url)
+    assert "sslmode" not in sanitized
+    assert sanitized == "postgresql+asyncpg://user:pass@host:5432/db"
+

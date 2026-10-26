@@ -2,6 +2,7 @@
 Authentication service – registration, login, Google OAuth, token refresh, password reset.
 """
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -26,6 +27,20 @@ from app.schemas.auth import (
 )
 
 GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo"
+
+# Module-level cached JWK clients (cache_keys=True and lifespan=86400 eliminate repeated network roundtrips)
+_FIREBASE_JWK_CLIENT = jwt.PyJWKClient(
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+    cache_keys=True,
+    max_cached_keys=32,
+    lifespan=86400,
+)
+_GOOGLE_JWK_CLIENT = jwt.PyJWKClient(
+    "https://www.googleapis.com/oauth2/v3/certs",
+    cache_keys=True,
+    max_cached_keys=32,
+    lifespan=86400,
+)
 
 
 async def register(schema: RegisterRequest, db: AsyncSession) -> TokenResponse:
@@ -104,50 +119,77 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
             user=user_to_response(user),
         )
 
-    # Verify the credential with Google's tokeninfo endpoint
     token_data: dict[str, Any] = {}
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(
-            GOOGLE_TOKEN_INFO_URL,
-            params={"id_token": credential},
-        )
-    if resp.status_code == 200:
-        token_data = resp.json()
-    else:
-        # Cryptographically verify Firebase / Google ID token against official Google JWKS
-        verified = False
-        for jwks_url in [
-            "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
-            "https://www.googleapis.com/oauth2/v3/certs",
-        ]:
-            try:
-                jwk_client = jwt.PyJWKClient(jwks_url)
-                signing_key = jwk_client.get_signing_key_from_jwt(credential)
-                claims = jwt.decode(
-                    credential,
-                    signing_key.key,
-                    algorithms=["RS256"],
-                    options={"verify_aud": False},
-                )
-                sub = claims.get("sub") or claims.get("user_id")
-                email_val = claims.get("email")
-                if sub and email_val:
-                    token_data = {
-                        "sub": str(sub),
-                        "email": str(email_val),
-                        "name": claims.get("name") or str(email_val).split("@")[0],
-                        "picture": claims.get("picture"),
-                    }
-                    verified = True
-                    break
-            except Exception:
-                continue
 
-        if not verified:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Google or Firebase credential signature",
+    # Fast path: detect token type from unverified issuer without network calls
+    try:
+        unverified = jwt.decode(credential, options={"verify_signature": False})
+        iss = unverified.get("iss", "")
+    except Exception:
+        iss = ""
+
+    # 1. Firebase Auth ID Token (Used by Next.js Firebase Client)
+    if "securetoken.google.com" in iss:
+        try:
+            signing_key = await asyncio.to_thread(_FIREBASE_JWK_CLIENT.get_signing_key_from_jwt, credential)
+            claims = jwt.decode(
+                credential,
+                signing_key.key,
+                algorithms=["RS256"],
+                options={"verify_aud": False},
             )
+            sub = claims.get("sub") or claims.get("user_id")
+            email_val = claims.get("email")
+            if sub and email_val:
+                token_data = {
+                    "sub": str(sub),
+                    "email": str(email_val),
+                    "name": claims.get("name") or str(email_val).split("@")[0],
+                    "picture": claims.get("picture"),
+                }
+        except Exception:
+            pass
+
+    # 2. Direct Google OAuth ID Token
+    if not token_data and ("accounts.google.com" in iss or not iss):
+        try:
+            signing_key = await asyncio.to_thread(_GOOGLE_JWK_CLIENT.get_signing_key_from_jwt, credential)
+            claims = jwt.decode(
+                credential,
+                signing_key.key,
+                algorithms=["RS256"],
+                options={"verify_aud": False},
+            )
+            sub = claims.get("sub") or claims.get("user_id")
+            email_val = claims.get("email")
+            if sub and email_val:
+                token_data = {
+                    "sub": str(sub),
+                    "email": str(email_val),
+                    "name": claims.get("name") or str(email_val).split("@")[0],
+                    "picture": claims.get("picture"),
+                }
+        except Exception:
+            pass
+
+    # 3. Fallback to Google tokeninfo only if not a Firebase token
+    if not token_data and "securetoken.google.com" not in iss:
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.get(
+                    GOOGLE_TOKEN_INFO_URL,
+                    params={"id_token": credential},
+                )
+            if resp.status_code == 200:
+                token_data = resp.json()
+        except Exception:
+            pass
+
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google or Firebase credential signature",
+        )
 
     google_id: str = token_data.get("sub", "")
     email: str = token_data.get("email", "")

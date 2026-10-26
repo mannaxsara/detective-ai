@@ -197,14 +197,15 @@ def _compute_health_score(
 
 
 async def profile_dataset(
-    file_path: str, file_type: str
+    file_path: str, file_type: str, df: pl.DataFrame | None = None
 ) -> DatasetProfileResponse:
     """Run a full profile on the dataset at *file_path*.
 
     This is intentionally CPU-bound; for very large files consider
     running inside ``asyncio.to_thread``.
     """
-    df = _load_dataframe(file_path, file_type)
+    if df is None:
+        df = _load_dataframe(file_path, file_type)
     total_rows = df.height
     total_cols = df.width
 

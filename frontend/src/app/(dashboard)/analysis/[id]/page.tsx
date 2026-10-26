@@ -76,7 +76,9 @@ export default function AnalysisPage() {
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `${dataset.name}_cleaned.csv`);
+      const ext = dataset.file_type ? dataset.file_type.toLowerCase() : "csv";
+      const baseName = dataset.name ? dataset.name.replace(/\.[^/.]+$/, "") : "dataset";
+      link.setAttribute("download", `${baseName}_cleaned.${ext}`);
       document.body.appendChild(link);
       link.click();
       link.remove();

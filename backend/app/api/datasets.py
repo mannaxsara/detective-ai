@@ -206,6 +206,6 @@ async def download_dataset_file(
     return FileResponse(
         path=dataset.file_path,
         media_type=media_type,
-        filename=os.path.basename(dataset.file_path),
+        filename=dataset.original_filename or os.path.basename(dataset.file_path),
     )
 

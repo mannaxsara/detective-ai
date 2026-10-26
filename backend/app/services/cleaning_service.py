@@ -305,10 +305,11 @@ def _detect_all(df: pl.DataFrame) -> list[CleaningSuggestion]:
 
 
 async def get_cleaning_suggestions(
-    file_path: str, file_type: str
+    file_path: str, file_type: str, df: pl.DataFrame | None = None
 ) -> list[CleaningSuggestion]:
     """Analyse the dataset and return all detected quality issues."""
-    df = _load_dataframe(file_path, file_type)
+    if df is None:
+        df = _load_dataframe(file_path, file_type)
     return _detect_all(df)
 
 

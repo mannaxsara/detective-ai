@@ -11,12 +11,13 @@ import polars as pl
 from app.schemas.analysis import InsightItem
 from app.services.profiling_service import _load_dataframe
 
-def discover_insights(file_path: str, file_type: str) -> list[InsightItem]:
+def discover_insights(file_path: str, file_type: str, df: pl.DataFrame | None = None) -> list[InsightItem]:
     """Analyze the dataset and generate high-value business insights with confidence scores."""
-    try:
-        df = _load_dataframe(file_path, file_type)
-    except Exception:
-        return []
+    if df is None:
+        try:
+            df = _load_dataframe(file_path, file_type)
+        except Exception:
+            return []
 
     if df.height == 0:
         return []

@@ -5,17 +5,29 @@ Uses Polars to trace metric distributions and build "5 Whys" diagnostic trees.
 
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 import polars as pl
 from app.services.profiling_service import _load_dataframe
 
-def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, Any]]:
-    """Analyze the dataset and generate a hierarchical 5 Whys diagnostic path."""
+def _safe_float(val: Any, default: float = 0.0) -> float:
+    """Safely convert value to float, handling None, NaN, and conversion errors."""
+    if val is None:
+        return default
     try:
-        df = _load_dataframe(file_path, file_type)
-    except Exception:
-        return []
+        f = float(val)
+        return default if math.isnan(f) else f
+    except (ValueError, TypeError):
+        return default
+
+def generate_root_cause_tree(file_path: str, file_type: str, df: pl.DataFrame | None = None) -> list[dict[str, Any]]:
+    """Analyze the dataset and generate a hierarchical 5 Whys diagnostic path."""
+    if df is None:
+        try:
+            df = _load_dataframe(file_path, file_type)
+        except Exception:
+            return []
 
     if df.height == 0:
         return []
@@ -75,7 +87,7 @@ def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, A
         }]
 
     # Total Sum
-    total_val = float(df[metric_col].sum())
+    total_val = _safe_float(df[metric_col].sum())
     metric_name = metric_col.replace("_", " ").title()
     
     tree.append({
@@ -97,7 +109,7 @@ def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, A
         
         if grouped.height > 0:
             worst_cat = grouped[dimension_col][0]
-            worst_val = float(grouped["total"][0])
+            worst_val = _safe_float(grouped["total"][0])
             pct_share = round((worst_val / total_val) * 100, 1) if total_val > 0 else 0.0
             dim_name = dimension_col.replace("_", " ").title()
 
@@ -118,7 +130,7 @@ def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, A
 
                 if sub_grouped.height > 0:
                     worst_sub = sub_grouped[sub_dimension_col][0]
-                    worst_sub_val = float(sub_grouped["total"][0])
+                    worst_sub_val = _safe_float(sub_grouped["total"][0])
                     sub_pct = round((worst_sub_val / worst_val) * 100, 1) if worst_val != 0 else 0.0
                     sub_dim_name = sub_dimension_col.replace("_", " ").title()
 
@@ -138,8 +150,8 @@ def generate_root_cause_tree(file_path: str, file_type: str) -> list[dict[str, A
                                 break
                     
                     if factor_col:
-                        avg_overall_factor = float(df[factor_col].mean())
-                        avg_sub_factor = float(sub_df.filter(pl.col(sub_dimension_col) == worst_sub)[factor_col].mean())
+                        avg_overall_factor = _safe_float(df[factor_col].mean())
+                        avg_sub_factor = _safe_float(sub_df.filter(pl.col(sub_dimension_col) == worst_sub)[factor_col].mean())
                         factor_name = factor_col.replace("_", " ").title()
 
                         diff_pct = 0.0

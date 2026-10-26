@@ -7,7 +7,7 @@ import { Eye, EyeOff, Loader2, Mail, Lock, User, ArrowRight, ShieldCheck, ArrowL
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
-import { authAPI } from "@/lib/api";
+import { authAPI, api } from "@/lib/api";
 
 function DetectiveBadgeLogo() {
   return (
@@ -42,6 +42,9 @@ export default function RegisterPage() {
   const loginStore = useAuthStore((state) => state.login);
 
   useEffect(() => {
+    // Pre-warm backend to bypass Render free-tier cold boot latency
+    api.get("/health").catch(() => {});
+
     const token = localStorage.getItem("detective_token");
     if (token) {
       try {

@@ -35,18 +35,21 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
             if not dataset:
                 return
 
-            # 2. Run EDA services
-            kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
-            insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
-            charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
+            from app.services.profiling_service import _load_dataframe
+            df = await asyncio.to_thread(_load_dataframe, dataset.file_path, dataset.file_type)
+
+            # 2. Run EDA services reusing loaded DataFrame (avoids Render 512MB OOM)
+            kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type, df)
+            insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type, df)
+            charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type, df)
 
             # Cleaning suggestions (used by the chat provider and cleaning tab)
             from app.services.cleaning_service import get_cleaning_suggestions
-            suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type)
+            suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type, df)
 
             # Profile dataset and update dataset details
             from app.services.profiling_service import profile_dataset
-            profile = await profile_dataset(dataset.file_path, dataset.file_type)
+            profile = await profile_dataset(dataset.file_path, dataset.file_type, df)
             dataset.row_count = profile.row_count
             dataset.column_count = profile.column_count
             dataset.health_score = profile.health_score
@@ -153,6 +156,19 @@ async def get_analysis(
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(resolved_id)
         if dataset and dataset.user_id == current_user.id:
+            if dataset.status == "running":
+                return AnalysisResponse(
+                    id=dataset.id,
+                    dataset_id=dataset.id,
+                    analysis_type="full",
+                    status="running",
+                    kpis=[],
+                    insights=[],
+                    charts=[],
+                    cleaning_suggestions=[],
+                    created_at=dataset.created_at or datetime.utcnow(),
+                    completed_at=None,
+                )
             kpis_data = []
             insights_data = []
             charts_data = []
@@ -161,15 +177,17 @@ async def get_analysis(
             import os
             if os.path.exists(dataset.file_path):
                 try:
-                    kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type)
-                    insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type)
-                    charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type)
+                    from app.services.profiling_service import _load_dataframe
+                    df = await asyncio.to_thread(_load_dataframe, dataset.file_path, dataset.file_type)
+                    kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type, df)
+                    insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type, df)
+                    charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type, df)
 
                     from app.services.cleaning_service import get_cleaning_suggestions
-                    suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type)
+                    suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type, df)
 
                     from app.services.profiling_service import profile_dataset
-                    profile = await profile_dataset(dataset.file_path, dataset.file_type)
+                    profile = await profile_dataset(dataset.file_path, dataset.file_type, df)
                     dataset.row_count = profile.row_count
                     dataset.column_count = profile.column_count
                     dataset.health_score = profile.health_score

@@ -328,9 +328,10 @@ def _heatmap_crosstab(df: pl.DataFrame, cat_cols: list[str]) -> ChartConfig | No
 # ── Public API ────────────────────────────────────────────────────────────────
 
 
-def generate_charts(file_path: str, file_type: str) -> list[ChartConfig]:
+def generate_charts(file_path: str, file_type: str, df: pl.DataFrame | None = None) -> list[ChartConfig]:
     """Automatically generate a suite of ECharts configurations for the dataset."""
-    df = _load_dataframe(file_path, file_type)
+    if df is None:
+        df = _load_dataframe(file_path, file_type)
     charts: list[ChartConfig] = []
 
     num = _numeric_cols(df)

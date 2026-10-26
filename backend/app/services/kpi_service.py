@@ -24,12 +24,13 @@ KPI_PATTERNS = {
     "discount": (r"(discount|markdown|promo_reduction)", "Percent"),
 }
 
-def detect_kpis(file_path: str, file_type: str) -> list[KPICard]:
+def detect_kpis(file_path: str, file_type: str, df: pl.DataFrame | None = None) -> list[KPICard]:
     """Auto-detect KPI metrics from the dataset and return structured KPI cards."""
-    try:
-        df = _load_dataframe(file_path, file_type)
-    except Exception:
-        return []
+    if df is None:
+        try:
+            df = _load_dataframe(file_path, file_type)
+        except Exception:
+            return []
 
     if df.height == 0:
         return []
