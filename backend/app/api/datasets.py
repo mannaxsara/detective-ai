@@ -156,14 +156,14 @@ async def get_dataset_preview(
     if not dataset or dataset.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    from app.services.profiling_service import _load_dataframe
+    from app.services.profiling_service import _load_dataframe, _safe_value
     try:
         df = _load_dataframe(dataset.file_path, dataset.file_type)
         preview_df = df.head(100)
         
-        # Convert df to lists
+        # Convert df to JSON-compliant dicts (sanitizing non-finite floats)
         columns = preview_df.columns
-        rows = [row for row in preview_df.to_dicts()]
+        rows = [{k: _safe_value(v) for k, v in row.items()} for row in preview_df.to_dicts()]
         
         return DatasetPreviewResponse(
             columns=columns,

@@ -29,17 +29,7 @@ def _safe(val: Any) -> Any:
     return val
 
 
-def _load_dataframe(file_path: str, file_type: str) -> pl.DataFrame:
-    ext = file_type.lower().strip(".")
-    if ext == "csv":
-        return pl.read_csv(file_path, infer_schema_length=10000, ignore_errors=True)
-    if ext in ("xlsx", "xls"):
-        return pl.read_excel(file_path)
-    if ext == "parquet":
-        return pl.read_parquet(file_path)
-    if ext == "json":
-        return pl.read_json(file_path)
-    return pl.read_csv(file_path, infer_schema_length=10000, ignore_errors=True)
+from app.services.profiling_service import _load_dataframe
 
 
 def _numeric_cols(df: pl.DataFrame) -> list[str]:

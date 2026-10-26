@@ -238,6 +238,26 @@ def test_anomaly_dbscan_empty_noise():
     assert isinstance(anomalies, list)
 
 
+def test_csv_encoding_and_delimiter_resilience(tmp_path):
+    from app.services.profiling_service import _load_dataframe
+
+    # 1. Non-UTF8 Latin1 CSV with accents
+    latin1_file = tmp_path / "latin1.csv"
+    latin1_file.write_bytes("name,amount\nCafé,12.5\nNaïve,15.0\n".encode("latin1"))
+    df_latin1 = _load_dataframe(str(latin1_file), "csv")
+    assert df_latin1.height == 2
+    assert df_latin1.width == 2
+
+    # 2. Semicolon delimited CSV
+    semi_file = tmp_path / "semi.csv"
+    semi_file.write_text("id;region;sales\n1;North;500\n2;South;300\n", encoding="utf-8")
+    df_semi = _load_dataframe(str(semi_file), "csv")
+    assert df_semi.height == 2
+    assert df_semi.width == 3
+    assert "sales" in df_semi.columns
+
+
+
 
 
 

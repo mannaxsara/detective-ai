@@ -20,10 +20,28 @@ from app.schemas.dataset import ColumnProfile, DatasetProfileResponse
 
 
 def _load_dataframe(file_path: str, file_type: str) -> pl.DataFrame:
-    """Load a file into a Polars DataFrame."""
+    """Load a file into a Polars DataFrame with encoding and delimiter resilience."""
     p = Path(file_path)
     if file_type == "csv":
-        return pl.read_csv(p, infer_schema_length=10_000, try_parse_dates=True)
+        try:
+            df = pl.read_csv(p, infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True)
+        except Exception:
+            df = pl.read_csv(p, infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True, encoding="utf8-lossy")
+
+        # Fallback for semicolon or tab delimited CSVs parsed into a single column
+        if df.width == 1 and df.columns:
+            first_col = df.columns[0]
+            if ";" in first_col:
+                try:
+                    df = pl.read_csv(p, separator=";", infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True, encoding="utf8-lossy")
+                except Exception:
+                    pass
+            elif "\t" in first_col:
+                try:
+                    df = pl.read_csv(p, separator="\t", infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True, encoding="utf8-lossy")
+                except Exception:
+                    pass
+        return df
     if file_type in ("xlsx", "xls"):
         return pl.read_excel(p)
     if file_type == "json":
