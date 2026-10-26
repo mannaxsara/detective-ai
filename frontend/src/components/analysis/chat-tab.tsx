@@ -16,10 +16,11 @@ interface Message {
 }
 
 const QUICK_PROMPTS = [
-  "What is the total size of the dataset?",
-  "What are the main KPIs?",
-  "Show some detected insights.",
-  "Are there any outliers or anomalies?",
+  "What are the primary KPIs and revenue drivers?",
+  "Show me the top 3 anomalies and outliers.",
+  "Which factors or categories explain the performance drop?",
+  "What data cleaning actions do you recommend?",
+  "Summarize key insights and executive action items.",
 ];
 
 export default function ChatTab({ datasetId }: ChatTabProps) {
@@ -235,6 +236,21 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Starter Pills */}
+          <div className="px-4 py-2 border-t border-black/10 dark:border-white/10 bg-[#f9f9f7] dark:bg-[#181914] flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
+            {QUICK_PROMPTS.map((prompt, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handleSend(prompt)}
+                disabled={mutation.isPending}
+                className="text-[10px] font-mono font-bold bg-white dark:bg-[#262720] border border-black/20 dark:border-white/20 hover:border-black dark:hover:border-white px-2.5 py-1 rounded-full whitespace-nowrap text-black/80 dark:text-white/80 hover:text-black dark:hover:text-white transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+              >
+                ✨ {prompt}
+              </button>
+            ))}
           </div>
 
           {/* Form input */}

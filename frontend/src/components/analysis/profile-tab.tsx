@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   FileText,
@@ -8,6 +8,7 @@ import {
   HardDrive,
   Copy,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import { datasetsAPI } from "@/lib/api";
 import { RadialProfile } from "@/components/ui/radial-profile";
@@ -19,6 +20,7 @@ interface ProfileTabProps {
 }
 
 export default function ProfileTab({ datasetId }: ProfileTabProps) {
+  const [columnFilter, setColumnFilter] = useState("");
   const { data: profile, isLoading, isError, refetch } = useQuery({
     queryKey: ["dataset-profile", datasetId],
     queryFn: () => datasetsAPI.getProfile(datasetId),
@@ -164,8 +166,23 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
 
       {/* Columns Profile Table */}
       <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
-        <div className="p-4 border-b border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720]">
-          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Column Schema & Profiling</h3>
+        <div className="p-4 border-b border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">Column Schema & Profiling</h3>
+            <p className="text-[10px] font-mono text-black/60 dark:text-white/60">
+              Showing {(profile.columns || []).filter((c: any) => c.name.toLowerCase().includes(columnFilter.toLowerCase()) || (c.classification && c.classification.toLowerCase().includes(columnFilter.toLowerCase()))).length} of {profile.columns.length} columns
+            </p>
+          </div>
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-black/50 dark:text-white/50" />
+            <input
+              type="text"
+              placeholder="Filter columns..."
+              value={columnFilter}
+              onChange={(e) => setColumnFilter(e.target.value)}
+              className="bg-white dark:bg-[#1c1d18] border border-black/20 dark:border-white/20 rounded-lg pl-8 pr-3 py-1 text-xs font-mono text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none focus:border-black dark:focus:border-white w-full sm:w-48"
+            />
+          </div>
         </div>
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse min-w-[700px] text-left">
@@ -180,24 +197,29 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5 dark:divide-white/5">
-              {profile.columns.map((col: any, idx: number) => {
-                return (
-                  <tr key={idx} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-3.5 font-bold font-serif text-xs text-black dark:text-white">{col.name}</td>
-                    <td className="px-6 py-3.5 font-mono text-[11px] text-black/60 dark:text-white/60">{col.dtype}</td>
-                    <td className="px-6 py-3.5">
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] uppercase text-black dark:text-white">
-                        {col.classification}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3.5 text-right font-mono text-xs font-bold text-black dark:text-white">{col.unique_count.toLocaleString()}</td>
-                    <td className="px-6 py-3.5 text-right font-mono text-xs font-bold text-black dark:text-white">{col.null_count.toLocaleString()}</td>
-                    <td className={`px-6 py-3.5 text-right font-mono text-xs font-bold ${col.null_percentage > 20 ? "text-[#bc3e3e]" : col.null_percentage > 0 ? "text-amber-600" : "text-black/50 dark:text-white/50"}`}>
-                      {col.null_percentage}%
-                    </td>
-                  </tr>
-                );
-              })}
+              {(profile.columns || [])
+                .filter((col: any) =>
+                  col.name.toLowerCase().includes(columnFilter.toLowerCase()) ||
+                  (col.classification && col.classification.toLowerCase().includes(columnFilter.toLowerCase()))
+                )
+                .map((col: any, idx: number) => {
+                  return (
+                    <tr key={idx} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-6 py-3.5 font-bold font-serif text-xs text-black dark:text-white">{col.name}</td>
+                      <td className="px-6 py-3.5 font-mono text-[11px] text-black/60 dark:text-white/60">{col.dtype}</td>
+                      <td className="px-6 py-3.5">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] uppercase text-black dark:text-white">
+                          {col.classification}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3.5 text-right font-mono text-xs font-bold text-black dark:text-white">{col.unique_count.toLocaleString()}</td>
+                      <td className="px-6 py-3.5 text-right font-mono text-xs font-bold text-black dark:text-white">{col.null_count.toLocaleString()}</td>
+                      <td className={`px-6 py-3.5 text-right font-mono text-xs font-bold ${col.null_percentage > 20 ? "text-[#bc3e3e]" : col.null_percentage > 0 ? "text-amber-600" : "text-black/50 dark:text-white/50"}`}>
+                        {col.null_percentage}%
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>

@@ -78,7 +78,11 @@ export default function UploadPage() {
       
       setUploadProgress(100);
       setStatus("success");
-      toast.success("Evidence loaded. Starting analysis...");
+      toast.success("Evidence loaded. Redirecting to case analysis...");
+      setTimeout(() => {
+        setActiveTab("profile");
+        router.push(`/analysis/${caseIdentifier}`);
+      }, 1200);
     } catch (err: any) {
       setUploadProgress(0);
       setStatus("error");
