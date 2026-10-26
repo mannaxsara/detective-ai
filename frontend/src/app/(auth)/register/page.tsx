@@ -42,8 +42,12 @@ export default function RegisterPage() {
   const loginStore = useAuthStore((state) => state.login);
 
   useEffect(() => {
-    // Pre-warm backend to bypass Render free-tier cold boot latency
+    // Pre-warm backend and JWK cache
     api.get("/health").catch(() => {});
+    // Preload Firebase auth SDK chunk so popup click is instant
+    import("@/lib/firebase").catch(() => {});
+    // Prefetch dashboard route for immediate page transition
+    router.prefetch("/dashboard");
 
     const token = localStorage.getItem("detective_token");
     if (token) {
@@ -110,10 +114,16 @@ export default function RegisterPage() {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
       
-      const res = await authAPI.googleAuth(idToken);
-      loginStore(res.user, res.access_token, res.refresh_token);
-      toast.success(`Welcome to DetectiveAI, ${res.user.full_name || 'Agent'}!`);
-      router.push("/dashboard");
+      const toastId = toast.loading("Verifying credentials with DetectiveAI...");
+      try {
+        const res = await authAPI.googleAuth(idToken);
+        loginStore(res.user, res.access_token, res.refresh_token);
+        toast.success(`Welcome to DetectiveAI, ${res.user.full_name || 'Agent'}!`, { id: toastId });
+        router.push("/dashboard");
+      } catch (authErr: any) {
+        toast.dismiss(toastId);
+        throw authErr;
+      }
     } catch (err: any) {
       console.error("Google Auth error:", err);
       if (err?.code === "auth/popup-closed-by-user") {

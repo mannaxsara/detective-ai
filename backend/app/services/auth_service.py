@@ -43,6 +43,18 @@ _GOOGLE_JWK_CLIENT = jwt.PyJWKClient(
 )
 
 
+def prewarm_jwk_clients() -> None:
+    """Pre-fetch Google & Firebase JWK sets into memory to eliminate first-request latency."""
+    try:
+        _FIREBASE_JWK_CLIENT.get_jwk_set()
+    except Exception:
+        pass
+    try:
+        _GOOGLE_JWK_CLIENT.get_jwk_set()
+    except Exception:
+        pass
+
+
 async def register(schema: RegisterRequest, db: AsyncSession) -> TokenResponse:
     """Register a new user with email and password.
 
@@ -209,8 +221,11 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
     if user is None:
         user = await repo.get_by_email(email)
         if user is not None:
-            # Link existing email account to Google
-            await repo.update(user.id, google_id=google_id, avatar_url=avatar_url)
+            # Link existing email account to Google directly on the loaded entity
+            user.google_id = google_id
+            if avatar_url:
+                user.avatar_url = avatar_url
+            db.add(user)
         else:
             # Create a brand-new user
             user = await repo.create(

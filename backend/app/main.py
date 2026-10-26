@@ -91,6 +91,11 @@ async def on_startup() -> None:
             await session.rollback()
             print(f"Error seeding demo user: {e}")
 
+    # Pre-warm Google & Firebase JWK keys in background to eliminate first sign-in latency
+    import asyncio
+    from app.services.auth_service import prewarm_jwk_clients
+    asyncio.create_task(asyncio.to_thread(prewarm_jwk_clients))
+
 @app.api_route("/", methods=["GET", "HEAD"])
 async def root_path():
     """Root endpoint for Render health checks (HEAD /)."""
@@ -103,7 +108,10 @@ async def root_health_check():
 
 @app.api_route("/api/health", methods=["GET", "HEAD"])
 async def health_check():
-    """Simple API health endpoint."""
+    """Simple API health endpoint that also triggers JWK caching."""
+    import asyncio
+    from app.services.auth_service import prewarm_jwk_clients
+    asyncio.create_task(asyncio.to_thread(prewarm_jwk_clients))
     return {"status": "ok", "app": "DetectiveAI Backend", "cors_origins": origins}
 
 @app.exception_handler(Exception)
