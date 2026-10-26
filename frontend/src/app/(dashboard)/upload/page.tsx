@@ -29,7 +29,7 @@ export default function UploadPage() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 15 * 1024 * 1024, // 15MB limit for optimal server memory
     accept: {
       "text/csv": [".csv"],
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
@@ -47,7 +47,7 @@ export default function UploadPage() {
     onDropRejected: (rejections) => {
       const error = rejections[0]?.errors[0];
       if (error?.code === "file-too-large") {
-        toast.error("File is too large. Max size is 100 MB.");
+        toast.error("File is too large. Max size is 15 MB on current server plan.");
       } else {
         toast.error("Invalid file format. Please upload CSV, Excel, JSON, or Parquet.");
       }
@@ -133,7 +133,7 @@ TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
           File New Evidence Case
         </h1>
         <p className="text-xs font-sans text-black/70 dark:text-white/70">
-          Upload CSV, Excel, JSON, or Apache Parquet dataset files up to 100MB for automated forensic profiling.
+          Upload CSV, Excel, JSON, or Apache Parquet dataset files up to 15MB for automated forensic profiling.
         </p>
       </div>
 
@@ -167,7 +167,7 @@ TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
                   {isDragActive ? "Drop evidence file here..." : "Drag & drop evidence dataset here, or click to browse"}
                 </h3>
                 <p className="text-xs font-mono text-black/60 dark:text-white/60 mt-1.5 font-medium max-w-md mx-auto">
-                  Supports CSV, Excel (.xlsx/.xls), JSON, & Apache Parquet files up to 100MB
+                  Supports CSV, Excel (.xlsx/.xls), JSON, & Apache Parquet files up to 15MB
                 </p>
 
                 {/* Visual Format Pills */}
