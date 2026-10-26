@@ -174,4 +174,20 @@ def test_kpi_null_nan_safety():
     assert isinstance(kpis, list)
 
 
+@pytest.mark.asyncio
+async def test_cleaning_safe_write_fallback(tmp_path):
+    from app.services.cleaning_service import apply_fixes
+
+    # Create dummy csv file
+    test_file = tmp_path / "test_data.csv"
+    df = pl.DataFrame({"a": [1, 1, 2], "b": ["x", "x", "y"]})
+    df.write_csv(test_file)
+
+    # Call apply_fixes with empty fix_ids to test safe write path
+    res = await apply_fixes(str(test_file), "csv", [])
+    assert res.new_row_count == 3
+    assert test_file.exists()
+
+
+
 

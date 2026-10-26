@@ -424,16 +424,22 @@ async def apply_fixes(
         except Exception:
             skipped.append(fid)
 
-    # Save cleaned data back
+    # Save cleaned data back safely
     p = Path(file_path)
-    if file_type == "csv":
+    ext = (file_type or "csv").lower().lstrip(".")
+    if ext == "csv":
         df.write_csv(p)
-    elif file_type in ("xlsx", "xls"):
-        df.write_excel(p)
-    elif file_type == "json":
+    elif ext in ("xlsx", "xls"):
+        try:
+            df.write_excel(p)
+        except Exception:
+            df.write_csv(p)
+    elif ext == "json":
         df.write_json(p)
-    elif file_type == "parquet":
+    elif ext == "parquet":
         df.write_parquet(p)
+    else:
+        df.write_csv(p)
 
     return CleaningApplyResponse(
         applied=applied,
