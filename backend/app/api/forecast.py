@@ -43,6 +43,9 @@ async def run_analysis_forecast(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
+
     try:
         res = generate_forecast(dataset.file_path, dataset.file_type, target_col, periods, model_type)
         if not res:
@@ -91,6 +94,9 @@ async def get_analysis_forecast(
     dataset = await ds_repo.get_by_id(analysis.dataset_id)
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
+
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
 
     import os
     if os.path.exists(dataset.file_path):

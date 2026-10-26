@@ -89,6 +89,8 @@ async def get_dataset_profile(
             pass
 
     # 2. Try profiling from disk file if present
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
     import os
     if os.path.exists(dataset.file_path):
         try:
@@ -156,6 +158,9 @@ async def get_dataset_preview(
     if not dataset or dataset.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
+
     from app.services.profiling_service import _load_dataframe, _safe_value
     try:
         df = _load_dataframe(dataset.file_path, dataset.file_type)
@@ -189,9 +194,8 @@ async def download_dataset_file(
     if not dataset or dataset.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Dataset not found")
         
-    if not os.path.exists(dataset.file_path):
-        from app.services.storage_service import ensure_file_local
-        await ensure_file_local(dataset.file_path, f"{dataset.user_id}/{os.path.basename(dataset.file_path)}")
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
 
     if not os.path.exists(dataset.file_path):
         raise HTTPException(status_code=404, detail="Dataset file not found on disk")

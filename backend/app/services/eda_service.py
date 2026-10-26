@@ -322,6 +322,8 @@ def generate_charts(file_path: str, file_type: str, df: pl.DataFrame | None = No
     """Automatically generate a suite of ECharts configurations for the dataset."""
     if df is None:
         df = _load_dataframe(file_path, file_type)
+    if df.height == 0:
+        return []
     charts: list[ChartConfig] = []
 
     num = _numeric_cols(df)

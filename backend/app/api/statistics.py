@@ -40,6 +40,8 @@ async def get_analysis_statistics(
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(analysis.dataset_id)
         if dataset:
+            from app.services.storage_service import ensure_dataset_file
+            await ensure_dataset_file(dataset)
             import os
             if os.path.exists(dataset.file_path):
                 try:
@@ -75,6 +77,9 @@ async def get_analysis_correlations(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
+
     import os
     if os.path.exists(dataset.file_path):
         try:
@@ -105,6 +110,8 @@ async def get_analysis_anomalies(
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(analysis.dataset_id)
         if dataset:
+            from app.services.storage_service import ensure_dataset_file
+            await ensure_dataset_file(dataset)
             import os
             if os.path.exists(dataset.file_path):
                 try:

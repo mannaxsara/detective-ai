@@ -42,6 +42,9 @@ async def get_cleaning_suggestions(
             total_issues=len(existing[0].cleaning_suggestions),
         )
 
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
+
     import os
     if os.path.exists(dataset.file_path):
         clean_service = CleaningService(db)
@@ -73,9 +76,16 @@ async def apply_cleaning_fixes(
     if not dataset or dataset.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
+    from app.services.storage_service import ensure_dataset_file, upload_file_backup
+    await ensure_dataset_file(dataset)
+
     clean_service = CleaningService(db)
     try:
         res = await clean_service.apply_fixes(dataset.file_path, dataset.file_type, request.fix_ids)
+        
+        # Backup cleaned file to Supabase Storage asynchronously
+        import asyncio
+        asyncio.create_task(upload_file_backup(dataset.file_path, f"{dataset.user_id}/{os.path.basename(dataset.file_path)}"))
         
         # Recalculate profile and health score on newly cleaned file
         from app.services.profiling_service import profile_dataset

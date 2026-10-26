@@ -35,6 +35,9 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
             if not dataset:
                 return
 
+            from app.services.storage_service import ensure_dataset_file
+            await ensure_dataset_file(dataset)
+
             from app.services.profiling_service import _load_dataframe
             df = await asyncio.to_thread(_load_dataframe, dataset.file_path, dataset.file_type)
 
@@ -207,6 +210,9 @@ async def get_analysis(
             charts_data = []
             suggestions_data = []
 
+            from app.services.storage_service import ensure_dataset_file
+            await ensure_dataset_file(dataset)
+
             import os
             if os.path.exists(dataset.file_path):
                 try:
@@ -276,6 +282,8 @@ async def get_analysis_charts(
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(analysis.dataset_id)
         if dataset:
+            from app.services.storage_service import ensure_dataset_file
+            await ensure_dataset_file(dataset)
             import os
             if os.path.exists(dataset.file_path):
                 try:
@@ -328,6 +336,8 @@ async def get_analysis_insights(
         ds_repo = DatasetRepository(db)
         dataset = await ds_repo.get_by_id(analysis.dataset_id)
         if dataset:
+            from app.services.storage_service import ensure_dataset_file
+            await ensure_dataset_file(dataset)
             import os
             if os.path.exists(dataset.file_path):
                 try:
@@ -424,6 +434,9 @@ async def get_analysis_root_cause(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
         
+    from app.services.storage_service import ensure_dataset_file
+    await ensure_dataset_file(dataset)
+
     from app.services.root_cause_service import generate_root_cause_tree
     tree = generate_root_cause_tree(dataset.file_path, dataset.file_type)
     return tree

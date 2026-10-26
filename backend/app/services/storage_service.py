@@ -61,3 +61,13 @@ async def ensure_file_local(local_path: str, remote_filename: str) -> bool:
     except Exception:
         pass
     return False
+
+
+async def ensure_dataset_file(dataset: object) -> bool:
+    """Ensure dataset file exists locally; if missing, restores from Supabase Storage."""
+    if not dataset or not getattr(dataset, "file_path", None):
+        return False
+    if os.path.exists(dataset.file_path):
+        return True
+    filename = f"{dataset.user_id}/{os.path.basename(dataset.file_path)}"
+    return await ensure_file_local(dataset.file_path, filename)

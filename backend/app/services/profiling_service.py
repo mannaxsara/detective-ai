@@ -28,7 +28,7 @@ def _load_dataframe(file_path: str, file_type: str) -> pl.DataFrame:
         except Exception:
             df = pl.read_csv(p, infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True, encoding="utf8-lossy")
 
-        # Fallback for semicolon or tab delimited CSVs parsed into a single column
+        # Fallback for semicolon, tab, or pipe delimited CSVs parsed into a single column
         if df.width == 1 and df.columns:
             first_col = df.columns[0]
             if ";" in first_col:
@@ -41,9 +41,19 @@ def _load_dataframe(file_path: str, file_type: str) -> pl.DataFrame:
                     df = pl.read_csv(p, separator="\t", infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True, encoding="utf8-lossy")
                 except Exception:
                     pass
+            elif "|" in first_col:
+                try:
+                    df = pl.read_csv(p, separator="|", infer_schema_length=10_000, try_parse_dates=True, ignore_errors=True, encoding="utf8-lossy")
+                except Exception:
+                    pass
+
+        # Strip BOM and leading/trailing whitespace from column names
+        df = df.rename({col: col.lstrip("\ufeff").strip() for col in df.columns if col != col.lstrip("\ufeff").strip()})
         return df
     if file_type in ("xlsx", "xls"):
-        return pl.read_excel(p)
+        df = pl.read_excel(p)
+        df = df.rename({col: str(col).strip() for col in df.columns if str(col) != str(col).strip()})
+        return df
     if file_type == "json":
         return pl.read_json(p)
     if file_type == "parquet":

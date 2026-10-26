@@ -474,21 +474,30 @@ class LLMInsightProvider(InsightProvider):
         import httpx
         try:
             if self.gemini_key:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.gemini_key}"
+                models_to_try = [self.model]
+                for fallback_m in ("gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"):
+                    if fallback_m not in models_to_try:
+                        models_to_try.append(fallback_m)
+
                 body: dict[str, Any] = {
                     "contents": [{"parts": [{"text": prompt}]}]
                 }
                 if system_prompt:
                     body["systemInstruction"] = {"parts": [{"text": system_prompt}]}
+
                 async with httpx.AsyncClient(timeout=30.0) as client:
-                    resp = await client.post(url, json=body)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        candidates = data.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
-                            if parts:
-                                return str(parts[0].get("text", "")).strip()
+                    for model_name in models_to_try:
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.gemini_key}"
+                        resp = await client.post(url, json=body)
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            candidates = data.get("candidates", [])
+                            if candidates:
+                                parts = candidates[0].get("content", {}).get("parts", [])
+                                if parts:
+                                    return str(parts[0].get("text", "")).strip()
+                        elif resp.status_code != 404:
+                            break
 
             elif self.openai_key:
                 url = "https://api.openai.com/v1/chat/completions"

@@ -256,6 +256,23 @@ def test_csv_encoding_and_delimiter_resilience(tmp_path):
     assert df_semi.width == 3
     assert "sales" in df_semi.columns
 
+    # 3. Pipe-delimited CSV with BOM and untrimmed headers
+    pipe_file = tmp_path / "pipe.csv"
+    pipe_content = "\ufeff  user_id |  department  | budget \n101|Engineering|95000\n102|Marketing|62000\n"
+    pipe_file.write_text(pipe_content, encoding="utf-8")
+    df_pipe = _load_dataframe(str(pipe_file), "csv")
+    assert df_pipe.height == 2
+    assert df_pipe.width == 3
+    assert df_pipe.columns == ["user_id", "department", "budget"]
+
+
+def test_eda_empty_dataframe_guard():
+    from app.services.eda_service import generate_charts
+    empty_df = pl.DataFrame({"a": [], "b": []})
+    charts = generate_charts("dummy.csv", "csv", df=empty_df)
+    assert charts == []
+
+
 
 
 
