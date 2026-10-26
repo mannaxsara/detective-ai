@@ -138,6 +138,39 @@ async def trigger_analysis(
 
     return AnalysisResponse.model_validate(analysis)
 
+@router.get("/public/{share_id}")
+async def get_public_shared_analysis(
+    share_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Public read-only endpoint returning sanitized findings for stakeholder sharing."""
+    from app.core.slug import decode_id
+    resolved_id = decode_id(share_id)
+    if resolved_id is None:
+        raise HTTPException(status_code=404, detail="Investigation case not found")
+
+    repo = AnalysisRepository(db)
+    analysis = await repo.get_by_id_or_dataset_id(resolved_id)
+
+    ds_repo = DatasetRepository(db)
+    dataset = await ds_repo.get_by_id(analysis.dataset_id if analysis else resolved_id)
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    return {
+        "dataset_name": dataset.name,
+        "file_type": dataset.file_type,
+        "row_count": dataset.row_count,
+        "column_count": dataset.column_count,
+        "health_score": dataset.health_score,
+        "created_at": dataset.created_at.isoformat() if dataset.created_at else None,
+        "status": dataset.status,
+        "kpis": analysis.kpis or [] if analysis else [],
+        "insights": analysis.insights or [] if analysis else [],
+        "anomalies": (analysis.anomalies or [])[:10] if analysis else [],
+        "charts": analysis.charts or [] if analysis else [],
+    }
+
 @router.get("/{analysis_id}", response_model=AnalysisResponse)
 async def get_analysis(
     analysis_id: str,

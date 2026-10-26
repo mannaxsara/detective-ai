@@ -18,7 +18,8 @@ import {
   HelpCircle,
   CheckCircle,
   FileText,
-  FileCode
+  FileCode,
+  Share2
 } from "lucide-react";
 import { toast } from "sonner";
 import { datasetsAPI } from "@/lib/api";
@@ -95,6 +96,17 @@ export default function AnalysisPage() {
     queryFn: () => datasetsAPI.getById(id),
     enabled: !!id,
   });
+
+  const handleShare = () => {
+    if (!dataset) return;
+    const shareUrl = `${window.location.origin}/share/${dataset.id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl);
+      toast.success("Read-only dossier link copied to clipboard!");
+    } else {
+      toast.info(`Public Link: ${shareUrl}`);
+    }
+  };
 
   const handleDownload = async () => {
     if (!dataset) return;
@@ -185,8 +197,16 @@ export default function AnalysisPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6 flex-wrap md:flex-nowrap shrink-0 justify-between md:justify-end">
+          <div className="flex items-center gap-3 flex-wrap md:flex-nowrap shrink-0 justify-between md:justify-end">
             <GaugeChart value={Math.round(dataset.health_score || 100)} size={80} strokeWidth={7} label="Health Score" />
+
+            <button
+              onClick={handleShare}
+              className="p-2.5 rounded-xl border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] text-black dark:text-white hover:bg-[#edf0e9] dark:hover:bg-[#262720] transition-colors cursor-pointer shrink-0"
+              title="Copy Public Dossier Link"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
 
             <button
               onClick={handleDownload}

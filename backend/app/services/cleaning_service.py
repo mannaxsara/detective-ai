@@ -321,7 +321,18 @@ def _apply_single_fix_to_df(
     action = ""
 
     if suggestion.issue_type == "missing_values" and col:
-        if df[col].dtype.is_numeric():
+        is_drop = "_drop_" in suggestion.fix_id
+        is_mean = "_mean_" in suggestion.fix_id
+
+        if is_drop:
+            before = df.height
+            df = df.filter(pl.col(col).is_not_null())
+            action = f"Dropped {before - df.height} rows with missing values in '{col}'"
+        elif is_mean and df[col].dtype.is_numeric():
+            mean_val = df[col].mean()
+            df = df.with_columns(pl.col(col).fill_null(mean_val))
+            action = f"Filled missing values in '{col}' with mean ({mean_val})"
+        elif df[col].dtype.is_numeric():
             median_val = df[col].median()
             df = df.with_columns(pl.col(col).fill_null(median_val))
             action = f"Filled missing values in '{col}' with median ({median_val})"
@@ -408,10 +419,17 @@ async def apply_fixes(
     skipped: list[str] = []
 
     # Map suggestions by fix_id
-    suggestions = {s.fix_id: s for s in _detect_all(df)}
+    base_suggestions = _detect_all(df)
+    suggestions = {s.fix_id: s for s in base_suggestions}
 
     for fid in fix_ids:
         s = suggestions.get(fid)
+        if not s:
+            # Check for customized missing value strategies (e.g. fix_missing_drop_<col>)
+            for candidate in base_suggestions:
+                if candidate.column and candidate.column in fid and candidate.issue_type == "missing_values":
+                    s = candidate.model_copy(update={"fix_id": fid})
+                    break
         if not s:
             skipped.append(fid)
             continue

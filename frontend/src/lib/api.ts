@@ -208,6 +208,11 @@ export const cleaningApi = {
 
 // ========== Analysis API ==========
 export const analysisApi = {
+  getPublic: async (id: string | number): Promise<any> => {
+    const { data } = await api.get(`/analysis/public/${id}`);
+    return data;
+  },
+
   triggerAnalysis: async (datasetId: string | number): Promise<Analysis> => {
     const { data } = await api.post(`/analysis/trigger`, { dataset_id: datasetId });
     return data;
