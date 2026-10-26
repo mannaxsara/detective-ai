@@ -15,12 +15,23 @@ from sklearn.preprocessing import StandardScaler
 from app.schemas.analysis import AnomalyItem
 from app.services.profiling_service import _load_dataframe
 
-def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
-    """Identify anomalous records in the dataset using statistical and machine learning algorithms."""
+def _safe_float(val: Any, default: float = 0.0) -> float:
+    """Ensure value is a standard JSON-compatible float."""
+    if val is None:
+        return default
     try:
-        df = _load_dataframe(file_path, file_type)
-    except Exception:
-        return []
+        f = float(val)
+        return default if (np.isnan(f) or np.isinf(f)) else f
+    except (ValueError, TypeError):
+        return default
+
+def detect_anomalies(file_path: str, file_type: str, df: pl.DataFrame | None = None) -> list[AnomalyItem]:
+    """Identify anomalous records in the dataset using statistical and machine learning algorithms."""
+    if df is None:
+        try:
+            df = _load_dataframe(file_path, file_type)
+        except Exception:
+            return []
 
     # Requires a reasonable number of rows to perform anomaly detection
     if df.height < 10:
@@ -62,17 +73,17 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
             # Report up to 5 extreme outliers
             for pos in np.where(extreme_mask)[0][:5]:
                 orig_row_idx = int(orig_indices[pos])
-                val = arr[pos]
-                z_val = z_scores[pos]
-                confidence = float(min(0.99, abs(z_val) / 5.0))
+                val = _safe_float(arr[pos])
+                z_val = _safe_float(z_scores[pos])
+                confidence = _safe_float(min(0.99, abs(z_val) / 5.0), default=0.5)
                 anomalies.append(
                     AnomalyItem(
                         entity_type="row",
                         entity_id=str(orig_row_idx + 1),
                         row_index=orig_row_idx,
                         column_name=col,
-                        value=float(val),
-                        z_score=float(z_val),
+                        value=val,
+                        z_score=z_val,
                         confidence_score=round(confidence, 2),
                         description=f"Outlier in column '{col}' with a value of {val} (Z-score: {z_val:.2f}).",
                         severity="critical" if abs(z_val) > 4.5 else "warning",
@@ -102,7 +113,7 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
             outlier_indices = np.where(preds == -1)[0]
             for idx in outlier_indices[:5]:
                 orig_row_idx = int(orig_rows[idx])
-                confidence = float(min(0.99, max(0.5, -scores[idx])))
+                confidence = _safe_float(min(0.99, max(0.5, -scores[idx])), default=0.5)
                 anomalies.append(
                     AnomalyItem(
                         entity_type="row",
@@ -147,7 +158,7 @@ def detect_anomalies(file_path: str, file_type: str) -> list[AnomalyItem]:
                 orig_row_idx = int(orig_rows[idx])
                 str_id = str(orig_row_idx + 1)
                 if str_id not in current_ids and len(anomalies) < 15:
-                    confidence = float(min(0.95, max(0.5, noise_dists[j][0] / 3.0)))
+                    confidence = _safe_float(min(0.95, max(0.5, noise_dists[j][0] / 3.0)), default=0.5)
                     anomalies.append(
                         AnomalyItem(
                             entity_type="row",

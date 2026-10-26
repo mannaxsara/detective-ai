@@ -120,7 +120,7 @@ export function useECharts(options: echarts.EChartsOption) {
     };
   }, []);
 
-  return { chartRef, instance: instanceRef.current };
+  return { chartRef, getInstance: () => instanceRef.current };
 }
 
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Record<string, unknown>): T {

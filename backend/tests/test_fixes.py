@@ -140,3 +140,38 @@ async def test_empty_file_upload_validation(tmp_path):
         assert "empty" in exc_info.value.detail.lower()
 
 
+def test_anomaly_null_nan_safety():
+    from app.services.anomaly_service import detect_anomalies
+    import numpy as np
+
+    # DataFrame with 20 rows, some with nulls, one huge outlier
+    sales = [10.0] * 19 + [10000.0]
+    sales[5] = None
+    df = pl.DataFrame({
+        "sales": sales,
+        "quantity": [1, 2, None, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100],
+    })
+
+    anomalies = detect_anomalies("dummy.csv", "csv", df=df)
+    assert isinstance(anomalies, list)
+    for a in anomalies:
+        if a.confidence_score is not None:
+            assert np.isfinite(a.confidence_score)
+        if a.z_score is not None:
+            assert np.isfinite(a.z_score)
+        if a.value is not None:
+            assert np.isfinite(a.value)
+
+
+def test_kpi_null_nan_safety():
+    from app.services.kpi_service import detect_kpis
+    # DataFrame where revenue column has all None
+    df = pl.DataFrame({
+        "revenue": [None, None, None, None],
+        "date": ["2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04"],
+    })
+    kpis = detect_kpis("dummy.csv", "csv", df=df)
+    assert isinstance(kpis, list)
+
+
+

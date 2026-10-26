@@ -6,11 +6,22 @@ based on column name pattern matching.
 
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 import polars as pl
 from app.schemas.analysis import KPICard
 from app.services.profiling_service import _load_dataframe
+
+def _safe_float(val: Any, default: float = 0.0) -> float:
+    """Ensure value is a standard JSON-compatible float."""
+    if val is None:
+        return default
+    try:
+        f = float(val)
+        return default if (math.isnan(f) or math.isinf(f)) else f
+    except (ValueError, TypeError):
+        return default
 
 # Common pattern mappings for KPIs
 KPI_PATTERNS = {
@@ -112,7 +123,7 @@ def detect_kpis(file_path: str, file_type: str, df: pl.DataFrame | None = None) 
                 # Sum or mean based on metric
                 use_avg = kpi_name in ("discount", "margin")
                 
-                val = float(series_non_null.mean() if use_avg else series_non_null.sum())
+                val = _safe_float(series_non_null.mean() if use_avg else series_non_null.sum())
                 prev_val = None
                 change_pct = None
                 trend = "stable"
@@ -122,8 +133,8 @@ def detect_kpis(file_path: str, file_type: str, df: pl.DataFrame | None = None) 
                     s_curr = df_curr[matched_col].drop_nulls()
                     
                     if len(s_prev) > 0 and len(s_curr) > 0:
-                        prev_val = float(s_prev.mean() if use_avg else s_prev.sum())
-                        curr_val = float(s_curr.mean() if use_avg else s_curr.sum())
+                        prev_val = _safe_float(s_prev.mean() if use_avg else s_prev.sum())
+                        curr_val = _safe_float(s_curr.mean() if use_avg else s_curr.sum())
                         if prev_val != 0:
                             change_pct = round(((curr_val - prev_val) / abs(prev_val)) * 100, 2)
                             trend = "up" if change_pct > 0.5 else ("down" if change_pct < -0.5 else "stable")
