@@ -180,17 +180,19 @@ export default function AnalysisPage() {
       <div className="border-b border-black/15 dark:border-white/15 flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1">
         {TABS_CONFIG.map((tab) => {
           const isActive = activeTab === tab.value;
+          const Icon = tab.icon;
           return (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border ${
                 isActive
                   ? "bg-[#edfe5e] text-black border-black/30 shadow-xs"
                   : "bg-white dark:bg-[#181914] text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white border-black/15 dark:border-white/15 hover:bg-[#edf0e9] dark:hover:bg-[#262720]"
               }`}
             >
-              {tab.label}
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-black" : "text-black/60 dark:text-white/60"}`} />
+              <span>{tab.label}</span>
             </button>
           );
         })}

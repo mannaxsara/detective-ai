@@ -272,10 +272,14 @@ class ReportService:
             ]]
             for s in statistics:
                 sig_text = "YES" if s.get("significant") else "NO"
+                stat_val = s.get("statistic")
+                pval_val = s.get("p_value")
+                stat_str = f"{stat_val:.4f}" if isinstance(stat_val, (int, float)) else "N/A"
+                pval_str = f"{pval_val:.4f}" if isinstance(pval_val, (int, float)) else "N/A"
                 stat_data.append([
                     Paragraph(str(s.get("test_name", "")), table_cell_style),
-                    Paragraph(f"{s.get('statistic', 0.0):.4f}", table_cell_style),
-                    Paragraph(f"{s.get('p_value', 1.0):.4f}", table_cell_style),
+                    Paragraph(stat_str, table_cell_style),
+                    Paragraph(pval_str, table_cell_style),
                     Paragraph(sig_text, table_cell_style)
                 ])
             
@@ -424,8 +428,10 @@ class ReportService:
             for s in statistics:
                 row_cells = table.add_row().cells
                 row_cells[0].text = str(s.get("test_name", ""))
-                row_cells[1].text = f"{s.get('statistic', 0.0):.4f}"
-                row_cells[2].text = f"{s.get('p_value', 1.0):.4f}"
+                stat_val = s.get("statistic")
+                pval_val = s.get("p_value")
+                row_cells[1].text = f"{stat_val:.4f}" if isinstance(stat_val, (int, float)) else "N/A"
+                row_cells[2].text = f"{pval_val:.4f}" if isinstance(pval_val, (int, float)) else "N/A"
                 row_cells[3].text = "YES" if s.get("significant") else "NO"
         else:
             doc.add_paragraph("No statistical tests executed.")

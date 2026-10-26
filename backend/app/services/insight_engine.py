@@ -120,7 +120,7 @@ def discover_insights(file_path: str, file_type: str, df: pl.DataFrame | None = 
                     if total_sum > 0 and grouped.height > 0:
                         top_row = grouped.row(0)
                         top_cat = str(top_row[0])
-                        top_val = float(top_row[1])
+                        top_val = float(top_row[1] or 0)
                         pct = round((top_val / total_sum) * 100, 1)
 
                         if pct >= 25:
@@ -156,7 +156,7 @@ def discover_insights(file_path: str, file_type: str, df: pl.DataFrame | None = 
                 try:
                     corr = df.select(pl.corr(col1, col2)).item()
                     if corr is not None and not pl.Series([corr]).is_nan().any():
-                        corr_val = float(corr)
+                        corr_val = float(corr or 0)
                         if abs(corr_val) >= 0.35:
                             rel_type = "positive" if corr_val > 0 else "inverse (negative)"
                             priority = "high" if abs(corr_val) >= 0.65 else "medium"

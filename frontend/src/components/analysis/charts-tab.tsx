@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Download } from "lucide-react";
+import { toast } from "sonner";
 
 import { analysisAPI } from "@/lib/api";
 import { useECharts } from "@/hooks/use-echarts";
@@ -22,8 +23,24 @@ interface ChartsTabProps {
 }
 
 function ChartItem({ chart }: { chart: any }) {
-  const { chartRef } = useECharts(chart.config);
+  const { chartRef, getInstance } = useECharts(chart.config);
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+
+  const handleExportPNG = () => {
+    const inst = getInstance?.();
+    if (!inst) {
+      toast.error("Chart is still rendering.");
+      return;
+    }
+    const url = inst.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: "#ffffff" });
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(chart.title || "chart").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success("Chart exported as PNG");
+  };
 
   // Extract legend item data ONLY if available from pie/bar series data (not scatter plots)
   const legendItems: LegendItemData[] = React.useMemo(() => {
@@ -60,9 +77,19 @@ function ChartItem({ chart }: { chart: any }) {
           <h3 className="text-base font-serif font-bold text-black dark:text-white truncate">{chart.title}</h3>
           <p className="text-black/75 dark:text-white/75 text-xs font-sans mt-0.5 truncate">{chart.description}</p>
         </div>
-        <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-2.5 py-0.5 rounded shadow-[1px_1px_0px_#000000] shrink-0">
-          {chart.chart_type}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleExportPNG}
+            className="p-1.5 rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#262720] hover:bg-[#edf0e9] dark:hover:bg-[#2e2f27] text-black dark:text-white transition-colors cursor-pointer"
+            title="Export chart as PNG"
+          >
+            <Download className="w-3.5 h-3.5" />
+          </button>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black border border-black px-2.5 py-0.5 rounded shadow-[1px_1px_0px_#000000]">
+            {chart.chart_type}
+          </span>
+        </div>
       </div>
       
       {/* Chart Canvas */}

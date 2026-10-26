@@ -35,6 +35,7 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
         setAppliedFixIds((prev) => [...new Set([...prev, ...data.applied])]);
       }
       queryClient.invalidateQueries({ queryKey: ["dataset", datasetId] });
+      queryClient.invalidateQueries({ queryKey: ["dataset-detail", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["dataset-profile", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["analysis", datasetId] });
       queryClient.invalidateQueries({ queryKey: ["analysis-anomalies", datasetId] });

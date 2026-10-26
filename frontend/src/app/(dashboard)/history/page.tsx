@@ -207,6 +207,8 @@ export default function HistoryPage() {
                 try {
                   await datasetsAPI.delete(datasetToDelete.dataset_id);
                   queryClient.invalidateQueries({ queryKey: ["history-list"] });
+                  queryClient.invalidateQueries({ queryKey: ["history-recent"] });
+                  queryClient.invalidateQueries({ queryKey: ["datasets"] });
                   refetch();
                   toast.success("Case file successfully deleted.");
                   setDeleteConfirmOpen(false);

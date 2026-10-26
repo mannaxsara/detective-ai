@@ -147,7 +147,7 @@ def detect_anomalies(file_path: str, file_type: str, df: pl.DataFrame | None = N
             current_ids = {a.entity_id for a in anomalies}
 
             # Distance to the nearest core point -> confidence that the row is isolated
-            if db.core_sample_indices_.size > 0:
+            if len(noise_idx) > 0 and db.core_sample_indices_.size > 0:
                 nn = NearestNeighbors(n_neighbors=1)
                 nn.fit(X_scaled[db.core_sample_indices_])
                 noise_dists, _ = nn.kneighbors(X_scaled[noise_idx])

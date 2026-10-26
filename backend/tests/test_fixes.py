@@ -189,26 +189,54 @@ async def test_cleaning_safe_write_fallback(tmp_path):
     assert test_file.exists()
 
 
-def test_report_pdf_generation(tmp_path):
+def test_report_pdf_and_docx_none_statistics(tmp_path):
     from app.services.report_service import ReportService
     import os
 
     rs = ReportService()
-    path = rs.generate_pdf(
-        analysis_id=999,
+    stats = [{"test_name": "Shapiro-Wilk", "statistic": None, "p_value": None, "significant": False}]
+    
+    # Test PDF generation with None statistics
+    pdf_path = rs.generate_pdf(
+        analysis_id=1001,
         dataset_name="TestDataset",
         kpis=[],
         insights=[],
-        statistics=[],
+        statistics=stats,
         summary="Test executive summary",
-        recommendations="Test recommendation",
+        recommendations=["Test recommendation"],
         dataset_info={"row_count": 100, "column_count": 5, "health_score": 95, "file_type": "csv"},
         anomalies=[],
     )
-    assert os.path.exists(path)
-    assert path.endswith(".pdf")
-    # Clean up
-    os.remove(path)
+    assert os.path.exists(pdf_path)
+    os.remove(pdf_path)
+
+    # Test DOCX generation with None statistics
+    docx_path = rs.generate_docx(
+        analysis_id=1001,
+        dataset_name="TestDataset",
+        kpis=[],
+        insights=[],
+        statistics=stats,
+        summary="Test executive summary",
+        recommendations=["Test recommendation"],
+        dataset_info={"row_count": 100, "column_count": 5, "health_score": 95, "file_type": "csv"},
+        anomalies=[],
+    )
+    assert os.path.exists(docx_path)
+    os.remove(docx_path)
+
+
+def test_anomaly_dbscan_empty_noise():
+    from app.services.anomaly_service import detect_anomalies
+    # Clean uniform data with 25 rows (no noise in DBSCAN)
+    df = pl.DataFrame({
+        "x": [10.0] * 25,
+        "y": [20.0] * 25,
+    })
+    anomalies = detect_anomalies("dummy.csv", "csv", df=df)
+    assert isinstance(anomalies, list)
+
 
 
 
