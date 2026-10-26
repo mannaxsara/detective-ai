@@ -24,12 +24,14 @@ def generate_forecast(
     target_col: str | None = None,
     periods: int = 30,
     model_type: str = "prophet",
+    df: pl.DataFrame | None = None,
 ) -> ForecastResult | None:
     """Generate time series forecasts using Prophet or ARIMA algorithm engines."""
-    try:
-        df = _load_dataframe(file_path, file_type)
-    except Exception:
-        return None
+    if df is None:
+        try:
+            df = _load_dataframe(file_path, file_type)
+        except Exception:
+            return None
 
     if df.height < 5:
         return None

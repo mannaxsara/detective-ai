@@ -58,6 +58,8 @@ async def run_analysis_forecast(
             )
 
         return res
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Forecasting failed: {str(e)}")
 

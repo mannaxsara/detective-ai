@@ -189,5 +189,28 @@ async def test_cleaning_safe_write_fallback(tmp_path):
     assert test_file.exists()
 
 
+def test_report_pdf_generation(tmp_path):
+    from app.services.report_service import ReportService
+    import os
+
+    rs = ReportService()
+    path = rs.generate_pdf(
+        analysis_id=999,
+        dataset_name="TestDataset",
+        kpis=[],
+        insights=[],
+        statistics=[],
+        summary="Test executive summary",
+        recommendations="Test recommendation",
+        dataset_info={"row_count": 100, "column_count": 5, "health_score": 95, "file_type": "csv"},
+        anomalies=[],
+    )
+    assert os.path.exists(path)
+    assert path.endswith(".pdf")
+    # Clean up
+    os.remove(path)
+
+
+
 
 
