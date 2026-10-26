@@ -190,6 +190,10 @@ async def download_dataset_file(
         raise HTTPException(status_code=404, detail="Dataset not found")
         
     if not os.path.exists(dataset.file_path):
+        from app.services.storage_service import ensure_file_local
+        await ensure_file_local(dataset.file_path, f"{dataset.user_id}/{os.path.basename(dataset.file_path)}")
+
+    if not os.path.exists(dataset.file_path):
         raise HTTPException(status_code=404, detail="Dataset file not found on disk")
         
     # Get media type based on file type

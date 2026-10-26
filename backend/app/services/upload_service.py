@@ -123,6 +123,12 @@ async def save_file(
         file_size=total_bytes,
         status="uploaded",
     )
+
+    # Backup to cloud storage if configured
+    import asyncio
+    from app.services.storage_service import upload_file_backup
+    asyncio.create_task(upload_file_backup(str(dest), f"{user_id}/{unique_name}"))
+
     return dataset
 
 

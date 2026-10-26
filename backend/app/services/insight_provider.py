@@ -463,10 +463,10 @@ class RuleBasedInsightProvider(InsightProvider):
 class LLMInsightProvider(InsightProvider):
     """LLM-backed insight provider with seamless fallback to RuleBasedInsightProvider."""
 
-    def __init__(self) -> None:
+    def __init__(self, api_key: str | None = None) -> None:
         self.fallback = RuleBasedInsightProvider()
         from app.core.config import settings
-        self.gemini_key = settings.GEMINI_API_KEY
+        self.gemini_key = api_key or settings.GEMINI_API_KEY
         self.openai_key = settings.OPENAI_API_KEY
         self.model = settings.AI_MODEL or "gemini-2.5-flash"
 
@@ -552,9 +552,10 @@ class LLMInsightProvider(InsightProvider):
         return await self.fallback.chat(message, context)
 
 
-def get_insight_provider() -> InsightProvider:
-    """Factory: returns LLMInsightProvider if API key is configured, else RuleBasedInsightProvider."""
+def get_insight_provider(api_key: str | None = None) -> InsightProvider:
+    """Factory: returns LLMInsightProvider if API key is configured (or passed), else RuleBasedInsightProvider."""
     from app.core.config import settings
-    if settings.GEMINI_API_KEY or settings.OPENAI_API_KEY:
-        return LLMInsightProvider()
+    active_key = api_key or settings.GEMINI_API_KEY or settings.OPENAI_API_KEY
+    if active_key:
+        return LLMInsightProvider(api_key=active_key)
     return RuleBasedInsightProvider()

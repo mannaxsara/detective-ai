@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,6 +27,7 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 async def generate_report(
     analysis_id: str,
     file_format: str,  # pdf | docx
+    x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
@@ -52,7 +53,7 @@ async def generate_report(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     # 3. Generate summary & recommendations using InsightProvider
-    ai_provider = get_insight_provider()
+    ai_provider = get_insight_provider(api_key=x_gemini_key)
     summary = await ai_provider.summarize(analysis.__dict__)
     recs = await ai_provider.recommend(analysis.insights or [])
 
@@ -105,6 +106,10 @@ async def generate_report(
         sections={"summary": summary, "recommendations": recs},
     )
 
+    import asyncio
+    from app.services.storage_service import upload_file_backup
+    asyncio.create_task(upload_file_backup(file_path, f"reports/{report.id}_{os.path.basename(file_path)}"))
+
     return {"message": "Report generated successfully", "report_id": report.id}
 
 @router.get("/{report_id}/download")
@@ -117,6 +122,10 @@ async def download_report(
     report = await repo.get_by_id(report_id)
     if not report or report.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Report not found")
+
+    if not os.path.exists(report.file_path):
+        from app.services.storage_service import ensure_file_local
+        await ensure_file_local(report.file_path, f"reports/{report.id}_{os.path.basename(report.file_path)}")
 
     if not os.path.exists(report.file_path):
         raise HTTPException(status_code=404, detail="Report file not found on disk")

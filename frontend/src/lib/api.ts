@@ -31,13 +31,17 @@ const api = axios.create({
   timeout: 60000,
 });
 
-// Request interceptor: attach JWT token
+// Request interceptor: attach JWT token & custom Gemini API key if present
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('detective_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      const customGeminiKey = localStorage.getItem('detective_custom_gemini_key');
+      if (customGeminiKey) {
+        config.headers['X-Gemini-Key'] = customGeminiKey;
       }
     }
     return config;

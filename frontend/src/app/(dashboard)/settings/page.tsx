@@ -18,6 +18,25 @@ export default function SettingsPage() {
   const [fullName, setFullName] = useState("");
   const [analytics, setAnalytics] = useState(true);
   const [activeTab, setActiveTab] = useState<"profile" | "ui" | "security">("profile");
+  const [customKey, setCustomKey] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCustomKey(localStorage.getItem("detective_custom_gemini_key") || "");
+    }
+  }, []);
+
+  const handleSaveCustomKey = () => {
+    if (typeof window !== "undefined") {
+      if (customKey.trim()) {
+        localStorage.setItem("detective_custom_gemini_key", customKey.trim());
+        toast.success("Personal Gemini API Key saved. AI chat & narratives unlocked!");
+      } else {
+        localStorage.removeItem("detective_custom_gemini_key");
+        toast.info("Custom API key removed. Using standard engine.");
+      }
+    }
+  };
 
   useEffect(() => {
     if (user?.full_name) {
@@ -197,6 +216,44 @@ export default function SettingsPage() {
                   <span className="bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full font-bold text-[10px]">
                     ACTIVE
                   </span>
+                </div>
+
+                {/* Custom AI Model Key (BYOK) */}
+                <div className="p-4 rounded-xl bg-[#f9f9f7] dark:bg-[#262720] border border-black/15 dark:border-white/15 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-mono font-bold text-xs text-black dark:text-white">
+                      <Key className="w-4 h-4 text-[#edfe5e]" />
+                      <span>Custom AI Model Key (BYOK)</span>
+                    </div>
+                    {customKey ? (
+                      <span className="bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono">
+                        CONNECTED
+                      </span>
+                    ) : (
+                      <span className="bg-black/10 dark:bg-white/10 text-black/60 dark:text-white/60 border border-black/15 dark:border-white/15 px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono">
+                        OPTIONAL
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] font-sans text-black/70 dark:text-white/70 leading-relaxed">
+                    Provide your personal Google Gemini API key to unlock natural multi-turn analysis chat and narrative report generation. Keys stay stored locally in your browser.
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={customKey}
+                      onChange={(e) => setCustomKey(e.target.value)}
+                      placeholder="AIzaSy..."
+                      className="h-10 flex-1 rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#edfe5e]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveCustomKey}
+                      className="btn-ink-accent px-4 rounded-lg font-mono text-xs font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      Save Key
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

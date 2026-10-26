@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
@@ -310,6 +310,7 @@ async def get_analysis_insights(
 @router.get("/{analysis_id}/recommendations", response_model=list[str])
 async def get_analysis_recommendations(
     analysis_id: str,
+    x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[str]:
@@ -324,7 +325,7 @@ async def get_analysis_recommendations(
         raise HTTPException(status_code=404, detail="Analysis not found")
     
     from app.services.insight_provider import get_insight_provider
-    provider = get_insight_provider()
+    provider = get_insight_provider(api_key=x_gemini_key)
     
     insights_list = [i.model_dump() if hasattr(i, "model_dump") else i for i in (analysis.insights or [])]
     recs = await provider.recommend(insights_list)
@@ -334,6 +335,7 @@ async def get_analysis_recommendations(
 async def chat_with_dataset(
     analysis_id: str,
     payload: dict[str, Any] = Body(...),
+    x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -363,7 +365,7 @@ async def chat_with_dataset(
     }
     
     from app.services.insight_provider import get_insight_provider
-    provider = get_insight_provider()
+    provider = get_insight_provider(api_key=x_gemini_key)
     
     reply = await provider.chat(payload.get("message", ""), context)
     return {"reply": reply}

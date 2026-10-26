@@ -34,9 +34,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     AI_MODEL: str = "gemini-2.5-flash"
 
-    # ── File uploads ──────────────────────────────────────────────────────
+    # ── File uploads & Storage ────────────────────────────────────────────
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE: int = 15_728_640  # 15 MB (free tier)
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "detective-datasets"
 
     # ── CORS ──────────────────────────────────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:3000,https://projectdetective.vercel.app"

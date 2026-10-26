@@ -39,20 +39,38 @@ import RootCauseTab from "@/components/analysis/root-cause-tab";
 import RecommendationsTab from "@/components/analysis/recommendations-tab";
 import ReportGenerator from "@/components/reports/report-generator";
 
-const TABS_CONFIG = [
-  { value: "profile", label: "Evidence", icon: Database },
-  { value: "cleaning", label: "Cleaning", icon: Activity },
-  { value: "kpis", label: "KPIs", icon: Zap },
-  { value: "insights", label: "Insights", icon: Sparkles },
-  { value: "chat", label: "Chat", icon: Table },
-  { value: "charts", label: "Charts", icon: PieChart },
-  { value: "forecast", label: "Forecast", icon: LineChart },
-  { value: "anomalies", label: "Anomalies", icon: AlertTriangle },
-  { value: "statistics", label: "Statistics", icon: Activity },
-  { value: "hypothesis", label: "Hypothesis", icon: HelpCircle },
-  { value: "rootcause", label: "Root Cause", icon: CheckCircle },
-  { value: "recommendations", label: "Recommendations", icon: FileText },
-  { value: "report", label: "Report", icon: FileCode },
+const TAB_GROUPS = [
+  {
+    id: "overview",
+    label: "Overview & Cleansing",
+    tabs: [
+      { value: "profile", label: "Evidence", icon: Database },
+      { value: "cleaning", label: "Cleaning", icon: Activity },
+      { value: "kpis", label: "KPIs", icon: Zap },
+      { value: "insights", label: "Insights", icon: Sparkles },
+    ],
+  },
+  {
+    id: "diagnostics",
+    label: "Diagnostics & Forensics",
+    tabs: [
+      { value: "charts", label: "Charts", icon: PieChart },
+      { value: "anomalies", label: "Anomalies", icon: AlertTriangle },
+      { value: "statistics", label: "Statistics", icon: Activity },
+      { value: "forecast", label: "Forecast", icon: LineChart },
+      { value: "rootcause", label: "Root Cause", icon: CheckCircle },
+      { value: "hypothesis", label: "Hypothesis", icon: HelpCircle },
+    ],
+  },
+  {
+    id: "deliverables",
+    label: "Deliverables & Chat",
+    tabs: [
+      { value: "chat", label: "Chat Assistant", icon: Table },
+      { value: "recommendations", label: "Recommendations", icon: FileText },
+      { value: "report", label: "Report Briefing", icon: FileCode },
+    ],
+  },
 ];
 
 export default function AnalysisPage() {
@@ -61,6 +79,16 @@ export default function AnalysisPage() {
   const id = params.id as string;
   const { activeTab, setActiveTab } = useAnalysisStore();
   const [downloading, setDownloading] = useState(false);
+
+  // Automatically determine category from active tab
+  const activeGroup = TAB_GROUPS.find((g) => g.tabs.some((t) => t.value === activeTab)) || TAB_GROUPS[0];
+
+  const handleCategorySelect = (groupId: string) => {
+    const grp = TAB_GROUPS.find((g) => g.id === groupId);
+    if (grp && !grp.tabs.some((t) => t.value === activeTab)) {
+      setActiveTab(grp.tabs[0].value);
+    }
+  };
 
   const { data: dataset, isLoading, error } = useQuery({
     queryKey: ["dataset-detail", id],
@@ -176,26 +204,48 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      {/* Spacious Tab Navigation Bar with No Visible Scrollbar Line */}
-      <div className="border-b border-black/15 dark:border-white/15 flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1">
-        {TABS_CONFIG.map((tab) => {
-          const isActive = activeTab === tab.value;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border ${
-                isActive
-                  ? "bg-[#edfe5e] text-black border-black/30 shadow-xs"
-                  : "bg-white dark:bg-[#181914] text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white border-black/15 dark:border-white/15 hover:bg-[#edf0e9] dark:hover:bg-[#262720]"
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-black" : "text-black/60 dark:text-white/60"}`} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Category & Sub-Tab Navigation Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-black/15 dark:border-white/15 pb-3">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#edf0e9] dark:bg-[#262720] border border-black/10 dark:border-white/10 w-fit shrink-0">
+          {TAB_GROUPS.map((grp) => {
+            const isGroupActive = activeGroup.id === grp.id;
+            return (
+              <button
+                key={grp.id}
+                onClick={() => handleCategorySelect(grp.id)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  isGroupActive
+                    ? "bg-white dark:bg-[#181914] text-black dark:text-white shadow-xs border border-black/15 dark:border-white/15"
+                    : "text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                {grp.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Focused Sub-Tabs for Active Category */}
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5">
+          {activeGroup.tabs.map((tab) => {
+            const isActive = activeTab === tab.value;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border ${
+                  isActive
+                    ? "bg-[#edfe5e] text-black border-black shadow-[2px_2px_0px_#000000]"
+                    : "bg-white dark:bg-[#181914] text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white border-black/15 dark:border-white/15 hover:bg-[#edf0e9] dark:hover:bg-[#262720]"
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-black" : "text-black/60 dark:text-white/60"}`} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tab Panels */}
