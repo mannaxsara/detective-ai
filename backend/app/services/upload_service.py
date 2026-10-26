@@ -91,6 +91,14 @@ async def save_file(
                 )
             f.write(chunk)
 
+    if total_bytes == 0:
+        if os.path.exists(dest):
+            os.remove(dest)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The uploaded file is empty (0 bytes).",
+        )
+
     # Derive a human-readable dataset name
     dataset_name = Path(original_filename).stem.replace("_", " ").replace("-", " ").title()
 

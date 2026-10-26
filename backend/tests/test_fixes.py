@@ -121,3 +121,22 @@ def test_database_session_sslmode_handling():
     assert "sslmode" not in sanitized
     assert sanitized == "postgresql+asyncpg://user:pass@host:5432/db"
 
+
+@pytest.mark.asyncio
+async def test_empty_file_upload_validation(tmp_path):
+    from fastapi import UploadFile, HTTPException
+    from app.services.upload_service import save_file
+    from unittest.mock import AsyncMock
+
+    empty_file = tmp_path / "empty.csv"
+    empty_file.write_bytes(b"")
+
+    with open(empty_file, "rb") as f:
+        upload = UploadFile(filename="empty.csv", file=f)
+        mock_db = AsyncMock()
+        with pytest.raises(HTTPException) as exc_info:
+            await save_file(upload, user_id=1, db=mock_db)
+        assert exc_info.value.status_code == 400
+        assert "empty" in exc_info.value.detail.lower()
+
+
