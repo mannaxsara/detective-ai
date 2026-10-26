@@ -21,9 +21,17 @@ interface ProfileTabProps {
 
 export default function ProfileTab({ datasetId }: ProfileTabProps) {
   const [columnFilter, setColumnFilter] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+
   const { data: profile, isLoading, isError, refetch } = useQuery({
     queryKey: ["dataset-profile", datasetId],
     queryFn: () => datasetsAPI.getProfile(datasetId),
+  });
+
+  const { data: previewData, isLoading: isPreviewLoading } = useQuery({
+    queryKey: ["dataset-preview", datasetId],
+    queryFn: () => datasetsAPI.preview(datasetId),
+    enabled: showPreview,
   });
 
   if (isLoading) {
@@ -223,6 +231,72 @@ export default function ProfileTab({ datasetId }: ProfileTabProps) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Raw Data Records Preview Accordion */}
+      <div className="border border-black dark:border-[#3b3a33] rounded-[18px] bg-white dark:bg-[#1c1d18] overflow-hidden shadow-[4px_4px_0px_#000000]">
+        <div className="p-4 border-b border-black/10 dark:border-white/10 bg-[#edf0e9] dark:bg-[#262720] flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-black dark:text-white">
+              Raw Evidence Records Inspector
+            </h3>
+            <p className="text-[10px] font-mono text-black/60 dark:text-white/60">
+              {showPreview ? "Viewing first 100 parsed data rows" : "Click to inspect row-level evidence samples"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="btn-ink-accent px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider cursor-pointer"
+          >
+            {showPreview ? "Hide Records" : "Inspect Raw Rows"}
+          </button>
+        </div>
+
+        {showPreview && (
+          <div className="p-0">
+            {isPreviewLoading ? (
+              <div className="p-8 text-center font-mono text-xs text-black/60 dark:text-white/60 animate-pulse">
+                Loading dataset rows...
+              </div>
+            ) : previewData?.rows && previewData.rows.length > 0 ? (
+              <div className="w-full overflow-x-auto max-h-[480px]">
+                <table className="w-full border-collapse text-left font-mono text-xs">
+                  <thead className="sticky top-0 bg-[#f9f9f7] dark:bg-[#262720] border-b border-black/15 dark:border-white/15 z-10">
+                    <tr>
+                      <th className="px-4 py-2.5 font-bold uppercase text-[10px] text-black/50 dark:text-white/50 w-12 text-center">
+                        #
+                      </th>
+                      {(previewData.columns || []).map((col: string, idx: number) => (
+                        <th key={idx} className="px-4 py-2.5 font-bold uppercase text-[10px] text-black dark:text-white whitespace-nowrap">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/5 dark:divide-white/5 text-black/85 dark:text-white/85">
+                    {previewData.rows.map((row: any, rIdx: number) => (
+                      <tr key={rIdx} className="hover:bg-black/5 dark:hover:bg-white/5">
+                        <td className="px-4 py-2 text-black/40 dark:text-white/40 text-[10px] text-center select-none font-bold">
+                          {rIdx + 1}
+                        </td>
+                        {(previewData.columns || []).map((col: string, cIdx: number) => (
+                          <td key={cIdx} className="px-4 py-2 whitespace-nowrap max-w-[200px] truncate text-[11px]">
+                            {row[col] !== null && row[col] !== undefined ? String(row[col]) : <span className="text-black/30 dark:text-white/30 italic">null</span>}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-8 text-center font-mono text-xs text-black/60 dark:text-white/60">
+                No record rows available to preview.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
