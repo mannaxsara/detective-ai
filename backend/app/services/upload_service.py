@@ -76,28 +76,39 @@ async def save_file(
 
     # Stream to disk in chunks, tracking total bytes
     total_bytes = 0
-    with open(dest, "wb") as f:
-        while True:
-            chunk = await file.read(CHUNK_SIZE)
-            if not chunk:
-                break
-            total_bytes += len(chunk)
-            if total_bytes > settings.MAX_UPLOAD_SIZE:
-                f.close()
-                os.remove(dest)
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"File exceeds maximum allowed size of {settings.MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
-                )
-            f.write(chunk)
+    try:
+        with open(dest, "wb") as f:
+            while True:
+                chunk = await file.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > settings.MAX_UPLOAD_SIZE:
+                    break
+                f.write(chunk)
 
-    if total_bytes == 0:
+        if total_bytes > settings.MAX_UPLOAD_SIZE:
+            if os.path.exists(dest):
+                os.remove(dest)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File exceeds maximum allowed size of {settings.MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+            )
+
+        if total_bytes == 0:
+            if os.path.exists(dest):
+                os.remove(dest)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The uploaded file is empty (0 bytes).",
+            )
+    except Exception:
         if os.path.exists(dest):
-            os.remove(dest)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The uploaded file is empty (0 bytes).",
-        )
+            try:
+                os.remove(dest)
+            except Exception:
+                pass
+        raise
 
     # Derive a human-readable dataset name
     dataset_name = Path(original_filename).stem.replace("_", " ").replace("-", " ").title()
