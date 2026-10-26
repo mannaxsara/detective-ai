@@ -28,7 +28,7 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
   });
 
   const applyFixMutation = useMutation({
-    mutationFn: (fixId: string) => cleaningAPI.applyFixes(datasetId, [fixId]),
+    mutationFn: (fixIds: string[]) => cleaningAPI.applyFixes(datasetId, fixIds),
     onSuccess: (data) => {
       toast.success(data.message || "Fix successfully applied!");
       if (data?.applied?.length) {
@@ -58,7 +58,16 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
 
   const handleApplyFix = (fixId: string) => {
     setApplying(fixId);
-    applyFixMutation.mutate(fixId);
+    applyFixMutation.mutate([fixId]);
+  };
+
+  const suggestions = cleanData?.suggestions || [];
+  const unappliedIssues = suggestions.filter((s: any) => !appliedFixIds.includes(s.fix_id));
+
+  const handleApplyAllFixes = () => {
+    if (!unappliedIssues.length) return;
+    setApplying("all");
+    applyFixMutation.mutate(unappliedIssues.map((s: any) => s.fix_id));
   };
 
   if (isLoading) {
@@ -89,7 +98,6 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
     );
   }
 
-  const suggestions = cleanData?.suggestions || [];
   const totalIssues = cleanData?.total_issues || 0;
   const appliedCount = appliedFixIds.length;
   const remainingIssues = Math.max(0, totalIssues - appliedCount);
@@ -104,7 +112,7 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
     <div className="space-y-6 font-sans text-black dark:text-white text-left">
       
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-black/15 dark:border-white/15 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/15 dark:border-white/15 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#edfe5e] text-black px-2 py-0.5 rounded border border-black/20">
@@ -118,6 +126,17 @@ export default function CleaningTab({ datasetId }: CleaningTabProps) {
             Data Quality & Sanitization Directives
           </h2>
         </div>
+
+        {unappliedIssues.length > 0 && (
+          <button
+            type="button"
+            onClick={handleApplyAllFixes}
+            disabled={applying !== null}
+            className="btn-ink-accent inline-flex items-center gap-2 py-2.5 px-4 font-mono text-xs uppercase tracking-wider font-bold cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            {applying === "all" ? "Applying All..." : `Apply All Recommended Fixes (${unappliedIssues.length})`}
+          </button>
+        )}
       </div>
 
       {/* Render Pipeline Funnel ONLY if total issues exist */}
