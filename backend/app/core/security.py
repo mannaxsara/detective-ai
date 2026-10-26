@@ -45,7 +45,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except Exception:
         pass
 
-    return plain_password == hashed_password
+    return False
 
 
 # ── JWT tokens ────────────────────────────────────────────────────────────────

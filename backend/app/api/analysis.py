@@ -305,8 +305,8 @@ async def get_analysis_recommendations(
     if not analysis or analysis.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Analysis not found")
     
-    from app.services.insight_provider import RuleBasedInsightProvider
-    provider = RuleBasedInsightProvider()
+    from app.services.insight_provider import get_insight_provider
+    provider = get_insight_provider()
     
     insights_list = [i.model_dump() if hasattr(i, "model_dump") else i for i in (analysis.insights or [])]
     recs = await provider.recommend(insights_list)
@@ -344,8 +344,8 @@ async def chat_with_dataset(
         "profile_data": dataset.profile_data or {},
     }
     
-    from app.services.insight_provider import RuleBasedInsightProvider
-    provider = RuleBasedInsightProvider()
+    from app.services.insight_provider import get_insight_provider
+    provider = get_insight_provider()
     
     reply = await provider.chat(payload.get("message", ""), context)
     return {"reply": reply}

@@ -290,11 +290,8 @@ def _detect_invalid_dates(df: pl.DataFrame) -> list[CleaningSuggestion]:
 # ── Public API ────────────────────────────────────────────────────────────────
 
 
-async def get_cleaning_suggestions(
-    file_path: str, file_type: str
-) -> list[CleaningSuggestion]:
-    """Analyse the dataset and return all detected quality issues."""
-    df = _load_dataframe(file_path, file_type)
+def _detect_all(df: pl.DataFrame) -> list[CleaningSuggestion]:
+    """Detect all cleaning suggestions on a DataFrame."""
     suggestions: list[CleaningSuggestion] = []
     suggestions.extend(_detect_missing(df))
     suggestions.extend(_detect_duplicates(df))
@@ -307,19 +304,18 @@ async def get_cleaning_suggestions(
     return suggestions
 
 
-async def apply_fix(
-    file_path: str, file_type: str, fix_id: str
-) -> tuple[pl.DataFrame, str]:
-    """Apply a single fix identified by *fix_id* to the dataset.
-
-    Returns the cleaned DataFrame and a description of what was done.
-    """
+async def get_cleaning_suggestions(
+    file_path: str, file_type: str
+) -> list[CleaningSuggestion]:
+    """Analyse the dataset and return all detected quality issues."""
     df = _load_dataframe(file_path, file_type)
-    suggestions = await get_cleaning_suggestions(file_path, file_type)
-    suggestion = next((s for s in suggestions if s.fix_id == fix_id), None)
-    if suggestion is None:
-        return df, "Fix ID not found – no changes applied."
+    return _detect_all(df)
 
+
+def _apply_single_fix_to_df(
+    df: pl.DataFrame, suggestion: CleaningSuggestion
+) -> tuple[pl.DataFrame, str]:
+    """Apply a single suggestion to an in-memory DataFrame."""
     col = suggestion.column
     action = ""
 
@@ -336,7 +332,7 @@ async def apply_fix(
 
     elif suggestion.issue_type == "duplicates":
         before = df.height
-        df = df.unique()
+        df = df.unique(maintain_order=True)
         action = f"Removed {before - df.height} duplicate rows"
 
     elif suggestion.issue_type == "outliers" and col:
@@ -390,24 +386,39 @@ async def apply_fix(
     return df, action
 
 
+async def apply_fix(
+    file_path: str, file_type: str, fix_id: str
+) -> tuple[pl.DataFrame, str]:
+    """Apply a single fix identified by *fix_id* to the dataset."""
+    df = _load_dataframe(file_path, file_type)
+    suggestions = _detect_all(df)
+    suggestion = next((s for s in suggestions if s.fix_id == fix_id), None)
+    if suggestion is None:
+        return df, "Fix ID not found – no changes applied."
+    return _apply_single_fix_to_df(df, suggestion)
+
+
 async def apply_fixes(
     file_path: str, file_type: str, fix_ids: list[str]
 ) -> CleaningApplyResponse:
-    """Apply multiple fixes sequentially and save the cleaned file.
-
-    The original file is overwritten with the cleaned data.
-    """
+    """Apply multiple fixes sequentially in-memory and persist the result."""
     df = _load_dataframe(file_path, file_type)
     applied: list[str] = []
     skipped: list[str] = []
 
+    # Map suggestions by fix_id
+    suggestions = {s.fix_id: s for s in _detect_all(df)}
+
     for fid in fix_ids:
+        s = suggestions.get(fid)
+        if not s:
+            skipped.append(fid)
+            continue
         try:
-            df_new, action = await apply_fix(file_path, file_type, fid)
+            df, action = _apply_single_fix_to_df(df, s)
             if "not found" in action.lower() or "no action" in action.lower():
                 skipped.append(fid)
             else:
-                df = df_new
                 applied.append(fid)
         except Exception:
             skipped.append(fid)

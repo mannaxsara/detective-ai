@@ -6,6 +6,7 @@ from typing import Sequence
 
 from sqlalchemy import func as sa_func
 from sqlalchemy import or_, select
+from sqlalchemy.orm import selectinload
 
 from app.models.analysis import Analysis
 from app.models.dataset import Dataset
@@ -41,9 +42,10 @@ class AnalysisRepository(BaseRepository[Analysis]):
     async def get_by_user_id(
         self, user_id: int, *, skip: int = 0, limit: int = 50
     ) -> Sequence[Analysis]:
-        """Return analyses belonging to a user (paginated)."""
+        """Return analyses belonging to a user (paginated) with dataset eager loaded."""
         stmt = (
             select(Analysis)
+            .options(selectinload(Analysis.dataset))
             .where(Analysis.user_id == user_id)
             .order_by(Analysis.created_at.desc())
             .offset(skip)
@@ -87,6 +89,7 @@ class AnalysisRepository(BaseRepository[Analysis]):
 
         data_stmt = (
             select(Analysis)
+            .options(selectinload(Analysis.dataset))
             .where(base_filter)
             .order_by(Analysis.created_at.desc())
             .offset(skip)

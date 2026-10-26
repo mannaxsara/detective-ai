@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
 
+    # ── AI Providers (Optional LLM Integration) ──────────────────────────
+    GEMINI_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    AI_MODEL: str = "gemini-2.5-flash"
+
     # ── File uploads ──────────────────────────────────────────────────────
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE: int = 15_728_640  # 15 MB (free tier)

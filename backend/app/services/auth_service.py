@@ -85,8 +85,11 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
     Raises:
         HTTPException 401: If the Google token is invalid.
     """
-    # For simulation/mock environments:
+    # For simulation/mock environments in local development only:
+    import os
     if credential == "google-oauth-token-simulated-12345":
+        if os.getenv("ENVIRONMENT", "development") != "development":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Simulated tokens disabled in production")
         repo = UserRepository(db)
         user = await repo.get_by_email("demo@example.com")
         if user is None:
@@ -111,28 +114,40 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
     if resp.status_code == 200:
         token_data = resp.json()
     else:
-        # Fallback for Firebase ID tokens: decode JWT payload
-        try:
-            unverified_claims = jwt.decode(
-                credential,
-                algorithms=["RS256", "HS256", "ES256"],
-                options={"verify_signature": False}
-            )
-            sub = unverified_claims.get("sub") or unverified_claims.get("user_id") or unverified_claims.get("uid")
-            email_val = unverified_claims.get("email")
-            name_val = unverified_claims.get("name") or (email_val.split("@")[0] if email_val else "User")
-            picture_val = unverified_claims.get("picture")
+        # Cryptographically verify Firebase / Google ID token against official Google JWKS
+        verified = False
+        for jwks_url in [
+            "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+            "https://www.googleapis.com/oauth2/v3/certs",
+        ]:
+            try:
+                jwk_client = jwt.PyJWKClient(jwks_url)
+                signing_key = jwk_client.get_signing_key_from_jwt(credential)
+                claims = jwt.decode(
+                    credential,
+                    signing_key.key,
+                    algorithms=["RS256"],
+                    options={"verify_aud": False},
+                )
+                sub = claims.get("sub") or claims.get("user_id")
+                email_val = claims.get("email")
+                if sub and email_val:
+                    token_data = {
+                        "sub": str(sub),
+                        "email": str(email_val),
+                        "name": claims.get("name") or str(email_val).split("@")[0],
+                        "picture": claims.get("picture"),
+                    }
+                    verified = True
+                    break
+            except Exception:
+                continue
 
-            if sub and email_val:
-                token_data = {
-                    "sub": str(sub),
-                    "email": str(email_val),
-                    "name": str(name_val),
-                    "picture": picture_val,
-                }
-        except Exception as err:
-            import logging
-            logging.getLogger(__name__).warning(f"Failed to decode JWT credential: {err}")
+        if not verified:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Google or Firebase credential signature",
+            )
 
     google_id: str = token_data.get("sub", "")
     email: str = token_data.get("email", "")

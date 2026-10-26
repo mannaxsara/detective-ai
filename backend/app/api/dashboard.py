@@ -28,11 +28,13 @@ async def get_dashboard_stats(
     health_result = await db.execute(select(func.avg(Dataset.health_score)).where(Dataset.user_id == current_user.id))
     avg_health = health_result.scalar_one() or 0.0
 
-    # Total insights and anomalies
-    analyses_result = await db.execute(select(Analysis).where(Analysis.user_id == current_user.id))
-    analyses = analyses_result.scalars().all()
-    total_insights = sum(len(a.insights or []) for a in analyses)
-    total_anomalies = sum(len(a.anomalies or []) for a in analyses)
+    # Total insights and anomalies (select only the required columns to avoid loading multi-MB JSON results into memory)
+    analyses_result = await db.execute(
+        select(Analysis.insights, Analysis.anomalies).where(Analysis.user_id == current_user.id)
+    )
+    analysis_rows = analyses_result.all()
+    total_insights = sum(len(row[0] or []) for row in analysis_rows)
+    total_anomalies = sum(len(row[1] or []) for row in analysis_rows)
 
     # Total reports
     rep_result = await db.execute(select(func.count(Report.id)).where(Report.user_id == current_user.id))

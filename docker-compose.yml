@@ -19,10 +19,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis (for future background task queue)
+  # Redis (optional: enable with --profile queue for future task workers)
   redis:
     image: redis:7-alpine
     container_name: detectiveai-redis
+    profiles:
+      - queue
     ports:
       - "6379:6379"
     volumes:

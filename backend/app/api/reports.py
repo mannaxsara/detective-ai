@@ -18,7 +18,7 @@ from app.models.user import User
 from app.repositories.analysis_repository import AnalysisRepository
 from app.repositories.dataset_repository import DatasetRepository
 from app.repositories.report_repository import ReportRepository
-from app.services.insight_provider import RuleBasedInsightProvider
+from app.services.insight_provider import get_insight_provider
 from app.services.report_service import ReportService
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -52,7 +52,7 @@ async def generate_report(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     # 3. Generate summary & recommendations using InsightProvider
-    ai_provider = RuleBasedInsightProvider()
+    ai_provider = get_insight_provider()
     summary = await ai_provider.summarize(analysis.__dict__)
     recs = await ai_provider.recommend(analysis.insights or [])
 

@@ -1,7 +1,7 @@
 "use client";
 
 import WorldMap from "@/components/ui/world-map";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 export default function WorldMapDemo() {
   return (
