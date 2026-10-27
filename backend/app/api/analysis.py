@@ -42,19 +42,40 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
             df = await asyncio.to_thread(_load_dataframe, dataset.file_path, dataset.file_type)
 
             # 2. Run EDA services reusing loaded DataFrame (avoids Render 512MB OOM)
-            kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type, df)
-            insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type, df)
-            charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type, df)
+            try:
+                kpis = await asyncio.to_thread(detect_kpis, dataset.file_path, dataset.file_type, df)
+            except Exception:
+                kpis = []
+
+            try:
+                insights = await asyncio.to_thread(discover_insights, dataset.file_path, dataset.file_type, df)
+            except Exception:
+                insights = []
+
+            try:
+                charts = await asyncio.to_thread(run_eda, dataset.file_path, dataset.file_type, df)
+            except Exception:
+                charts = []
 
             # Cleaning suggestions (used by the chat provider and cleaning tab)
             from app.services.cleaning_service import get_cleaning_suggestions
-            suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type, df)
+            try:
+                suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type, df)
+            except Exception:
+                suggestions = []
 
             # Anomaly detection & baseline forecast reusing in-memory dataframe (avoids duplicate I/O)
             from app.services.anomaly_service import detect_anomalies
             from app.services.forecast_service import generate_forecast
-            anomalies = await asyncio.to_thread(detect_anomalies, dataset.file_path, dataset.file_type, df)
-            forecast = await asyncio.to_thread(generate_forecast, dataset.file_path, dataset.file_type, None, 30, "prophet", df)
+            try:
+                anomalies = await asyncio.to_thread(detect_anomalies, dataset.file_path, dataset.file_type, df)
+            except Exception:
+                anomalies = []
+
+            try:
+                forecast = await asyncio.to_thread(generate_forecast, dataset.file_path, dataset.file_type, None, 30, "prophet", df)
+            except Exception:
+                forecast = None
 
             # Profile dataset and update dataset details
             from app.services.profiling_service import profile_dataset

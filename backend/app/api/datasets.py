@@ -175,6 +175,14 @@ async def get_dataset_preview(
     from app.services.storage_service import ensure_dataset_file
     await ensure_dataset_file(dataset)
 
+    if not os.path.exists(dataset.file_path):
+        stored_cols = list((dataset.profile_data or {}).get("columns", {}).keys())
+        return DatasetPreviewResponse(
+            columns=stored_cols,
+            rows=[],
+            total_rows=dataset.row_count or 0,
+        )
+
     from app.services.profiling_service import _load_dataframe, _safe_value
     try:
         df = _load_dataframe(dataset.file_path, dataset.file_type)
