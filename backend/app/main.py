@@ -6,6 +6,9 @@ Configures CORS, handles global exceptions, and hooks database lifecycles.
 from __future__ import annotations
 
 import os
+# Safely adapt to local hardware: limit Polars thread pool to half CPU cores so user's PC stays responsive
+os.environ.setdefault("POLARS_MAX_THREADS", str(max(1, (os.cpu_count() or 4) // 2)))
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

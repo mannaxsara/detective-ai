@@ -19,21 +19,45 @@ export default function SettingsPage() {
   const [analytics, setAnalytics] = useState(true);
   const [activeTab, setActiveTab] = useState<"profile" | "ui" | "security">("profile");
   const [customKey, setCustomKey] = useState("");
+  const [aiProvider, setAiProvider] = useState<"gemini" | "ollama" | "openai" | "custom">("gemini");
+  const [aiBaseUrl, setAiBaseUrl] = useState("");
+  const [aiModel, setAiModel] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setCustomKey(localStorage.getItem("detective_custom_gemini_key") || "");
+      setCustomKey(localStorage.getItem("detective_custom_gemini_key") || localStorage.getItem("detective_ai_key") || "");
+      setAiProvider((localStorage.getItem("detective_ai_provider") as any) || "gemini");
+      setAiBaseUrl(localStorage.getItem("detective_ai_base_url") || "");
+      setAiModel(localStorage.getItem("detective_ai_model") || "");
     }
   }, []);
 
   const handleSaveCustomKey = () => {
     if (typeof window !== "undefined") {
+      localStorage.setItem("detective_ai_provider", aiProvider);
+      if (aiBaseUrl.trim()) {
+        localStorage.setItem("detective_ai_base_url", aiBaseUrl.trim());
+      } else {
+        localStorage.removeItem("detective_ai_base_url");
+      }
+      if (aiModel.trim()) {
+        localStorage.setItem("detective_ai_model", aiModel.trim());
+      } else {
+        localStorage.removeItem("detective_ai_model");
+      }
+
       if (customKey.trim()) {
         localStorage.setItem("detective_custom_gemini_key", customKey.trim());
-        toast.success("Personal Gemini API Key saved. AI chat & narratives unlocked!");
+        localStorage.setItem("detective_ai_key", customKey.trim());
+        toast.success(`AI configuration saved (${aiProvider.toUpperCase()}). Engine ready!`);
       } else {
         localStorage.removeItem("detective_custom_gemini_key");
-        toast.info("Custom API key removed. Using standard engine.");
+        localStorage.removeItem("detective_ai_key");
+        if (aiProvider === "ollama") {
+          toast.success("Local Ollama engine saved (no API key required).");
+        } else {
+          toast.info("Custom API key removed. Using standard engine.");
+        }
       }
     }
   };
@@ -218,32 +242,120 @@ export default function SettingsPage() {
                   </span>
                 </div>
 
-                {/* Custom AI Model Key (BYOK) */}
+                {/* Multi-Engine AI Provider & BYOK */}
                 <div className="p-4 rounded-xl bg-[#f9f9f7] dark:bg-[#262720] border border-black/15 dark:border-white/15 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-mono font-bold text-xs text-black dark:text-white">
                       <Key className="w-4 h-4 text-[#edfe5e]" />
-                      <span>Custom AI Model Key (BYOK)</span>
+                      <span>AI Engine & Model Configuration</span>
                     </div>
-                    {customKey ? (
+                    {customKey || aiProvider === "ollama" ? (
                       <span className="bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono">
-                        CONNECTED
+                        {aiProvider === "ollama" ? "LOCAL ACTIVE" : "KEY CONNECTED"}
                       </span>
                     ) : (
                       <span className="bg-black/10 dark:bg-white/10 text-black/60 dark:text-white/60 border border-black/15 dark:border-white/15 px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono">
-                        OPTIONAL
+                        STANDARD
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] font-sans text-black/70 dark:text-white/70 leading-relaxed">
-                    Provide your personal Google Gemini API key to unlock natural multi-turn analysis chat and narrative report generation. Keys stay stored locally in your browser.
+                    Connect your personal Google Gemini API key, standard OpenAI key, or run completely offline with <strong>Local Ollama / LM Studio</strong> on your PC for 100% private data forensics.
                   </p>
-                  <div className="flex gap-2">
+
+                  {/* Provider Radio Tabs */}
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    {[
+                      { id: "gemini", label: "Google Gemini" },
+                      { id: "ollama", label: "Local Ollama" },
+                      { id: "openai", label: "OpenAI / Custom" },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setAiProvider(p.id as any)}
+                        className={`h-8 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer border ${
+                          aiProvider === p.id
+                            ? "bg-[#edfe5e] text-black border-black shadow-xs"
+                            : "bg-white dark:bg-[#181914] text-black/70 dark:text-white/70 border-black/15 dark:border-white/15 hover:bg-black/5"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Dynamic Inputs based on provider */}
+                  {aiProvider === "ollama" && (
+                    <div className="space-y-2 pt-1 text-left">
+                      <div className="flex gap-2">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-mono uppercase font-bold text-black/60 dark:text-white/60">Ollama Base URL</label>
+                          <input
+                            type="text"
+                            value={aiBaseUrl}
+                            onChange={(e) => setAiBaseUrl(e.target.value)}
+                            placeholder="http://localhost:11434/v1"
+                            className="h-9 w-full rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-[#edfe5e]"
+                          />
+                        </div>
+                        <div className="w-1/3 space-y-1">
+                          <label className="text-[10px] font-mono uppercase font-bold text-black/60 dark:text-white/60">Model</label>
+                          <input
+                            type="text"
+                            value={aiModel}
+                            onChange={(e) => setAiModel(e.target.value)}
+                            placeholder="llama3.2"
+                            className="h-9 w-full rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-[#edfe5e]"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-mono text-[#31e992]">
+                        ✓ Offline & 100% Private. No external network requests or API costs.
+                      </p>
+                    </div>
+                  )}
+
+                  {aiProvider === "openai" && (
+                    <div className="space-y-2 pt-1 text-left">
+                      <div className="flex gap-2">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-mono uppercase font-bold text-black/60 dark:text-white/60">Custom Base URL (Optional)</label>
+                          <input
+                            type="text"
+                            value={aiBaseUrl}
+                            onChange={(e) => setAiBaseUrl(e.target.value)}
+                            placeholder="https://api.openai.com/v1 (or Groq, DeepSeek)"
+                            className="h-9 w-full rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-[#edfe5e]"
+                          />
+                        </div>
+                        <div className="w-1/3 space-y-1">
+                          <label className="text-[10px] font-mono uppercase font-bold text-black/60 dark:text-white/60">Model</label>
+                          <input
+                            type="text"
+                            value={aiModel}
+                            onChange={(e) => setAiModel(e.target.value)}
+                            placeholder="gpt-4o-mini"
+                            className="h-9 w-full rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-[#edfe5e]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key Input */}
+                  <div className="flex gap-2 pt-1">
                     <input
                       type="password"
                       value={customKey}
                       onChange={(e) => setCustomKey(e.target.value)}
-                      placeholder="AIzaSy..."
+                      placeholder={
+                        aiProvider === "ollama"
+                          ? "API Key optional for local Ollama"
+                          : aiProvider === "gemini"
+                          ? "Google Gemini Key (AIzaSy...)"
+                          : "API Key (sk-...)"
+                      }
                       className="h-10 flex-1 rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#edfe5e]"
                     />
                     <button
@@ -251,7 +363,7 @@ export default function SettingsPage() {
                       onClick={handleSaveCustomKey}
                       className="btn-ink-accent px-4 rounded-lg font-mono text-xs font-bold uppercase tracking-wider cursor-pointer"
                     >
-                      Save Key
+                      Save Configuration
                     </button>
                   </div>
                 </div>

@@ -461,19 +461,55 @@ class RuleBasedInsightProvider(InsightProvider):
 
 
 class LLMInsightProvider(InsightProvider):
-    """LLM-backed insight provider with seamless fallback to RuleBasedInsightProvider."""
+    """LLM-backed insight provider with seamless fallback to RuleBasedInsightProvider.
+    Supports Google Gemini, Local Offline LLMs (Ollama / LM Studio), OpenAI, and OpenAI-compatible APIs (Groq, DeepSeek).
+    """
 
-    def __init__(self, api_key: str | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str | None = None,
+        provider: str | None = None,
+        base_url: str | None = None,
+        model: str | None = None,
+    ) -> None:
         self.fallback = RuleBasedInsightProvider()
         from app.core.config import settings
-        self.gemini_key = api_key or settings.GEMINI_API_KEY
-        self.openai_key = settings.OPENAI_API_KEY
-        self.model = settings.AI_MODEL or "gemini-2.5-flash"
+        self.provider = (provider or getattr(settings, "AI_PROVIDER", "gemini")).lower()
+        self.gemini_key = api_key if self.provider == "gemini" else (getattr(settings, "GEMINI_API_KEY", "") or api_key)
+        self.openai_key = api_key if self.provider in ("openai", "custom") else (getattr(settings, "OPENAI_API_KEY", "") or api_key or "")
+        self.base_url = base_url or getattr(settings, "AI_BASE_URL", "")
+        self.model = model or getattr(settings, "AI_MODEL", None) or ("llama3.2" if self.provider == "ollama" else "gemini-2.5-flash")
 
     async def _call_llm(self, prompt: str, system_prompt: str = "") -> str | None:
         import httpx
         try:
-            if self.gemini_key:
+            # 1. Local Offline LLM (Ollama / LM Studio) or Custom OpenAI-compatible endpoint
+            if self.provider in ("ollama", "custom") or (self.base_url and self.provider != "gemini"):
+                target_url = f"{self.base_url.rstrip('/')}/chat/completions" if self.base_url else (
+                    "http://localhost:11434/v1/chat/completions" if self.provider == "ollama" else "https://api.openai.com/v1/chat/completions"
+                )
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                messages.append({"role": "user", "content": prompt})
+                headers = {"Content-Type": "application/json"}
+                if self.openai_key:
+                    headers["Authorization"] = f"Bearer {self.openai_key}"
+                body = {
+                    "model": self.model or "llama3.2",
+                    "messages": messages,
+                    "temperature": 0.2,
+                }
+                async with httpx.AsyncClient(timeout=45.0) as client:
+                    resp = await client.post(target_url, json=body, headers=headers)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        choices = data.get("choices", [])
+                        if choices:
+                            return str(choices[0].get("message", {}).get("content", "")).strip()
+
+            # 2. Google Gemini REST
+            elif self.provider == "gemini" and self.gemini_key:
                 models_to_try = [self.model]
                 for fallback_m in ("gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"):
                     if fallback_m not in models_to_try:
@@ -499,6 +535,7 @@ class LLMInsightProvider(InsightProvider):
                         elif resp.status_code != 404:
                             break
 
+            # 3. Standard OpenAI
             elif self.openai_key:
                 url = "https://api.openai.com/v1/chat/completions"
                 messages = []
@@ -507,7 +544,7 @@ class LLMInsightProvider(InsightProvider):
                 messages.append({"role": "user", "content": prompt})
                 headers = {"Authorization": f"Bearer {self.openai_key}"}
                 async with httpx.AsyncClient(timeout=30.0) as client:
-                    resp = await client.post(url, json={"model": "gpt-4o-mini", "messages": messages}, headers=headers)
+                    resp = await client.post(url, json={"model": self.model or "gpt-4o-mini", "messages": messages}, headers=headers)
                     if resp.status_code == 200:
                         data = resp.json()
                         choices = data.get("choices", [])
@@ -561,10 +598,23 @@ class LLMInsightProvider(InsightProvider):
         return await self.fallback.chat(message, context)
 
 
-def get_insight_provider(api_key: str | None = None) -> InsightProvider:
-    """Factory: returns LLMInsightProvider if API key is configured (or passed), else RuleBasedInsightProvider."""
+def get_insight_provider(
+    api_key: str | None = None,
+    provider: str | None = None,
+    base_url: str | None = None,
+    model: str | None = None,
+) -> InsightProvider:
+    """Factory: returns LLMInsightProvider if API key or local provider (Ollama) is configured, else RuleBasedInsightProvider."""
     from app.core.config import settings
-    active_key = api_key or settings.GEMINI_API_KEY or settings.OPENAI_API_KEY
-    if active_key:
-        return LLMInsightProvider(api_key=active_key)
+    active_provider = (provider or getattr(settings, "AI_PROVIDER", "gemini")).lower()
+    active_key = api_key or getattr(settings, "GEMINI_API_KEY", "") or getattr(settings, "OPENAI_API_KEY", "")
+    
+    # If using local ollama or an explicit base_url, key is not strictly required
+    if active_provider == "ollama" or base_url or active_key:
+        return LLMInsightProvider(
+            api_key=active_key,
+            provider=active_provider,
+            base_url=base_url,
+            model=model,
+        )
     return RuleBasedInsightProvider()

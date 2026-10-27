@@ -43,6 +43,22 @@ api.interceptors.request.use(
       if (customGeminiKey) {
         config.headers['X-Gemini-Key'] = customGeminiKey;
       }
+      const aiProvider = localStorage.getItem('detective_ai_provider');
+      if (aiProvider) {
+        config.headers['X-AI-Provider'] = aiProvider;
+      }
+      const aiBaseUrl = localStorage.getItem('detective_ai_base_url');
+      if (aiBaseUrl) {
+        config.headers['X-AI-Base-Url'] = aiBaseUrl;
+      }
+      const aiModel = localStorage.getItem('detective_ai_model');
+      if (aiModel) {
+        config.headers['X-AI-Model'] = aiModel;
+      }
+      const aiKey = localStorage.getItem('detective_ai_key');
+      if (aiKey) {
+        config.headers['X-AI-Key'] = aiKey;
+      }
     }
     return config;
   },

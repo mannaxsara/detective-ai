@@ -28,6 +28,10 @@ async def generate_report(
     analysis_id: str,
     file_format: str,  # pdf | docx
     x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
+    x_ai_provider: str | None = Header(None, alias="X-AI-Provider"),
+    x_ai_base_url: str | None = Header(None, alias="X-AI-Base-Url"),
+    x_ai_model: str | None = Header(None, alias="X-AI-Model"),
+    x_ai_key: str | None = Header(None, alias="X-AI-Key"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
@@ -53,7 +57,12 @@ async def generate_report(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     # 3. Generate summary & recommendations using InsightProvider
-    ai_provider = get_insight_provider(api_key=x_gemini_key)
+    ai_provider = get_insight_provider(
+        api_key=x_ai_key or x_gemini_key,
+        provider=x_ai_provider,
+        base_url=x_ai_base_url,
+        model=x_ai_model,
+    )
     summary = await ai_provider.summarize(analysis.__dict__)
     recs = await ai_provider.recommend(analysis.insights or [])
 

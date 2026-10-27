@@ -354,6 +354,10 @@ async def get_analysis_insights(
 async def get_analysis_recommendations(
     analysis_id: str,
     x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
+    x_ai_provider: str | None = Header(None, alias="X-AI-Provider"),
+    x_ai_base_url: str | None = Header(None, alias="X-AI-Base-Url"),
+    x_ai_model: str | None = Header(None, alias="X-AI-Model"),
+    x_ai_key: str | None = Header(None, alias="X-AI-Key"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[str]:
@@ -368,7 +372,12 @@ async def get_analysis_recommendations(
         raise HTTPException(status_code=404, detail="Analysis not found")
     
     from app.services.insight_provider import get_insight_provider
-    provider = get_insight_provider(api_key=x_gemini_key)
+    provider = get_insight_provider(
+        api_key=x_ai_key or x_gemini_key,
+        provider=x_ai_provider,
+        base_url=x_ai_base_url,
+        model=x_ai_model,
+    )
     
     insights_list = [i.model_dump() if hasattr(i, "model_dump") else i for i in (analysis.insights or [])]
     recs = await provider.recommend(insights_list)
@@ -379,6 +388,10 @@ async def chat_with_dataset(
     analysis_id: str,
     payload: dict[str, Any] = Body(...),
     x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
+    x_ai_provider: str | None = Header(None, alias="X-AI-Provider"),
+    x_ai_base_url: str | None = Header(None, alias="X-AI-Base-Url"),
+    x_ai_model: str | None = Header(None, alias="X-AI-Model"),
+    x_ai_key: str | None = Header(None, alias="X-AI-Key"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -408,6 +421,12 @@ async def chat_with_dataset(
     }
     
     from app.services.insight_provider import get_insight_provider
+    provider = get_insight_provider(
+        api_key=x_ai_key or x_gemini_key,
+        provider=x_ai_provider,
+        base_url=x_ai_base_url,
+        model=x_ai_model,
+    )
     provider = get_insight_provider(api_key=x_gemini_key)
     
     reply = await provider.chat(payload.get("message", ""), context)

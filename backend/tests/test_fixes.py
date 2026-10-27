@@ -46,16 +46,29 @@ def test_cleaning_multi_fix_composition():
 
 
 def test_insight_provider_factory():
-    # Default without API key should be rule-based
+    # 1. Default without API key should be rule-based
     settings.GEMINI_API_KEY = ""
     settings.OPENAI_API_KEY = ""
+    settings.AI_BASE_URL = ""
     provider = get_insight_provider()
     assert isinstance(provider, RuleBasedInsightProvider)
 
-    # When key configured, should return LLM provider
+    # 2. When Gemini key configured, should return LLM provider
     settings.GEMINI_API_KEY = "test-key"
     provider_llm = get_insight_provider()
     assert isinstance(provider_llm, LLMInsightProvider)
+    assert provider_llm.provider == "gemini"
+
+    # 3. Local Ollama provider should activate without API key
+    provider_ollama = get_insight_provider(provider="ollama", model="llama3.2")
+    assert isinstance(provider_ollama, LLMInsightProvider)
+    assert provider_ollama.provider == "ollama"
+    assert provider_ollama.model == "llama3.2"
+
+    # 4. Custom OpenAI-compatible provider with base_url
+    provider_custom = get_insight_provider(provider="custom", base_url="https://api.groq.com/openai/v1", api_key="test-key")
+    assert isinstance(provider_custom, LLMInsightProvider)
+    assert provider_custom.base_url == "https://api.groq.com/openai/v1"
 
     # Reset
     settings.GEMINI_API_KEY = ""

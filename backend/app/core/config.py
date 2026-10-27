@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
 
     # ── AI Providers (Optional LLM Integration) ──────────────────────────
+    AI_PROVIDER: str = "gemini"  # gemini | ollama | openai | custom
+    AI_BASE_URL: str = ""        # e.g. http://localhost:11434/v1 for Ollama
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     AI_MODEL: str = "gemini-2.5-flash"

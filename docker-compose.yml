@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   db:
-    image: postgres:16-alpine
-    container_name: detectiveai-db
+    image: postgres:17-alpine
+    container_name: detective_db
+    restart: always
     environment:
-      POSTGRES_DB: detectiveai
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: detectiveai
     ports:
       - "5432:5432"
     volumes:
@@ -19,39 +19,44 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis (optional: enable with --profile queue for future task workers)
-  redis:
-    image: redis:7-alpine
-    container_name: detectiveai-redis
-    profiles:
-      - queue
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisdata:/data
-
-  # FastAPI Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: detectiveai-backend
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/detectiveai
-      SECRET_KEY: dev-secret-key-change-in-production-at-least-32-chars
-      CORS_ORIGINS: '["http://localhost:3000"]'
-      UPLOAD_DIR: /app/uploads
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-      - uploads:/app/uploads
+    container_name: detective_backend
+    restart: always
     depends_on:
       db:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgrespassword@db:5432/detectiveai
+      SECRET_KEY: local-detective-ai-secret-key-32charsmin!
+      ENVIRONMENT: development
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      AI_PROVIDER: ollama
+      AI_BASE_URL: http://host.docker.internal:11434/v1
+      AI_MODEL: llama3.2
+      UPLOAD_DIR: ./uploads
+      MAX_UPLOAD_SIZE: 104857600  # 100 MB for local execution
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: detective_frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    ports:
+      - "3000:3000"
 
 volumes:
   pgdata:
-  redisdata:
-  uploads:
