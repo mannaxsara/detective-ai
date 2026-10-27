@@ -497,12 +497,23 @@ class LLMInsightProvider(InsightProvider):
                 self.gemini_key = ""
                 self.base_url = base_url or "https://openrouter.ai/api/v1"
                 self.model = model or "meta-llama/llama-3.3-70b-instruct"
+            elif key_str.startswith("sk-ant-"):
+                self.provider = "anthropic"
+                self.openai_key = key_str
+                self.gemini_key = ""
+                self.base_url = "https://api.anthropic.com/v1"
+                self.model = model or "claude-3-7-sonnet-20250219"
             elif key_str.startswith("sk-"):
                 self.provider = "openai"
                 self.openai_key = key_str
                 self.gemini_key = ""
-                self.base_url = base_url or ""
-                self.model = model or getattr(settings, "AI_MODEL", None) or "gpt-4o-mini"
+                # Auto-route DeepSeek model if specified
+                if model and "deepseek" in model:
+                    self.base_url = base_url or "https://api.deepseek.com/v1"
+                    self.model = model
+                else:
+                    self.base_url = base_url or ""
+                    self.model = model or getattr(settings, "AI_MODEL", None) or "gpt-4o-mini"
             elif not key_str and (base_url or getattr(settings, "AI_PROVIDER", "") == "ollama"):
                 self.provider = "ollama"
                 self.base_url = base_url or getattr(settings, "AI_BASE_URL", "") or "http://localhost:11434/v1"
@@ -577,16 +588,49 @@ class LLMInsightProvider(InsightProvider):
                         elif resp.status_code != 404:
                             break
 
-            # 3. Standard OpenAI
-            elif self.openai_key:
-                url = "https://api.openai.com/v1/chat/completions"
-                messages = []
+            # 3. Anthropic Claude native Messages API
+            elif self.provider == "anthropic" or (self.openai_key and self.openai_key.startswith("sk-ant-")):
+                url = "https://api.anthropic.com/v1/messages"
+                headers = {
+                    "x-api-key": self.openai_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                }
+                body: dict[str, Any] = {
+                    "model": self.model or "claude-3-7-sonnet-20250219",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 2048,
+                }
                 if system_prompt:
-                    messages.append({"role": "system", "content": system_prompt})
-                messages.append({"role": "user", "content": prompt})
+                    body["system"] = system_prompt
+                async with httpx.AsyncClient(timeout=45.0) as client:
+                    resp = await client.post(url, json=body, headers=headers)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        content = data.get("content", [])
+                        if content and content[0].get("type") == "text":
+                            return str(content[0].get("text", "")).strip()
+
+            # 4. Standard OpenAI & Reasoning Models (gpt-4o, o3-mini, o1)
+            elif self.openai_key:
+                url = f"{self.base_url.rstrip('/')}/chat/completions" if self.base_url else "https://api.openai.com/v1/chat/completions"
+                model_name = self.model or "gpt-4o-mini"
+                is_reasoning_model = model_name.startswith("o1") or model_name.startswith("o3")
+
+                messages = []
+                if is_reasoning_model:
+                    # Reasoning models don't support system instructions or temperature
+                    messages.append({"role": "user", "content": f"{system_prompt}\n\n{prompt}" if system_prompt else prompt})
+                    req_body: dict[str, Any] = {"model": model_name, "messages": messages}
+                else:
+                    if system_prompt:
+                        messages.append({"role": "system", "content": system_prompt})
+                    messages.append({"role": "user", "content": prompt})
+                    req_body = {"model": model_name, "messages": messages, "temperature": 0.2}
+
                 headers = {"Authorization": f"Bearer {self.openai_key}"}
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    resp = await client.post(url, json={"model": self.model or "gpt-4o-mini", "messages": messages}, headers=headers)
+                async with httpx.AsyncClient(timeout=45.0) as client:
+                    resp = await client.post(url, json=req_body, headers=headers)
                     if resp.status_code == 200:
                         data = resp.json()
                         choices = data.get("choices", [])

@@ -89,6 +89,11 @@ def test_insight_provider_factory():
     assert isinstance(p_openai_auto, LLMInsightProvider)
     assert p_openai_auto.provider == "openai"
 
+    p_ant_auto = get_insight_provider(api_key="sk-ant-api03-TestAnthropicKey")
+    assert isinstance(p_ant_auto, LLMInsightProvider)
+    assert p_ant_auto.provider == "anthropic"
+    assert "claude" in p_ant_auto.model
+
     # Reset
     settings.GEMINI_API_KEY = ""
 
