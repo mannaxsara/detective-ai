@@ -24,6 +24,7 @@ const QUICK_PROMPTS = [
 ];
 
 export default function ChatTab({ datasetId }: ChatTabProps) {
+  const [activeEngine, setActiveEngine] = useState<string>("Active Engine");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "bot",
@@ -33,6 +34,21 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
   ]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const provider = localStorage.getItem("detective_ai_provider") || "gemini";
+      const model = localStorage.getItem("detective_ai_model") || "";
+      const customKey = localStorage.getItem("detective_custom_gemini_key") || localStorage.getItem("detective_ai_key");
+      if (provider === "ollama") {
+        setActiveEngine(`Ollama (${model || "local"})`);
+      } else if (customKey || provider !== "gemini") {
+        setActiveEngine(`${provider.toUpperCase()} ${model ? `(${model})` : ""}`);
+      } else {
+        setActiveEngine("Gemini (Cloud)");
+      }
+    }
+  }, []);
 
   const mutation = useMutation({
     mutationFn: (message: string) => analysisAPI.chat(datasetId, message),
@@ -179,13 +195,19 @@ export default function ChatTab({ datasetId }: ChatTabProps) {
               </div>
             </div>
 
-            <button
-              onClick={clearChat}
-              className="p-1.5 rounded-[6px] border border-black bg-white dark:bg-[#1c1d18] text-black dark:text-white hover:bg-[#bc3e3e] hover:text-white transition-colors cursor-pointer"
-              title="Clear Chat Logs"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2.5">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] text-black dark:text-white shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#31e992] animate-pulse" />
+                {activeEngine}
+              </span>
+              <button
+                onClick={clearChat}
+                className="p-1.5 rounded-[6px] border border-black bg-white dark:bg-[#1c1d18] text-black dark:text-white hover:bg-[#bc3e3e] hover:text-white transition-colors cursor-pointer"
+                title="Clear Chat Logs"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages view */}
