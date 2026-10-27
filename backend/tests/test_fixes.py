@@ -273,6 +273,28 @@ def test_eda_empty_dataframe_guard():
     assert charts == []
 
 
+@pytest.mark.asyncio
+async def test_rate_limit_ip():
+    from unittest.mock import Mock
+    from fastapi import HTTPException
+    from app.core.dependencies import rate_limit_ip
+
+    limiter = rate_limit_ip(max_requests=2, window_seconds=10)
+    mock_req = Mock()
+    mock_req.headers = {"x-forwarded-for": "203.0.113.195"}
+    mock_req.client = None
+
+    # First two requests should pass
+    await limiter(mock_req)
+    await limiter(mock_req)
+
+    # Third request must raise HTTP 429
+    with pytest.raises(HTTPException) as exc_info:
+        await limiter(mock_req)
+    assert exc_info.value.status_code == 429
+
+
+
 
 
 

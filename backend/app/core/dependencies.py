@@ -2,10 +2,12 @@
 FastAPI dependencies for authentication and authorization.
 """
 
+import time
+from collections import defaultdict
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,3 +64,28 @@ async def get_current_active_user(
             detail="User account is deactivated",
         )
     return current_user
+
+
+# In-memory sliding window IP attempt tracking
+_ip_request_history: dict[str, list[float]] = defaultdict(list)
+
+
+def rate_limit_ip(max_requests: int = 10, window_seconds: int = 60):
+    """Zero-dependency in-memory sliding-window IP rate limiter."""
+    async def dependency(request: Request):
+        forwarded = request.headers.get("x-forwarded-for")
+        ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+        
+        now = time.time()
+        timestamps = _ip_request_history[ip]
+        # Prune older entries outside current window
+        _ip_request_history[ip] = [t for t in timestamps if now - t < window_seconds]
+        
+        if len(_ip_request_history[ip]) >= max_requests:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Rate limit exceeded. Maximum {max_requests} attempts per {window_seconds} seconds. Please wait before retrying.",
+            )
+        _ip_request_history[ip].append(now)
+    return dependency
+

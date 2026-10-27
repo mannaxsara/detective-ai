@@ -8,7 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, rate_limit_ip
 from app.database.session import get_db
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (
@@ -24,7 +24,7 @@ from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", response_model=TokenResponse, dependencies=[Depends(rate_limit_ip(max_requests=10, window_seconds=60))])
 async def register(
     request: RegisterRequest,
     db: AsyncSession = Depends(get_db),
@@ -32,7 +32,7 @@ async def register(
     auth_service = AuthService(db)
     return await auth_service.register(request)
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, dependencies=[Depends(rate_limit_ip(max_requests=10, window_seconds=60))])
 async def login(
     request: LoginRequest,
     db: AsyncSession = Depends(get_db),
@@ -56,7 +56,7 @@ async def refresh(
     auth_service = AuthService(db)
     return await auth_service.refresh_token(refresh_token)
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(rate_limit_ip(max_requests=5, window_seconds=60))])
 async def forgot_password(
     request: ForgotPasswordRequest,
     db: AsyncSession = Depends(get_db),
