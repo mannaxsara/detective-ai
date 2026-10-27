@@ -369,6 +369,27 @@ def test_secure_share_tokens():
     assert decode_share_token(None) is None
 
 
+def test_formula_injection_cleaning():
+    from app.services.cleaning_service import _detect_formula_injection, _apply_single_fix_to_df
+
+    df = pl.DataFrame({
+        "notes": ["=cmd|' /C calc'!A0", "+12345", "@sum(A1:A5)", "normal text"],
+        "id": [1, 2, 3, 4]
+    })
+
+    suggestions = _detect_formula_injection(df)
+    assert len(suggestions) == 1
+    assert suggestions[0].issue_type == "formula_injection"
+    assert suggestions[0].affected_count == 3
+
+    cleaned_df, action = _apply_single_fix_to_df(df, suggestions[0])
+    cleaned_notes = cleaned_df["notes"].to_list()
+    assert cleaned_notes[0] == "'=cmd|' /C calc'!A0"
+    assert cleaned_notes[1] == "'+12345"
+    assert cleaned_notes[2] == "'@sum(A1:A5)"
+    assert cleaned_notes[3] == "normal text"
+
+
 
 
 

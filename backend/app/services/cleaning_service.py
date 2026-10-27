@@ -287,6 +287,32 @@ def _detect_invalid_dates(df: pl.DataFrame) -> list[CleaningSuggestion]:
     return suggestions
 
 
+def _detect_formula_injection(df: pl.DataFrame) -> list[CleaningSuggestion]:
+    """Detect spreadsheet formula injection risks (=, @, +) in text columns."""
+    suggestions: list[CleaningSuggestion] = []
+    for col in df.columns:
+        if df[col].dtype == pl.Utf8:
+            risky_count = df.filter(
+                pl.col(col).str.starts_with("=")
+                | pl.col(col).str.starts_with("@")
+                | pl.col(col).str.starts_with("+")
+            ).height
+            if risky_count > 0:
+                suggestions.append(
+                    CleaningSuggestion(
+                        issue_type="formula_injection",
+                        severity="warning",
+                        column=col,
+                        description=f"Column '{col}' contains {risky_count:,} values starting with formula execution characters (=, @, +).",
+                        suggested_fix="Neutralize formulas with prepended quote (')",
+                        affected_count=risky_count,
+                        affected_percentage=_pct(risky_count, df.height),
+                        fix_id=_fix_id("formula", col),
+                    )
+                )
+    return suggestions
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 
@@ -301,6 +327,7 @@ def _detect_all(df: pl.DataFrame) -> list[CleaningSuggestion]:
     suggestions.extend(_detect_whitespace(df))
     suggestions.extend(_detect_negative_quantities(df))
     suggestions.extend(_detect_invalid_dates(df))
+    suggestions.extend(_detect_formula_injection(df))
     return suggestions
 
 
@@ -391,6 +418,19 @@ def _apply_single_fix_to_df(
         df = df.with_columns(pl.col(col).str.to_datetime(strict=False))
         df = df.filter(pl.col(col).is_not_null())
         action = f"Parsed valid dates in '{col}' and dropped unparseable rows"
+
+    elif suggestion.issue_type == "formula_injection" and col:
+        df = df.with_columns(
+            pl.when(
+                pl.col(col).str.starts_with("=")
+                | pl.col(col).str.starts_with("@")
+                | pl.col(col).str.starts_with("+")
+            )
+            .then(pl.concat_str([pl.lit("'"), pl.col(col)]))
+            .otherwise(pl.col(col))
+            .alias(col)
+        )
+        action = f"Neutralized spreadsheet formula injection characters in '{col}'"
 
     else:
         action = "No action taken for this fix type"
