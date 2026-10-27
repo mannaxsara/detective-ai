@@ -23,6 +23,47 @@ export default function SettingsPage() {
   const [aiBaseUrl, setAiBaseUrl] = useState("");
   const [aiModel, setAiModel] = useState("");
 
+  const handleKeyChange = (val: string) => {
+    const trimmed = val.trim();
+    setCustomKey(trimmed);
+
+    // Auto-detect provider, model, and endpoint from key structure
+    if (trimmed.startsWith("AIzaSy")) {
+      setAiProvider("gemini");
+      setAiModel("gemini-2.5-flash");
+      setAiBaseUrl("");
+    } else if (trimmed.startsWith("gsk_")) {
+      setAiProvider("openai");
+      setAiBaseUrl("https://api.groq.com/openai/v1");
+      setAiModel("llama-3.3-70b-versatile");
+    } else if (trimmed.startsWith("sk-or-")) {
+      setAiProvider("openai");
+      setAiBaseUrl("https://openrouter.ai/api/v1");
+      setAiModel("meta-llama/llama-3.3-70b-instruct");
+    } else if (trimmed.startsWith("sk-ant-")) {
+      setAiProvider("openai");
+      setAiBaseUrl("https://api.anthropic.com/v1");
+      setAiModel("claude-3-5-sonnet-20241022");
+    } else if (trimmed.startsWith("sk-")) {
+      setAiProvider("openai");
+      setAiBaseUrl("");
+      setAiModel("gpt-4o-mini");
+    }
+  };
+
+  const detectedBadge = (() => {
+    if (!customKey) {
+      if (aiProvider === "ollama") return { text: "LOCAL OLLAMA (OFFLINE)", color: "text-[#31e992] bg-[#31e992]/20 border-[#31e992]/40" };
+      return { text: "STANDARD RULE ENGINE", color: "text-black/60 dark:text-white/60 bg-black/10 dark:bg-white/10 border-black/15 dark:border-white/15" };
+    }
+    if (customKey.startsWith("AIzaSy")) return { text: "AUTO-DETECTED: GOOGLE GEMINI", color: "text-[#edfe5e] bg-[#edfe5e]/15 border-[#edfe5e]/40" };
+    if (customKey.startsWith("gsk_")) return { text: "AUTO-DETECTED: GROQ HIGH-SPEED", color: "text-[#31e992] bg-[#31e992]/20 border-[#31e992]/40" };
+    if (customKey.startsWith("sk-or-")) return { text: "AUTO-DETECTED: OPENROUTER", color: "text-[#31e992] bg-[#31e992]/20 border-[#31e992]/40" };
+    if (customKey.startsWith("sk-ant-")) return { text: "AUTO-DETECTED: ANTHROPIC CLAUDE", color: "text-[#31e992] bg-[#31e992]/20 border-[#31e992]/40" };
+    if (customKey.startsWith("sk-")) return { text: "AUTO-DETECTED: OPENAI", color: "text-[#31e992] bg-[#31e992]/20 border-[#31e992]/40" };
+    return { text: "CUSTOM API KEY", color: "text-[#31e992] bg-[#31e992]/20 border-[#31e992]/40" };
+  })();
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setCustomKey(localStorage.getItem("detective_custom_gemini_key") || localStorage.getItem("detective_ai_key") || "");
@@ -249,15 +290,9 @@ export default function SettingsPage() {
                       <Key className="w-4 h-4 text-[#edfe5e]" />
                       <span>AI Engine & Model Configuration</span>
                     </div>
-                    {customKey || aiProvider === "ollama" ? (
-                      <span className="bg-[#31e992]/20 text-[#31e992] border border-[#31e992]/40 px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono">
-                        {aiProvider === "ollama" ? "LOCAL ACTIVE" : "KEY CONNECTED"}
-                      </span>
-                    ) : (
-                      <span className="bg-black/10 dark:bg-white/10 text-black/60 dark:text-white/60 border border-black/15 dark:border-white/15 px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono">
-                        STANDARD
-                      </span>
-                    )}
+                    <span className={`border px-2.5 py-0.5 rounded-full font-bold text-[10px] font-mono ${detectedBadge.color}`}>
+                      {detectedBadge.text}
+                    </span>
                   </div>
                   <p className="text-[11px] font-sans text-black/70 dark:text-white/70 leading-relaxed">
                     Connect your personal Google Gemini API key, standard OpenAI key, or run completely offline with <strong>Local Ollama / LM Studio</strong> on your PC for 100% private data forensics.
@@ -348,13 +383,13 @@ export default function SettingsPage() {
                     <input
                       type="password"
                       value={customKey}
-                      onChange={(e) => setCustomKey(e.target.value)}
+                      onChange={(e) => handleKeyChange(e.target.value)}
                       placeholder={
                         aiProvider === "ollama"
                           ? "API Key optional for local Ollama"
                           : aiProvider === "gemini"
-                          ? "Google Gemini Key (AIzaSy...)"
-                          : "API Key (sk-...)"
+                          ? "Paste key to auto-detect (AIzaSy... / gsk_... / sk-...)"
+                          : "Paste API key (sk-... / gsk_...)"
                       }
                       className="h-10 flex-1 rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] px-3 text-xs font-mono text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#edfe5e]"
                     />

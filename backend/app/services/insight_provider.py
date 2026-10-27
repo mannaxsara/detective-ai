@@ -474,11 +474,53 @@ class LLMInsightProvider(InsightProvider):
     ) -> None:
         self.fallback = RuleBasedInsightProvider()
         from app.core.config import settings
-        self.provider = (provider or getattr(settings, "AI_PROVIDER", "gemini")).lower()
-        self.gemini_key = api_key if self.provider == "gemini" else (getattr(settings, "GEMINI_API_KEY", "") or api_key)
-        self.openai_key = api_key if self.provider in ("openai", "custom") else (getattr(settings, "OPENAI_API_KEY", "") or api_key or "")
-        self.base_url = base_url or getattr(settings, "AI_BASE_URL", "")
-        self.model = model or getattr(settings, "AI_MODEL", None) or ("llama3.2" if self.provider == "ollama" else "gemini-2.5-flash")
+
+        key_str = (api_key or "").strip()
+
+        # Automatic key type detection if provider is not explicitly pinned
+        if not provider or provider == "auto":
+            if key_str.startswith("AIzaSy"):
+                self.provider = "gemini"
+                self.gemini_key = key_str
+                self.openai_key = ""
+                self.model = model or getattr(settings, "AI_MODEL", None) or "gemini-2.5-flash"
+                self.base_url = ""
+            elif key_str.startswith("gsk_"):
+                self.provider = "custom"
+                self.openai_key = key_str
+                self.gemini_key = ""
+                self.base_url = base_url or "https://api.groq.com/openai/v1"
+                self.model = model or "llama-3.3-70b-versatile"
+            elif key_str.startswith("sk-or-"):
+                self.provider = "custom"
+                self.openai_key = key_str
+                self.gemini_key = ""
+                self.base_url = base_url or "https://openrouter.ai/api/v1"
+                self.model = model or "meta-llama/llama-3.3-70b-instruct"
+            elif key_str.startswith("sk-"):
+                self.provider = "openai"
+                self.openai_key = key_str
+                self.gemini_key = ""
+                self.base_url = base_url or ""
+                self.model = model or getattr(settings, "AI_MODEL", None) or "gpt-4o-mini"
+            elif not key_str and (base_url or getattr(settings, "AI_PROVIDER", "") == "ollama"):
+                self.provider = "ollama"
+                self.base_url = base_url or getattr(settings, "AI_BASE_URL", "") or "http://localhost:11434/v1"
+                self.model = model or "llama3.2"
+                self.gemini_key = ""
+                self.openai_key = ""
+            else:
+                self.provider = getattr(settings, "AI_PROVIDER", "gemini").lower()
+                self.gemini_key = getattr(settings, "GEMINI_API_KEY", "") or key_str
+                self.openai_key = getattr(settings, "OPENAI_API_KEY", "") or key_str
+                self.base_url = base_url or getattr(settings, "AI_BASE_URL", "")
+                self.model = model or getattr(settings, "AI_MODEL", None) or "gemini-2.5-flash"
+        else:
+            self.provider = provider.lower()
+            self.gemini_key = key_str if self.provider == "gemini" else (getattr(settings, "GEMINI_API_KEY", "") or key_str)
+            self.openai_key = key_str if self.provider in ("openai", "custom") else (getattr(settings, "OPENAI_API_KEY", "") or key_str)
+            self.base_url = base_url or getattr(settings, "AI_BASE_URL", "")
+            self.model = model or getattr(settings, "AI_MODEL", None) or ("llama3.2" if self.provider == "ollama" else "gemini-2.5-flash")
 
     async def _call_llm(self, prompt: str, system_prompt: str = "") -> str | None:
         import httpx
@@ -604,13 +646,13 @@ def get_insight_provider(
     base_url: str | None = None,
     model: str | None = None,
 ) -> InsightProvider:
-    """Factory: returns LLMInsightProvider if API key or local provider (Ollama) is configured, else RuleBasedInsightProvider."""
+    """Factory: returns LLMInsightProvider with automatic key detection or local Ollama support, else RuleBasedInsightProvider."""
     from app.core.config import settings
-    active_provider = (provider or getattr(settings, "AI_PROVIDER", "gemini")).lower()
-    active_key = api_key or getattr(settings, "GEMINI_API_KEY", "") or getattr(settings, "OPENAI_API_KEY", "")
+    active_key = (api_key or getattr(settings, "GEMINI_API_KEY", "") or getattr(settings, "OPENAI_API_KEY", "")).strip()
+    active_provider = (provider or ("auto" if api_key else getattr(settings, "AI_PROVIDER", "auto"))).lower()
     
-    # If using local ollama or an explicit base_url, key is not strictly required
-    if active_provider == "ollama" or base_url or active_key:
+    # If using local ollama or an explicit base_url or key is provided
+    if active_key or active_provider == "ollama" or base_url:
         return LLMInsightProvider(
             api_key=active_key,
             provider=active_provider,

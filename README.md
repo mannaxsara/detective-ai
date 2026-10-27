@@ -129,6 +129,18 @@ detective-ai/
 
 ## 🚀 Quickstart Guide (Local Development — Full Potential)
 
+### Option A: One-Command Docker Setup (Recommended)
+```bash
+docker compose up --build
+```
+- Web App: `http://localhost:3000`
+- API Docs: `http://localhost:8000/docs`
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for full developer onboarding.
+
+---
+
+### Option B: Manual Local Setup
+
 ### Prerequisites
 - Node.js 18+ & npm
 - Python 3.11+
