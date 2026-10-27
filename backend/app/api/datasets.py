@@ -192,12 +192,13 @@ async def get_dataset_preview(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load preview: {str(e)}")
 
-@router.get("/{dataset_id}/download")
+@router.get("/{dataset_id}/download", response_model=None)
 async def download_dataset_file(
     dataset_id: str,
+    format: str | None = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> FileResponse:
+) -> Response | FileResponse:
     from app.core.slug import decode_id
     resolved_id = decode_id(dataset_id)
     if resolved_id is None:
@@ -213,21 +214,55 @@ async def download_dataset_file(
 
     if not os.path.exists(dataset.file_path):
         raise HTTPException(status_code=404, detail="Dataset file not found on disk")
-        
-    # Get media type based on file type
-    media_type = "application/octet-stream"
-    if dataset.file_type == "csv":
-        media_type = "text/csv"
-    elif dataset.file_type in ("xlsx", "xls"):
-        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    elif dataset.file_type == "json":
-        media_type = "application/json"
-    elif dataset.file_type == "parquet":
+
+    requested_fmt = (format or "").lower().strip()
+    original_fmt = (dataset.file_type or "csv").lower()
+
+    # If format is omitted or matches native file, stream directly
+    if not requested_fmt or requested_fmt == original_fmt:
         media_type = "application/octet-stream"
-        
-    return FileResponse(
-        path=dataset.file_path,
+        if original_fmt == "csv":
+            media_type = "text/csv"
+        elif original_fmt in ("xlsx", "xls"):
+            media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        elif original_fmt == "json":
+            media_type = "application/json"
+        elif original_fmt == "parquet":
+            media_type = "application/octet-stream"
+            
+        return FileResponse(
+            path=dataset.file_path,
+            media_type=media_type,
+            filename=dataset.original_filename or os.path.basename(dataset.file_path),
+        )
+
+    # Conversion on demand using in-memory Polars streams
+    from app.services.profiling_service import _load_dataframe
+    from pathlib import Path
+    import io
+
+    df = _load_dataframe(dataset.file_path, dataset.file_type)
+    buf = io.BytesIO()
+    if requested_fmt == "csv":
+        df.write_csv(buf)
+        media_type = "text/csv"
+    elif requested_fmt == "json":
+        df.write_json(buf)
+        media_type = "application/json"
+    elif requested_fmt == "parquet":
+        df.write_parquet(buf)
+        media_type = "application/octet-stream"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported export format '{format}'. Allowed: csv, json, parquet",
+        )
+
+    buf.seek(0)
+    base_name = Path(dataset.original_filename or dataset.name).stem
+    return Response(
+        content=buf.getvalue(),
         media_type=media_type,
-        filename=dataset.original_filename or os.path.basename(dataset.file_path),
+        headers={"Content-Disposition": f'attachment; filename="{base_name}_cleaned.{requested_fmt}"'},
     )
 

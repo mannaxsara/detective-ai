@@ -201,8 +201,9 @@ export const datasetsApi = {
     return data;
   },
 
-  download: async (id: string | number): Promise<Blob> => {
+  download: async (id: string | number, format?: string): Promise<Blob> => {
     const { data } = await api.get(`/datasets/${id}/download`, {
+      params: format ? { format } : undefined,
       responseType: 'blob',
     });
     return data;

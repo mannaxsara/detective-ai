@@ -80,6 +80,7 @@ export default function AnalysisPage() {
   const id = params.id as string;
   const { activeTab, setActiveTab } = useAnalysisStore();
   const [downloading, setDownloading] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"csv" | "json" | "parquet">("csv");
 
   // Automatically determine category from active tab
   const activeGroup = TAB_GROUPS.find((g) => g.tabs.some((t) => t.value === activeTab)) || TAB_GROUPS[0];
@@ -109,23 +110,23 @@ export default function AnalysisPage() {
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (targetFormat?: string) => {
     if (!dataset) return;
     setDownloading(true);
+    const ext = targetFormat || exportFormat || (dataset.file_type ? dataset.file_type.toLowerCase() : "csv");
     try {
-      const blob = await datasetsAPI.download(dataset.id);
+      const blob = await datasetsAPI.download(dataset.id, ext);
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement("a");
       link.href = url;
-      const ext = dataset.file_type ? dataset.file_type.toLowerCase() : "csv";
       const baseName = dataset.name ? dataset.name.replace(/\.[^/.]+$/, "") : "dataset";
       link.setAttribute("download", `${baseName}_cleaned.${ext}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success("Cleaned dataset downloaded successfully.");
+      toast.success(`Cleaned dataset (${ext.toUpperCase()}) downloaded successfully.`);
     } catch (err) {
-      toast.error("Failed to download dataset.");
+      toast.error(`Failed to download dataset as ${ext.toUpperCase()}.`);
     } finally {
       setDownloading(false);
     }
@@ -209,18 +210,27 @@ export default function AnalysisPage() {
               <Share2 className="w-4 h-4" />
             </button>
 
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="btn-ink-accent inline-flex items-center gap-2 py-2.5 px-5 font-mono text-xs uppercase tracking-wider font-bold cursor-pointer disabled:opacity-50"
-            >
-              {downloading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Download className="w-3.5 h-3.5" />
-              )}
-              Export Cleaned Data
-            </button>
+            <div className="flex items-center rounded-xl border border-black/20 dark:border-white/20 bg-white dark:bg-[#181914] overflow-hidden shadow-xs shrink-0">
+              <select
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value as any)}
+                aria-label="Export format"
+                className="h-10 pl-2.5 pr-1 py-1 text-[11px] font-mono font-bold uppercase bg-transparent text-black dark:text-white border-r border-black/15 dark:border-white/15 focus:outline-none cursor-pointer"
+              >
+                <option value="csv" className="text-black dark:text-white bg-white dark:bg-[#181914]">CSV</option>
+                <option value="json" className="text-black dark:text-white bg-white dark:bg-[#181914]">JSON</option>
+                <option value="parquet" className="text-black dark:text-white bg-white dark:bg-[#181914]">PARQUET</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => handleDownload(exportFormat)}
+                disabled={downloading}
+                className="btn-ink-accent h-10 px-4 font-mono text-xs uppercase tracking-wider font-bold cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                Export
+              </button>
+            </div>
           </div>
         </div>
       </div>

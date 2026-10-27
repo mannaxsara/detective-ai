@@ -390,6 +390,27 @@ def test_formula_injection_cleaning():
     assert cleaned_notes[3] == "normal text"
 
 
+def test_dataset_multi_format_conversion(tmp_path):
+    from app.services.profiling_service import _load_dataframe
+    import io
+
+    csv_file = tmp_path / "test.csv"
+    csv_file.write_text("id,val\n1,100\n2,200\n", encoding="utf-8")
+
+    df = _load_dataframe(str(csv_file), "csv")
+    assert df.height == 2
+
+    # JSON export test
+    json_buf = io.BytesIO()
+    df.write_json(json_buf)
+    assert b"100" in json_buf.getvalue()
+
+    # Parquet export test
+    parquet_buf = io.BytesIO()
+    df.write_parquet(parquet_buf)
+    assert len(parquet_buf.getvalue()) > 0
+
+
 
 
 
