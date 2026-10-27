@@ -71,3 +71,22 @@ async def ensure_dataset_file(dataset: object) -> bool:
         return True
     filename = f"{dataset.user_id}/{os.path.basename(dataset.file_path)}"
     return await ensure_file_local(dataset.file_path, filename)
+
+
+async def delete_file_backup(remote_filename: str) -> bool:
+    """Delete a backup file from Supabase Storage."""
+    if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_KEY):
+        return False
+
+    bucket = settings.SUPABASE_STORAGE_BUCKET
+    url = f"{settings.SUPABASE_URL.rstrip('/')}/storage/v1/object/{bucket}/{remote_filename}"
+    headers = {"Authorization": f"Bearer {settings.SUPABASE_SERVICE_KEY}"}
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            res = await client.delete(url, headers=headers)
+            return res.status_code in (200, 204)
+    except Exception:
+        pass
+    return False
+

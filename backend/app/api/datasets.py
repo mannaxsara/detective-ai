@@ -31,6 +31,14 @@ async def upload_dataset(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DatasetResponse:
+    repo = DatasetRepository(db)
+    user_dataset_count = await repo.count_by_user_id(current_user.id)
+    if user_dataset_count >= 25:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Storage quota reached (maximum 25 case files on free tier). Please delete older cases from your archive to upload new evidence.",
+        )
+
     upload_service = UploadService(db)
     dataset = await upload_service.save_file(file, current_user.id)
     return dataset
@@ -139,6 +147,11 @@ async def delete_dataset(
             os.remove(dataset.file_path)
         except Exception:
             pass
+
+    # Remove backup from Supabase Storage if configured
+    import asyncio
+    from app.services.storage_service import delete_file_backup
+    asyncio.create_task(delete_file_backup(f"{dataset.user_id}/{os.path.basename(dataset.file_path)}"))
 
     await repo.delete_by_id(resolved_id)
 

@@ -99,7 +99,8 @@ export default function AnalysisPage() {
 
   const handleShare = () => {
     if (!dataset) return;
-    const shareUrl = `${window.location.origin}/share/${dataset.id}`;
+    const shareKey = dataset.slug || dataset.id;
+    const shareUrl = `${window.location.origin}/share/${shareKey}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl);
       toast.success("Read-only dossier link copied to clipboard!");
