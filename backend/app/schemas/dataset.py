@@ -44,6 +44,7 @@ class DatasetResponse(BaseModel):
 
     id: int
     slug: str | None = None
+    share_token: str | None = None
     name: str
     original_filename: str
     file_type: str

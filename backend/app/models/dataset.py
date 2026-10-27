@@ -49,5 +49,10 @@ class Dataset(Base):
         from app.core.slug import encode_id
         return encode_id(self.id)
 
+    @property
+    def share_token(self) -> str:
+        from app.core.slug import encode_share_token
+        return encode_share_token(self.id)
+
     def __repr__(self) -> str:
         return f"<Dataset id={self.id} name={self.name!r}>"

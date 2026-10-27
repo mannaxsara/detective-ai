@@ -154,11 +154,11 @@ async def get_public_shared_analysis(
     share_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Public read-only endpoint returning sanitized findings for stakeholder sharing."""
-    from app.core.slug import decode_id
-    resolved_id = decode_id(share_id)
+    """Public read-only endpoint returning sanitized findings for stakeholder sharing with cryptographic HMAC signature."""
+    from app.core.slug import decode_share_token
+    resolved_id = decode_share_token(share_id)
     if resolved_id is None:
-        raise HTTPException(status_code=404, detail="Investigation case not found")
+        raise HTTPException(status_code=404, detail="Investigation case not found or invalid share token")
 
     repo = AnalysisRepository(db)
     analysis = await repo.get_by_id_or_dataset_id(resolved_id)

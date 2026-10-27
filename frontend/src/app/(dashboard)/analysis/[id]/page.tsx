@@ -99,7 +99,7 @@ export default function AnalysisPage() {
 
   const handleShare = () => {
     if (!dataset) return;
-    const shareKey = dataset.slug || dataset.id;
+    const shareKey = dataset.share_token || dataset.slug || dataset.id;
     const shareUrl = `${window.location.origin}/share/${shareKey}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl);

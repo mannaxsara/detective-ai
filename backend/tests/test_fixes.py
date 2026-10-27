@@ -351,6 +351,24 @@ async def test_health_check_diagnostics():
     assert res["app"] == "DetectiveAI Backend"
 
 
+def test_secure_share_tokens():
+    from app.core.slug import encode_share_token, decode_share_token
+
+    # Valid token creation & resolution
+    token = encode_share_token(42)
+    assert token.startswith("case_42_")
+    assert decode_share_token(token) == 42
+
+    # Tampered signature should be rejected
+    tampered = "case_42_000000000000"
+    assert decode_share_token(tampered) is None
+
+    # Plain sequential ID guessing should be rejected
+    assert decode_share_token("case_42") is None
+    assert decode_share_token("42") is None
+    assert decode_share_token(None) is None
+
+
 
 
 

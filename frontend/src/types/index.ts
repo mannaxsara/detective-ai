@@ -35,6 +35,7 @@ export interface RegisterCredentials {
 export interface Dataset {
   id: string | number;
   slug?: string;
+  share_token?: string;
   name: string;
   file_name?: string;
   original_filename?: string;

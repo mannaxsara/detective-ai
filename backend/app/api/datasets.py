@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, rate_limit_ip
 from app.database.session import get_db
 from app.models.user import User
 from app.repositories.dataset_repository import DatasetRepository
@@ -30,6 +30,7 @@ async def upload_dataset(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    _rate_limit: None = Depends(rate_limit_ip(max_requests=10, window_seconds=60)),
 ) -> DatasetResponse:
     repo = DatasetRepository(db)
     user_dataset_count = await repo.count_by_user_id(current_user.id)

@@ -54,6 +54,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Enforce standard HTTP security headers on all responses."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
 # Global router registration
 app.include_router(api_router, prefix="/api")
 
@@ -138,11 +147,12 @@ async def health_check():
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Handle unexpected errors globally."""
-    # Log the details (in production, log using a structured logger)
+    """Handle unexpected errors globally without leaking internal credentials."""
     import traceback
     traceback.print_exc()
+    is_dev = os.getenv("ENVIRONMENT", "development") == "development"
+    detail = f"An internal server error occurred: {str(exc)}" if is_dev else "An internal server error occurred. Please retry shortly."
     return JSONResponse(
         status_code=500,
-        content={"detail": f"An internal server error occurred: {str(exc)}"},
+        content={"detail": detail},
     )
