@@ -25,6 +25,7 @@ if not is_sqlite:
         "pool_size": 5,
         "max_overflow": 5,
         "pool_pre_ping": True,
+        "pool_recycle": 300,
     })
     if "asyncpg" in db_url or "supabase" in db_url:
         connect_args["prepared_statement_cache_size"] = 0

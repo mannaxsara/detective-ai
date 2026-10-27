@@ -111,11 +111,30 @@ async def root_health_check():
 
 @app.api_route("/api/health", methods=["GET", "HEAD"])
 async def health_check():
-    """Simple API health endpoint that also triggers JWK caching."""
+    """Diagnostic API health endpoint verifying database, storage, and system settings."""
     import asyncio
     from app.services.auth_service import prewarm_jwk_clients
     asyncio.create_task(asyncio.to_thread(prewarm_jwk_clients))
-    return {"status": "ok", "app": "DetectiveAI Backend", "cors_origins": origins}
+
+    db_status = "ok"
+    try:
+        from sqlalchemy import text
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+
+    from app.services.storage_service import is_storage_configured
+    storage_backed = is_storage_configured()
+
+    return {
+        "status": "ok" if db_status == "ok" else "degraded",
+        "app": "DetectiveAI Backend",
+        "database": db_status,
+        "storage": "supabase_cloud" if storage_backed else "local_disk",
+        "polars_threads": os.environ.get("POLARS_MAX_THREADS", "auto"),
+        "cors_origins": origins,
+    }
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:

@@ -13,6 +13,11 @@ import httpx
 from app.core.config import settings
 
 
+def is_storage_configured() -> bool:
+    """Return whether Supabase storage credentials are configured."""
+    return bool(settings.SUPABASE_URL and settings.SUPABASE_SERVICE_KEY)
+
+
 async def upload_file_backup(local_path: str, remote_filename: str, content_type: str = "application/octet-stream") -> str | None:
     """Upload a file to Supabase Storage if configured."""
     if not (settings.SUPABASE_URL and settings.SUPABASE_SERVICE_KEY):

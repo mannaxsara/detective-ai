@@ -50,6 +50,12 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
             from app.services.cleaning_service import get_cleaning_suggestions
             suggestions = await get_cleaning_suggestions(dataset.file_path, dataset.file_type, df)
 
+            # Anomaly detection & baseline forecast reusing in-memory dataframe (avoids duplicate I/O)
+            from app.services.anomaly_service import detect_anomalies
+            from app.services.forecast_service import generate_forecast
+            anomalies = await asyncio.to_thread(detect_anomalies, dataset.file_path, dataset.file_type, df)
+            forecast = await asyncio.to_thread(generate_forecast, dataset.file_path, dataset.file_type, None, 30, "prophet", df)
+
             # Profile dataset and update dataset details
             from app.services.profiling_service import profile_dataset
             profile = await profile_dataset(dataset.file_path, dataset.file_type, df)
@@ -69,6 +75,8 @@ async def run_async_analysis(dataset_id: int, analysis_id: int):
                 insights=[i.model_dump() for i in insights],
                 charts=[c.model_dump() for c in charts],
                 cleaning_suggestions=[s.model_dump() for s in suggestions],
+                anomalies=[a.model_dump() for a in (anomalies or [])],
+                forecast=forecast.model_dump() if forecast else {},
                 completed_at=datetime.utcnow()
             )
             await session.commit()

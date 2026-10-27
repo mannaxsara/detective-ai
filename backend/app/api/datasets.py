@@ -6,7 +6,7 @@ Handles uploading, listing, profiling, and previewing datasets.
 from __future__ import annotations
 
 import os
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -125,7 +125,7 @@ async def get_dataset_profile(
         columns=[],
     )
 
-@router.delete("/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
 async def delete_dataset(
     dataset_id: str,
     current_user: User = Depends(get_current_user),

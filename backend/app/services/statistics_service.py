@@ -9,7 +9,6 @@ from typing import Any
 import numpy as np
 import polars as pl
 from scipy import stats
-import statsmodels.api as sm
 from app.schemas.analysis import (
     CorrelationMatrix,
     CorrelationResult,
@@ -194,21 +193,24 @@ def run_statistics(file_path: str, file_type: str) -> list[StatisticalTest]:
             if aligned.height >= 10:
                 X = aligned[x_col].to_numpy()
                 y = aligned[y_col].to_numpy()
-                # Add constant
-                X_const = sm.add_constant(X)
-                model = sm.OLS(y, X_const).fit()
-                
-                coef = model.params[1]
-                p_val = model.pvalues[1]
-                r2 = model.rsquared
-
-                coef = _safe_float(coef)
-                p_val = _safe_float(p_val)
-                r2 = _safe_float(r2)
+                try:
+                    import statsmodels.api as sm
+                    X_const = sm.add_constant(X)
+                    model = sm.OLS(y, X_const).fit()
+                    intercept = _safe_float(model.params[0])
+                    coef = _safe_float(model.params[1])
+                    p_val = _safe_float(model.pvalues[1])
+                    r2 = _safe_float(model.rsquared)
+                except Exception:
+                    res = stats.linregress(X, y)
+                    intercept = _safe_float(res.intercept)
+                    coef = _safe_float(res.slope)
+                    p_val = _safe_float(res.pvalue)
+                    r2 = _safe_float(res.rvalue ** 2)
                 
                 significant = p_val < 0.05
                 interpretation = (
-                    f"OLS Regression: Y = {model.params[0]:.2f} + {coef:.2f} * X. "
+                    f"OLS Regression: Y = {intercept:.2f} + {coef:.2f} * X. "
                     f"R² coefficient of determination is {r2:.3f}. "
                     f"The independent variable '{x_col}' is a {'significant' if significant else 'non-significant'} "
                     f"predictor of '{y_col}' (p-value={p_val:.4f})."

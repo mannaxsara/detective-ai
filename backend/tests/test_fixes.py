@@ -340,6 +340,17 @@ async def test_rate_limit_ip():
     assert exc_info.value.status_code == 429
 
 
+@pytest.mark.asyncio
+async def test_health_check_diagnostics():
+    from app.main import health_check
+    res = await health_check()
+    assert "status" in res
+    assert "database" in res
+    assert "storage" in res
+    assert "polars_threads" in res
+    assert res["app"] == "DetectiveAI Backend"
+
+
 
 
 
