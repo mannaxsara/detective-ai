@@ -20,7 +20,11 @@ engine_kwargs = {}
 db_url = settings.DATABASE_URL
 connect_args: dict[str, object] = {}
 
-if not is_sqlite:
+if is_sqlite:
+    connect_args["check_same_thread"] = False
+    connect_args["timeout"] = 30
+    engine_kwargs["connect_args"] = connect_args
+else:
     engine_kwargs.update({
         "pool_size": 5,
         "max_overflow": 5,

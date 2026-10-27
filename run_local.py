@@ -57,6 +57,9 @@ def main():
         os.environ.setdefault("AI_BASE_URL", "http://localhost:11434/v1")
         os.environ.setdefault("AI_MODEL", "llama3.2")
 
+    os.environ.setdefault("MAX_UPLOAD_SIZE", "104857600")
+    print("[*] Local upload capacity: 100 MB per dataset file.")
+
     procs = []
     try:
         print("\n[*] Starting FastAPI backend on http://localhost:8000 ...")

@@ -40,7 +40,7 @@ elif isinstance(_raw_origins, list):
     origins = [str(o).strip() for o in _raw_origins]
 
 # Always ensure these are included
-default_origins = ["http://localhost:3000", "http://localhost:3001", "https://projectdetective.vercel.app"]
+default_origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "https://projectdetective.vercel.app"]
 for o in default_origins:
     if o not in origins:
         origins.append(o)
