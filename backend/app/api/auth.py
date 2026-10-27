@@ -40,7 +40,7 @@ async def login(
     auth_service = AuthService(db)
     return await auth_service.login(request)
 
-@router.post("/google", response_model=TokenResponse)
+@router.post("/google", response_model=TokenResponse, dependencies=[Depends(rate_limit_ip(max_requests=10, window_seconds=60))])
 async def google_login(
     request: GoogleAuthRequest,
     db: AsyncSession = Depends(get_db),

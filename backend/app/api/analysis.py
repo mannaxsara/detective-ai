@@ -11,7 +11,7 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, rate_limit_ip
 from app.database.session import get_db
 from app.models.analysis import Analysis
 from app.models.user import User
@@ -149,7 +149,7 @@ async def trigger_analysis(
 
     return AnalysisResponse.model_validate(analysis)
 
-@router.get("/public/{share_id}")
+@router.get("/public/{share_id}", dependencies=[Depends(rate_limit_ip(max_requests=60, window_seconds=60))])
 async def get_public_shared_analysis(
     share_id: str,
     db: AsyncSession = Depends(get_db),

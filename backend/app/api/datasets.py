@@ -190,7 +190,9 @@ async def get_dataset_preview(
             total_rows=df.height,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load preview: {str(e)}")
+        is_dev = os.getenv("ENVIRONMENT", "development") == "development"
+        detail = f"Failed to load preview: {str(e)}" if is_dev else "Failed to load dataset preview."
+        raise HTTPException(status_code=500, detail=detail)
 
 @router.get("/{dataset_id}/download", response_model=None)
 async def download_dataset_file(
