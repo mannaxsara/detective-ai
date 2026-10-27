@@ -106,15 +106,25 @@ export default function AnalysisPage() {
     }
   }, [dataset, id]);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!dataset) return;
-    const shareKey = dataset.share_token || dataset.slug || dataset.id;
+    const shareKey = dataset.share_token || dataset.slug || `case_${dataset.id}`;
     const shareUrl = `${window.location.origin}/share/${shareKey}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl);
-      toast.success("Read-only dossier link copied to clipboard!");
-    } else {
-      toast.info(`Public Link: ${shareUrl}`);
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Read-only dossier link copied to clipboard!");
+      } else {
+        const input = document.createElement("input");
+        input.value = shareUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+        toast.success("Read-only dossier link copied to clipboard!");
+      }
+    } catch {
+      toast.info(`Dossier URL: ${shareUrl}`);
     }
   };
 
