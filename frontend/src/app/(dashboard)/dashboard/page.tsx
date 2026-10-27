@@ -254,7 +254,7 @@ export default function DashboardPage() {
                       return (
                         <tr
                           key={item.id}
-                          onClick={() => handleOpenCase(item.id)}
+                          onClick={() => handleOpenCase(item.slug || `case_${item.id}`)}
                           className="hover:bg-[#edf0e9]/40 dark:hover:bg-[#262720]/40 transition-colors cursor-pointer group"
                         >
                           <td className="py-3 px-4 font-sans font-bold text-black dark:text-white group-hover:underline truncate max-w-[200px]">
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleOpenCase(item.id); }}
+                                onClick={(e) => { e.stopPropagation(); handleOpenCase(item.slug || `case_${item.id}`); }}
                                 className="px-2.5 py-1 rounded bg-[#edfe5e] text-black border border-black font-bold text-[10px] uppercase hover:opacity-90 cursor-pointer"
                               >
                                 Inspect

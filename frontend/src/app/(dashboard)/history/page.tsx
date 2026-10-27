@@ -33,7 +33,7 @@ export default function HistoryPage() {
 
   const handleReopenAnalysis = (item: any) => {
     setActiveTab("profile");
-    const target = item.slug || item.dataset_id;
+    const target = item.slug || (item.dataset_id ? `case_${item.dataset_id}` : `case_${item.id}`);
     router.push(`/analysis/${target}`);
   };
 

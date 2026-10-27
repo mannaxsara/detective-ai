@@ -115,6 +115,7 @@ class AnalysisResponse(BaseModel):
 
     id: int
     slug: str | None = None
+    share_token: str | None = None
     dataset_id: int
     user_id: int
     analysis_type: str
@@ -138,6 +139,7 @@ class AnalysisListItem(BaseModel):
 
     id: int
     slug: str | None = None
+    share_token: str | None = None
     dataset_id: int
     dataset_name: str | None = None
     analysis_type: str

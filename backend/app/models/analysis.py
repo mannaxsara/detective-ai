@@ -54,5 +54,15 @@ class Analysis(Base):
         back_populates="analysis", cascade="all, delete-orphan", lazy="selectin"
     )
 
+    @property
+    def slug(self) -> str:
+        from app.core.slug import encode_id
+        return encode_id(self.dataset_id or self.id)
+
+    @property
+    def share_token(self) -> str:
+        from app.core.slug import encode_share_token
+        return encode_share_token(self.dataset_id or self.id)
+
     def __repr__(self) -> str:
         return f"<Analysis id={self.id} type={self.analysis_type!r} status={self.status!r}>"

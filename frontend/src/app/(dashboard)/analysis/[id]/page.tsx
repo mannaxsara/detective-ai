@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -97,6 +97,14 @@ export default function AnalysisPage() {
     queryFn: () => datasetsAPI.getById(id),
     enabled: !!id,
   });
+
+  // Canonicalize URL to sequential case slug in address bar (e.g. /analysis/case_1)
+  useEffect(() => {
+    if (dataset && typeof window !== "undefined" && !id.startsWith("case_")) {
+      const canonical = dataset.slug || `case_${dataset.id}`;
+      window.history.replaceState(null, "", `/analysis/${canonical}`);
+    }
+  }, [dataset, id]);
 
   const handleShare = () => {
     if (!dataset) return;
