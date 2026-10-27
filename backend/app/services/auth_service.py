@@ -149,6 +149,7 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
                 signing_key.key,
                 algorithms=["RS256"],
                 options={"verify_aud": False},
+                leeway=60,
             )
             sub = claims.get("sub") or claims.get("user_id")
             email_val = claims.get("email")
@@ -159,8 +160,8 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
                     "name": claims.get("name") or str(email_val).split("@")[0],
                     "picture": claims.get("picture"),
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Firebase token verification notice: {e}")
 
     # 2. Direct Google OAuth ID Token
     if not token_data and ("accounts.google.com" in iss or not iss):
@@ -171,6 +172,7 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
                 signing_key.key,
                 algorithms=["RS256"],
                 options={"verify_aud": False},
+                leeway=60,
             )
             sub = claims.get("sub") or claims.get("user_id")
             email_val = claims.get("email")
@@ -181,19 +183,34 @@ async def google_auth(credential: str, db: AsyncSession) -> TokenResponse:
                     "name": claims.get("name") or str(email_val).split("@")[0],
                     "picture": claims.get("picture"),
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Google token verification notice: {e}")
 
-    # 3. Fallback to Google tokeninfo only if not a Firebase token
+    # 3. Fallback to Google tokeninfo
     if not token_data and "securetoken.google.com" not in iss:
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.get(
                     GOOGLE_TOKEN_INFO_URL,
                     params={"id_token": credential},
                 )
             if resp.status_code == 200:
                 token_data = resp.json()
+        except Exception:
+            pass
+
+    # 4. Fallback for Google OAuth access tokens (Bearer tokens / ya29)
+    if not token_data:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {credential}"},
+                )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("sub") and data.get("email"):
+                    token_data = data
         except Exception:
             pass
 

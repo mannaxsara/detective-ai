@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, Mail, Lock, ArrowRight, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Lock, ArrowRight, ShieldCheck, ArrowLeft, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
@@ -86,12 +86,28 @@ export default function LoginPage() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setEmail("demo@example.com");
+    setPassword("password123");
+    setLoading(true);
+    try {
+      const res = await authAPI.login({ email: "demo@example.com", password: "password123" });
+      loginStore(res.user, res.access_token, res.refresh_token);
+      toast.success("Welcome back, Demo Agent!");
+      router.push("/dashboard");
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Demo login failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
       const { auth, googleProvider, signInWithPopup } = await import("@/lib/firebase");
       if (!auth || !googleProvider) {
-        throw new Error("Firebase Auth is not initialized. Please check environment variables.");
+        throw new Error("Firebase Auth is not initialized. Please configure NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.");
       }
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
@@ -110,6 +126,12 @@ export default function LoginPage() {
       console.error("Google Auth error:", err);
       if (err?.code === "auth/popup-closed-by-user") {
         toast.info("Google Sign-In popup was closed.");
+      } else if (err?.code === "auth/unauthorized-domain") {
+        toast.error("Vercel domain unauthorized: Add 'projectdetective.vercel.app' to Firebase Console -> Authentication -> Settings -> Authorized Domains.");
+      } else if (err?.code === "auth/invalid-api-key" || err?.code === "auth/configuration-not-found") {
+        toast.error("Firebase API key missing on Vercel. Please use 1-Click Demo Login below.");
+      } else if (err?.code === "auth/popup-blocked") {
+        toast.error("Google popup was blocked by browser. Please allow popups for this site.");
       } else if (err?.code?.includes("requests-from-referer")) {
         toast.error("Google Sign-In blocked: Please allow domain in Firebase & Google Cloud Console.");
       } else {
@@ -250,6 +272,17 @@ export default function LoginPage() {
               </svg>
             )}
             <span>Continue with Google</span>
+          </button>
+
+          {/* Quick Demo Access Button */}
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={anyLoading}
+            className="h-10 w-full rounded-xl border border-dashed border-black/30 dark:border-white/30 bg-[#edf0e9]/50 dark:bg-[#181914] hover:bg-[#edfe5e] hover:text-black hover:border-black text-black/80 dark:text-white/80 font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-black dark:text-[#edfe5e] group-hover:text-black" />
+            <span>1-Click Demo Agent Access</span>
           </button>
 
           {/* Footer Redirect */}

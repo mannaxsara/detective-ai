@@ -128,6 +128,12 @@ export default function RegisterPage() {
       console.error("Google Auth error:", err);
       if (err?.code === "auth/popup-closed-by-user") {
         toast.info("Google Sign-In popup was closed.");
+      } else if (err?.code === "auth/unauthorized-domain") {
+        toast.error("Vercel domain unauthorized: Add 'projectdetective.vercel.app' to Firebase Console -> Authentication -> Settings -> Authorized Domains.");
+      } else if (err?.code === "auth/invalid-api-key" || err?.code === "auth/configuration-not-found") {
+        toast.error("Firebase API key missing on Vercel. Please register with email/password or use Demo Login.");
+      } else if (err?.code === "auth/popup-blocked") {
+        toast.error("Google popup was blocked by browser. Please allow popups for this site.");
       } else if (err?.code?.includes("requests-from-referer")) {
         toast.error("Google Sign-In blocked: Please allow domain in Firebase & Google Cloud Console.");
       } else {
