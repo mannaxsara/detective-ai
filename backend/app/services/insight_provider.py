@@ -460,9 +460,46 @@ class RuleBasedInsightProvider(InsightProvider):
         )
 
 
+PROVIDER_DEFAULTS = {
+    "gemini": {
+        "base_url": "",
+        "default_model": "gemini-2.5-flash",
+    },
+    "anthropic": {
+        "base_url": "https://api.anthropic.com/v1",
+        "default_model": "claude-3-7-sonnet-20250219",
+    },
+    "openai": {
+        "base_url": "https://api.openai.com/v1",
+        "default_model": "gpt-4o-mini",
+    },
+    "deepseek": {
+        "base_url": "https://api.deepseek.com/v1",
+        "default_model": "deepseek-chat",
+    },
+    "groq": {
+        "base_url": "https://api.groq.com/openai/v1",
+        "default_model": "llama-3.3-70b-versatile",
+    },
+    "openrouter": {
+        "base_url": "https://openrouter.ai/api/v1",
+        "default_model": "meta-llama/llama-3.3-70b-instruct",
+    },
+    "ollama": {
+        "base_url": "http://localhost:11434/v1",
+        "default_model": "llama3.2",
+    },
+    "custom": {
+        "base_url": "",
+        "default_model": "gpt-4o-mini",
+    },
+}
+
+
 class LLMInsightProvider(InsightProvider):
     """LLM-backed insight provider with seamless fallback to RuleBasedInsightProvider.
-    Supports Google Gemini, Local Offline LLMs (Ollama / LM Studio), OpenAI, and OpenAI-compatible APIs (Groq, DeepSeek).
+    Supports Google Gemini, OpenAI (gpt-4o, o3-mini, o1), Anthropic (Claude 3.7 Sonnet), DeepSeek (V3 & R1),
+    Groq ultra-fast inference, OpenRouter, and Local Offline LLMs (Ollama / LM Studio).
     """
 
     def __init__(
@@ -477,94 +514,54 @@ class LLMInsightProvider(InsightProvider):
 
         key_str = (api_key or "").strip()
 
-        # Automatic key type detection if provider is not explicitly pinned
+        # Determine provider via automatic key detection or explicit request
         if not provider or provider == "auto":
             if key_str.startswith("AIzaSy"):
-                self.provider = "gemini"
-                self.gemini_key = key_str
-                self.openai_key = ""
-                self.model = model or getattr(settings, "AI_MODEL", None) or "gemini-2.5-flash"
-                self.base_url = ""
-            elif key_str.startswith("gsk_"):
-                self.provider = "custom"
-                self.openai_key = key_str
-                self.gemini_key = ""
-                self.base_url = base_url or "https://api.groq.com/openai/v1"
-                self.model = model or "llama-3.3-70b-versatile"
-            elif key_str.startswith("sk-or-"):
-                self.provider = "custom"
-                self.openai_key = key_str
-                self.gemini_key = ""
-                self.base_url = base_url or "https://openrouter.ai/api/v1"
-                self.model = model or "meta-llama/llama-3.3-70b-instruct"
+                p_name = "gemini"
             elif key_str.startswith("sk-ant-"):
-                self.provider = "anthropic"
-                self.openai_key = key_str
-                self.gemini_key = ""
-                self.base_url = "https://api.anthropic.com/v1"
-                self.model = model or "claude-3-7-sonnet-20250219"
+                p_name = "anthropic"
+            elif key_str.startswith("gsk_"):
+                p_name = "groq"
+            elif key_str.startswith("sk-or-"):
+                p_name = "openrouter"
+            elif key_str.startswith("xai-"):
+                p_name = "custom"
+                base_url = base_url or "https://api.x.ai/v1"
+                model = model or "grok-2-latest"
             elif key_str.startswith("sk-"):
-                self.provider = "openai"
-                self.openai_key = key_str
-                self.gemini_key = ""
-                # Auto-route DeepSeek model if specified
-                if model and "deepseek" in model:
-                    self.base_url = base_url or "https://api.deepseek.com/v1"
-                    self.model = model
+                if (model and "deepseek" in model.lower()) or (base_url and "deepseek" in base_url.lower()):
+                    p_name = "deepseek"
                 else:
-                    self.base_url = base_url or ""
-                    self.model = model or getattr(settings, "AI_MODEL", None) or "gpt-4o-mini"
+                    p_name = "openai"
             elif not key_str and (base_url or getattr(settings, "AI_PROVIDER", "") == "ollama"):
-                self.provider = "ollama"
-                self.base_url = base_url or getattr(settings, "AI_BASE_URL", "") or "http://localhost:11434/v1"
-                self.model = model or "llama3.2"
-                self.gemini_key = ""
-                self.openai_key = ""
+                p_name = "ollama"
             else:
-                self.provider = getattr(settings, "AI_PROVIDER", "gemini").lower()
-                self.gemini_key = getattr(settings, "GEMINI_API_KEY", "") or key_str
-                self.openai_key = getattr(settings, "OPENAI_API_KEY", "") or key_str
-                self.base_url = base_url or getattr(settings, "AI_BASE_URL", "")
-                self.model = model or getattr(settings, "AI_MODEL", None) or "gemini-2.5-flash"
+                p_name = getattr(settings, "AI_PROVIDER", "gemini").lower()
         else:
-            self.provider = provider.lower()
-            self.gemini_key = key_str if self.provider == "gemini" else (getattr(settings, "GEMINI_API_KEY", "") or key_str)
-            self.openai_key = key_str if self.provider in ("openai", "custom") else (getattr(settings, "OPENAI_API_KEY", "") or key_str)
-            self.base_url = base_url or getattr(settings, "AI_BASE_URL", "")
-            self.model = model or getattr(settings, "AI_MODEL", None) or ("llama3.2" if self.provider == "ollama" else "gemini-2.5-flash")
+            p_name = provider.lower()
+
+        defaults = PROVIDER_DEFAULTS.get(p_name, PROVIDER_DEFAULTS["custom"])
+        self.provider = p_name
+        self.base_url = (base_url or defaults["base_url"]).strip()
+
+        env_provider = getattr(settings, "AI_PROVIDER", "gemini").lower()
+        provider_model_from_env = getattr(settings, "AI_MODEL", None) if p_name == env_provider else None
+        self.model = (model or provider_model_from_env or defaults["default_model"]).strip()
+
+        if self.provider == "gemini":
+            self.gemini_key = key_str or getattr(settings, "GEMINI_API_KEY", "")
+            self.openai_key = ""
+        else:
+            self.gemini_key = ""
+            self.openai_key = key_str or getattr(settings, "OPENAI_API_KEY", "")
 
     async def _call_llm(self, prompt: str, system_prompt: str = "") -> str | None:
         import httpx
         try:
-            # 1. Local Offline LLM (Ollama / LM Studio) or Custom OpenAI-compatible endpoint
-            if self.provider in ("ollama", "custom") or (self.base_url and self.provider != "gemini"):
-                target_url = f"{self.base_url.rstrip('/')}/chat/completions" if self.base_url else (
-                    "http://localhost:11434/v1/chat/completions" if self.provider == "ollama" else "https://api.openai.com/v1/chat/completions"
-                )
-                messages = []
-                if system_prompt:
-                    messages.append({"role": "system", "content": system_prompt})
-                messages.append({"role": "user", "content": prompt})
-                headers = {"Content-Type": "application/json"}
-                if self.openai_key:
-                    headers["Authorization"] = f"Bearer {self.openai_key}"
-                body = {
-                    "model": self.model or "llama3.2",
-                    "messages": messages,
-                    "temperature": 0.2,
-                }
-                async with httpx.AsyncClient(timeout=45.0) as client:
-                    resp = await client.post(target_url, json=body, headers=headers)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        choices = data.get("choices", [])
-                        if choices:
-                            return str(choices[0].get("message", {}).get("content", "")).strip()
-
-            # 2. Google Gemini REST
-            elif self.provider == "gemini" and self.gemini_key:
+            # 1. Google Gemini REST
+            if self.provider == "gemini" and self.gemini_key:
                 models_to_try = [self.model]
-                for fallback_m in ("gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"):
+                for fallback_m in ("gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"):
                     if fallback_m not in models_to_try:
                         models_to_try.append(fallback_m)
 
@@ -588,9 +585,10 @@ class LLMInsightProvider(InsightProvider):
                         elif resp.status_code != 404:
                             break
 
-            # 3. Anthropic Claude native Messages API
+            # 2. Anthropic Claude native Messages API (claude-3-7-sonnet-20250219, etc.)
             elif self.provider == "anthropic" or (self.openai_key and self.openai_key.startswith("sk-ant-")):
-                url = "https://api.anthropic.com/v1/messages"
+                target = self.base_url.rstrip("/") if self.base_url else "https://api.anthropic.com/v1"
+                url = f"{target}/messages" if not target.endswith("/messages") else target
                 headers = {
                     "x-api-key": self.openai_key,
                     "anthropic-version": "2023-06-01",
@@ -611,15 +609,27 @@ class LLMInsightProvider(InsightProvider):
                         if content and content[0].get("type") == "text":
                             return str(content[0].get("text", "")).strip()
 
-            # 4. Standard OpenAI & Reasoning Models (gpt-4o, o3-mini, o1)
-            elif self.openai_key:
-                url = f"{self.base_url.rstrip('/')}/chat/completions" if self.base_url else "https://api.openai.com/v1/chat/completions"
+            # 3. OpenAI-compatible APIs (OpenAI, DeepSeek, Groq, OpenRouter, Ollama, LM Studio, Custom)
+            elif self.openai_key or self.provider in ("ollama", "custom", "groq", "deepseek", "openrouter") or self.base_url:
+                base = self.base_url.rstrip("/") if self.base_url else "https://api.openai.com/v1"
+                if not base.endswith("/chat/completions"):
+                    if not base.endswith("/v1"):
+                        base += "/v1"
+                    target_url = f"{base}/chat/completions"
+                else:
+                    target_url = base
+
                 model_name = self.model or "gpt-4o-mini"
-                is_reasoning_model = model_name.startswith("o1") or model_name.startswith("o3")
+                is_reasoning_model = (
+                    model_name.startswith("o1")
+                    or model_name.startswith("o3")
+                    or "reasoner" in model_name.lower()
+                    or "r1" in model_name.lower()
+                )
 
                 messages = []
                 if is_reasoning_model:
-                    # Reasoning models don't support system instructions or temperature
+                    # Reasoning models reject temperature and prefer prompt in user message
                     messages.append({"role": "user", "content": f"{system_prompt}\n\n{prompt}" if system_prompt else prompt})
                     req_body: dict[str, Any] = {"model": model_name, "messages": messages}
                 else:
@@ -628,9 +638,12 @@ class LLMInsightProvider(InsightProvider):
                     messages.append({"role": "user", "content": prompt})
                     req_body = {"model": model_name, "messages": messages, "temperature": 0.2}
 
-                headers = {"Authorization": f"Bearer {self.openai_key}"}
+                headers = {"Content-Type": "application/json"}
+                if self.openai_key:
+                    headers["Authorization"] = f"Bearer {self.openai_key}"
+
                 async with httpx.AsyncClient(timeout=45.0) as client:
-                    resp = await client.post(url, json=req_body, headers=headers)
+                    resp = await client.post(target_url, json=req_body, headers=headers)
                     if resp.status_code == 200:
                         data = resp.json()
                         choices = data.get("choices", [])

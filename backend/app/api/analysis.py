@@ -427,10 +427,47 @@ async def chat_with_dataset(
         base_url=x_ai_base_url,
         model=x_ai_model,
     )
-    provider = get_insight_provider(api_key=x_gemini_key)
     
     reply = await provider.chat(payload.get("message", ""), context)
     return {"reply": reply}
+
+@router.post("/test-ai")
+async def test_ai_connection(
+    x_gemini_key: str | None = Header(None, alias="X-Gemini-Key"),
+    x_ai_provider: str | None = Header(None, alias="X-AI-Provider"),
+    x_ai_base_url: str | None = Header(None, alias="X-AI-Base-Url"),
+    x_ai_model: str | None = Header(None, alias="X-AI-Model"),
+    x_ai_key: str | None = Header(None, alias="X-AI-Key"),
+    current_user: User = Depends(get_current_user),
+):
+    """Verifies that the configured AI provider, API key, or local endpoint is online."""
+    from app.services.insight_provider import get_insight_provider, RuleBasedInsightProvider
+    provider = get_insight_provider(
+        api_key=x_ai_key or x_gemini_key,
+        provider=x_ai_provider,
+        base_url=x_ai_base_url,
+        model=x_ai_model,
+    )
+    if isinstance(provider, RuleBasedInsightProvider):
+        return {
+            "status": "online",
+            "provider": "rule_based",
+            "model": "deterministic-rules",
+            "reply": "Standard Rule Engine active (no external API needed).",
+        }
+
+    reply = await provider.chat("Say 'AI Engine Online' and state your active model name in one sentence.", {})
+    if not reply:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to reach provider '{getattr(provider, 'provider', 'unknown')}'. Check your API key or endpoint.",
+        )
+    return {
+        "status": "online",
+        "provider": getattr(provider, "provider", "unknown"),
+        "model": getattr(provider, "model", "default"),
+        "reply": reply,
+    }
 
 @router.get("/{analysis_id}/root-cause")
 async def get_analysis_root_cause(

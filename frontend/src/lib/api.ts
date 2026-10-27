@@ -268,6 +268,11 @@ export const analysisApi = {
     const { data } = await api.get(`/analysis/${analysisId}/recommendations`);
     return data;
   },
+
+  testAI: async (): Promise<{ status: string; provider: string; model: string; reply: string }> => {
+    const { data } = await api.post('/analysis/test-ai');
+    return data;
+  },
 };
 
 // ========== Statistics API ==========

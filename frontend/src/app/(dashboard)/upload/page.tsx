@@ -90,9 +90,15 @@ export default function UploadPage() {
     }
   };
 
-  const handleSampleUpload = (sampleName: string) => {
-    // Generate a sample CSV file
-    const sampleCsvContent = `TransactionID,Date,CustomerName,Category,Amount,Quantity,Status,StoreRegion
+  const handleSampleUpload = (sampleType: "retail" | "churn" | "fraud") => {
+    let content = "";
+    let fileName = "";
+    let label = "";
+
+    if (sampleType === "retail") {
+      label = "Retail Transactions";
+      fileName = "retail_sales_sample.csv";
+      content = `TransactionID,Date,CustomerName,Category,Amount,Quantity,Status,StoreRegion
 TXN1001,2026-08-01,Alpha Enterprises,Electronics,1250.50,5,Completed,North
 TXN1002,2026-08-02,Beta Logistics,Software,840.00,2,Completed,West
 TXN1003,2026-08-02,Gamma Retail,Hardware,310.25,1,Pending,South
@@ -103,11 +109,40 @@ TXN1007,2026-08-05,Eta Global,Hardware,180.00,2,Completed,Central
 TXN1008,2026-08-06,Theta Solutions,Services,2300.00,8,Completed,North
 TXN1009,2026-08-06,Iota Ventures,Electronics,620.00,4,Completed,South
 TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
+    } else if (sampleType === "churn") {
+      label = "Customer Churn Analytics";
+      fileName = "saas_customer_churn.csv";
+      content = `CustomerID,Age,SubscriptionTier,MonthlySpend,SupportTickets,SatisfactionScore,TenureMonths,ChurnRisk
+CUST-01,34,Enterprise,450.00,1,9.2,24,Low
+CUST-02,28,Starter,49.00,5,4.1,3,High
+CUST-03,42,Professional,199.00,2,8.0,14,Medium
+CUST-04,51,Enterprise,520.00,0,9.8,36,Low
+CUST-05,23,Starter,49.00,8,3.2,1,High
+CUST-06,37,Professional,199.00,3,7.5,11,Medium
+CUST-07,45,Enterprise,610.00,1,9.0,18,Low
+CUST-08,31,Starter,49.00,4,5.0,4,High
+CUST-09,29,Professional,199.00,1,8.5,8,Low
+CUST-10,39,Enterprise,480.00,2,8.9,20,Low`;
+    } else {
+      label = "Financial Fraud Audit";
+      fileName = "financial_fraud_audit.csv";
+      content = `TransactionID,AccountID,Timestamp,Amount,DeviceType,RiskScore,LocationMismatch,IsFraud
+TXF-901,ACC-101,2026-09-01 10:14:22,120.00,Mobile,12,No,0
+TXF-902,ACC-102,2026-09-01 11:32:05,45000.00,Unknown,94,Yes,1
+TXF-903,ACC-103,2026-09-01 13:05:18,45.50,Desktop,8,No,0
+TXF-904,ACC-104,2026-09-01 14:40:50,9800.00,Mobile,88,Yes,1
+TXF-905,ACC-105,2026-09-01 16:12:10,210.00,Desktop,15,No,0
+TXF-906,ACC-106,2026-09-01 18:22:33,15.00,Mobile,5,No,0
+TXF-907,ACC-107,2026-09-01 19:45:12,68000.00,TorProxy,99,Yes,1
+TXF-908,ACC-108,2026-09-01 21:02:44,320.00,Desktop,20,No,0
+TXF-909,ACC-109,2026-09-01 22:15:30,85.00,Mobile,9,No,0
+TXF-910,ACC-110,2026-09-01 23:50:11,5400.00,Unknown,82,Yes,1`;
+    }
 
-    const sampleBlob = new Blob([sampleCsvContent], { type: "text/csv" });
-    const sampleFile = new File([sampleBlob], `${sampleName.toLowerCase().replace(/\s+/g, "_")}.csv`, { type: "text/csv" });
+    const sampleBlob = new Blob([content], { type: "text/csv" });
+    const sampleFile = new File([sampleBlob], fileName, { type: "text/csv" });
     setFile(sampleFile);
-    toast.success(`Loaded ${sampleName} dataset! Click 'Start Investigation' to analyze.`);
+    toast.success(`Loaded ${label}! Click 'Start Investigation' to analyze.`);
   };
 
   const handleViewAnalysis = () => {
@@ -340,20 +375,30 @@ TXN1010,2026-08-07,Kappa Industries,Software,1500.00,5,Completed,West`;
         <p className="text-xs font-sans text-black/70 dark:text-white/70">
           Don&apos;t have a file ready? Click below to instantly load a pre-formatted sample dataset for investigation.
         </p>
-        <div className="flex flex-wrap gap-3 pt-1">
+        <div className="flex flex-wrap gap-2.5 pt-1">
           <button
-            onClick={() => handleSampleUpload("Retail Transactions")}
-            className="h-9 px-4 rounded-lg border border-black/20 dark:border-white/20 bg-[#edf0e9] dark:bg-[#262720] hover:bg-[#edfe5e] hover:text-black hover:border-black text-black dark:text-white text-xs font-mono font-bold inline-flex items-center gap-2 cursor-pointer transition-all shadow-sm"
+            type="button"
+            onClick={() => handleSampleUpload("retail")}
+            className="h-9 px-3.5 rounded-lg border border-black/20 dark:border-white/20 bg-[#edf0e9] dark:bg-[#262720] hover:bg-[#edfe5e] hover:text-black hover:border-black text-black dark:text-white text-xs font-mono font-bold inline-flex items-center gap-2 cursor-pointer transition-all shadow-xs"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>Load Sales Transactions (CSV)</span>
+            <span>Sales & Transactions (CSV)</span>
           </button>
           <button
-            onClick={() => handleSampleUpload("Customer Metrics")}
-            className="h-9 px-4 rounded-lg border border-black/20 dark:border-white/20 bg-[#edf0e9] dark:bg-[#262720] hover:bg-[#31e992] hover:text-black hover:border-black text-black dark:text-white text-xs font-mono font-bold inline-flex items-center gap-2 cursor-pointer transition-all shadow-sm"
+            type="button"
+            onClick={() => handleSampleUpload("churn")}
+            className="h-9 px-3.5 rounded-lg border border-black/20 dark:border-white/20 bg-[#edf0e9] dark:bg-[#262720] hover:bg-[#31e992] hover:text-black hover:border-black text-black dark:text-white text-xs font-mono font-bold inline-flex items-center gap-2 cursor-pointer transition-all shadow-xs"
           >
             <Database className="w-3.5 h-3.5" />
-            <span>Load Customer Analytics (CSV)</span>
+            <span>SaaS Customer Churn (CSV)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSampleUpload("fraud")}
+            className="h-9 px-3.5 rounded-lg border border-black/20 dark:border-white/20 bg-[#edf0e9] dark:bg-[#262720] hover:bg-[#bc3e3e] hover:text-white hover:border-[#bc3e3e] text-black dark:text-white text-xs font-mono font-bold inline-flex items-center gap-2 cursor-pointer transition-all shadow-xs"
+          >
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>Fraud & Anomaly Case (CSV)</span>
           </button>
         </div>
       </div>

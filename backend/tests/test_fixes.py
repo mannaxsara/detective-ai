@@ -77,22 +77,31 @@ def test_insight_provider_factory():
 
     p_groq_auto = get_insight_provider(api_key="gsk_TestGroqKey456")
     assert isinstance(p_groq_auto, LLMInsightProvider)
-    assert p_groq_auto.provider == "custom"
+    assert p_groq_auto.provider == "groq"
     assert "groq.com" in p_groq_auto.base_url
 
     p_or_auto = get_insight_provider(api_key="sk-or-TestOpenRouter789")
     assert isinstance(p_or_auto, LLMInsightProvider)
-    assert p_or_auto.provider == "custom"
+    assert p_or_auto.provider == "openrouter"
     assert "openrouter.ai" in p_or_auto.base_url
 
     p_openai_auto = get_insight_provider(api_key="sk-proj-TestOpenAI000")
     assert isinstance(p_openai_auto, LLMInsightProvider)
     assert p_openai_auto.provider == "openai"
 
+    p_deepseek = get_insight_provider(provider="deepseek", api_key="sk-deepseek-key-123")
+    assert isinstance(p_deepseek, LLMInsightProvider)
+    assert p_deepseek.provider == "deepseek"
+    assert "deepseek.com" in p_deepseek.base_url
+    assert p_deepseek.model == "deepseek-chat"
+
+    p_deepseek_r1 = get_insight_provider(provider="deepseek", model="deepseek-reasoner", api_key="sk-deepseek-key-123")
+    assert p_deepseek_r1.model == "deepseek-reasoner"
+
     p_ant_auto = get_insight_provider(api_key="sk-ant-api03-TestAnthropicKey")
     assert isinstance(p_ant_auto, LLMInsightProvider)
     assert p_ant_auto.provider == "anthropic"
-    assert "claude" in p_ant_auto.model
+    assert "claude-3-7-sonnet" in p_ant_auto.model
 
     # Reset
     settings.GEMINI_API_KEY = ""
