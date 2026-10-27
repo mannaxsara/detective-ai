@@ -77,6 +77,12 @@ def rate_limit_ip(max_requests: int = 10, window_seconds: int = 60):
         ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
         
         now = time.time()
+        # Periodic pruning to prevent memory bloat on free tier instances
+        if len(_ip_request_history) > 1000:
+            for k in list(_ip_request_history.keys()):
+                if not _ip_request_history[k] or (now - _ip_request_history[k][-1] > window_seconds):
+                    _ip_request_history.pop(k, None)
+
         timestamps = _ip_request_history[ip]
         # Prune older entries outside current window
         _ip_request_history[ip] = [t for t in timestamps if now - t < window_seconds]
